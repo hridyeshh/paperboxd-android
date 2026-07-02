@@ -1,0 +1,192 @@
+package `in`.paperboxd.app.ui.navigation
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import `in`.paperboxd.app.AppDestination
+import `in`.paperboxd.app.AppState
+import `in`.paperboxd.app.domain.model.User
+import `in`.paperboxd.app.ui.screens.auth.AuthScreen
+import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailScreen
+import `in`.paperboxd.app.ui.screens.diary.DiaryEntryDetailScreen
+import `in`.paperboxd.app.ui.screens.write.WriteScreen
+import `in`.paperboxd.app.ui.screens.home.HomeScreen
+import `in`.paperboxd.app.ui.screens.leaderboard.LeaderboardScreen
+import `in`.paperboxd.app.ui.screens.onboarding.OnboardingScreen
+import `in`.paperboxd.app.ui.screens.profile.ProfileScreen
+import `in`.paperboxd.app.ui.screens.search.SearchScreen
+import `in`.paperboxd.app.ui.screens.splash.SplashScreen
+import `in`.paperboxd.app.ui.theme.Background
+import `in`.paperboxd.app.ui.theme.TextSecondary
+
+/** Root switch on the AppState destination — splash / auth / onboarding / main. */
+@Composable
+fun AppRoot(appState: AppState) {
+    val destination by appState.destination.collectAsState()
+    when (val dest = destination) {
+        is AppDestination.Splash -> SplashScreen(onBootstrap = { appState.bootstrap() })
+        is AppDestination.Auth -> AuthScreen(
+            onSignedIn = { token, user -> appState.signedIn(token, user) }
+        )
+        is AppDestination.Onboarding -> OnboardingScreen(
+            user = dest.user,
+            onUsernameSet = { appState.setOnboardingUsername(it) },
+            onFinished = { appState.finishOnboarding() }
+        )
+        is AppDestination.Main -> MainScaffold(user = dest.user, appState = appState)
+    }
+}
+
+private val tabRoutes = mapOf(
+    DockTab.Home to Screen.Home.route,
+    DockTab.Search to Screen.Search.route,
+    DockTab.Leaderboard to Screen.Leaderboard.route,
+    DockTab.Profile to Screen.ProfileTab.route
+)
+
+/**
+ * Main tab container: one NavHost, per-tab back stacks preserved via
+ * saveState/restoreState (the Android twin of iOS per-tab NavigationStacks).
+ */
+@Composable
+fun MainScaffold(user: User, appState: AppState) {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    var showScan by rememberSaveable { mutableStateOf(false) }
+    var showWrite by rememberSaveable { mutableStateOf(false) }
+
+    val currentUser by appState.currentUser.collectAsState()
+    val sessionUser = currentUser ?: user
+
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    user = sessionUser,
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
+                    onWrite = { showWrite = true }
+                )
+            }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
+                )
+            }
+            composable(Screen.Leaderboard.route) {
+                LeaderboardScreen(
+                    viewer = sessionUser,
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
+                )
+            }
+            composable(Screen.ProfileTab.route) {
+                ProfileScreen(
+                    username = sessionUser.username.orEmpty(),
+                    viewer = sessionUser,
+                    showBack = false,
+                    onBack = {},
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
+                    onOpenSettings = { navController.navigate("settings") },
+                    onOpenEditProfile = { navController.navigate("edit-profile") },
+                    onOpenDiaryEntry = {
+                        navController.navigate("diary-entry/${sessionUser.username.orEmpty()}/$it")
+                    }
+                )
+            }
+            composable(Screen.BookDetail.route) {
+                BookDetailScreen(
+                    user = sessionUser,
+                    onBack = { navController.popBackStack() },
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
+                )
+            }
+            composable(Screen.Profile.route) { entry ->
+                val username = entry.arguments?.getString("username").orEmpty()
+                ProfileScreen(
+                    username = username,
+                    viewer = sessionUser,
+                    showBack = true,
+                    onBack = { navController.popBackStack() },
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
+                    onOpenSettings = { navController.navigate("settings") },
+                    onOpenEditProfile = { navController.navigate("edit-profile") },
+                    onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") }
+                )
+            }
+            composable("settings") { PlaceholderScreen("Settings") }
+            composable("edit-profile") { PlaceholderScreen("Edit Profile") }
+            composable("diary-entry/{username}/{entryId}") {
+                DiaryEntryDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) }
+                )
+            }
+        }
+
+        // Dock only on tab roots — detail screens get full-bleed content.
+        if (currentRoute in tabRoutes.values) {
+            BottomNavBar(
+                selected = tabRoutes.entries.firstOrNull { it.value == currentRoute }?.key
+                    ?: DockTab.Home,
+                onSelect = { tab ->
+                    val route = tabRoutes.getValue(tab)
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onScan = { showScan = true },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (showWrite) {
+            WriteScreen(
+                user = sessionUser,
+                onDismiss = { showWrite = false }
+            )
+        }
+        if (showScan) {
+            PlaceholderScreen("Scan")
+        }
+    }
+}
+
+/** Temporary stand-in until each screen lands. */
+@Composable
+fun PlaceholderScreen(name: String) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.headlineSmall,
+            color = TextSecondary
+        )
+    }
+}
