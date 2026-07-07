@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.paperboxd.app.R
@@ -30,10 +31,13 @@ import `in`.paperboxd.app.ui.theme.Accent
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.TextSecondary
 
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+
 /**
  * Wordmark fade-in IS the loading state — no spinner. Bootstrap runs on
  * first composition; AppState routes away when it resolves.
  */
+
 @Composable
 fun SplashScreen(onBootstrap: suspend () -> Unit) {
     var visible by remember { mutableStateOf(false) }
@@ -48,6 +52,11 @@ fun SplashScreen(onBootstrap: suspend () -> Unit) {
         onBootstrap()
     }
 
+    SplashContent(alpha = alpha)
+}
+
+@Composable
+fun SplashContent(alpha: Float) {
     Box(
         modifier = Modifier.fillMaxSize().background(Background),
         contentAlignment = Alignment.Center
@@ -68,5 +77,13 @@ fun SplashScreen(onBootstrap: suspend () -> Unit) {
                 color = TextSecondary
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun SplashPreview() {
+    PaperBoxdTheme {
+        SplashContent(alpha = 1f)
     }
 }

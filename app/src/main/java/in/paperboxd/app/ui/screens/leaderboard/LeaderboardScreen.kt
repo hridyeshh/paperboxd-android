@@ -44,6 +44,8 @@ import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 
 @Composable
 fun LeaderboardScreen(
@@ -52,7 +54,19 @@ fun LeaderboardScreen(
     viewModel: LeaderboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    LeaderboardContent(
+        state = state,
+        onTabSelected = viewModel::onTabSelected,
+        onOpenProfile = onOpenProfile
+    )
+}
 
+@Composable
+fun LeaderboardContent(
+    state: LeaderboardUiState,
+    onTabSelected: (LeaderboardTab) -> Unit,
+    onOpenProfile: (String) -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             Text(
@@ -61,7 +75,7 @@ fun LeaderboardScreen(
                 color = TextPrimary,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
             )
-            DimensionTabs(selected = state.tab, onSelect = viewModel::onTabSelected)
+            DimensionTabs(selected = state.tab, onSelect = onTabSelected)
             Spacer(Modifier.height(10.dp))
 
             when {
@@ -245,5 +259,28 @@ private fun LoadingList() {
                     .clip(RoundedCornerShape(8.dp))
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun LeaderboardPreview() {
+    val mockEntries = listOf(
+        LeaderboardEntry(userId = "1", username = "alice", totalXp = 1000, xpRank = 1, levelName = "Legend"),
+        LeaderboardEntry(userId = "2", username = "bob", totalXp = 800, xpRank = 2, levelName = "Veteran"),
+        LeaderboardEntry(userId = "3", username = "charlie", totalXp = 600, xpRank = 3, levelName = "Novice"),
+        LeaderboardEntry(userId = "4", username = "dave", totalXp = 400, xpRank = 4, levelName = "Beginner"),
+    )
+    PaperBoxdTheme {
+        LeaderboardContent(
+            state = LeaderboardUiState(
+                tab = LeaderboardTab.Global,
+                entries = mockEntries,
+                myStats = mockEntries[2],
+                isLoading = false
+            ),
+            onTabSelected = {},
+            onOpenProfile = {}
+        )
     }
 }

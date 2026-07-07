@@ -65,6 +65,8 @@ import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,16 +77,42 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var showNotifications by remember { mutableStateOf(false) }
-
     LaunchedEffect(user.id) { viewModel.user = user }
+
+    HomeContent(
+        state = state,
+        onRefresh = { viewModel.load(refreshing = true) },
+        onOpenBook = onOpenBook,
+        onWrite = onWrite,
+        onBell = {
+            viewModel.markActivitiesViewed()
+            // In a real app, this might navigate or open a sheet. 
+            // The original code had a local state for showNotifications.
+        },
+        trackImpression = viewModel::trackImpression,
+        markActivitiesViewed = viewModel::markActivitiesViewed
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeContent(
+    state: HomeUiState,
+    onRefresh: () -> Unit,
+    onOpenBook: (String) -> Unit,
+    onWrite: () -> Unit,
+    onBell: () -> Unit,
+    trackImpression: (String) -> Unit = {},
+    markActivitiesViewed: () -> Unit = {}
+) {
+    var showNotifications by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         DotGridBackground()
 
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
-            onRefresh = { viewModel.load(refreshing = true) }
+            onRefresh = onRefresh
         ) {
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
@@ -97,8 +125,9 @@ fun HomeScreen(
                     TopBar(
                         hasUnread = state.hasNewActivities,
                         onBell = {
-                            viewModel.markActivitiesViewed()
+                            markActivitiesViewed()
                             showNotifications = true
+                            onBell()
                         },
                         onWrite = onWrite
                     )
@@ -128,7 +157,7 @@ fun HomeScreen(
                     }
                 } else {
                     items(state.pickedForYou, key = { it.id }) { rec ->
-                        LaunchedEffect(rec.id) { viewModel.trackImpression(rec.id) }
+                        LaunchedEffect(rec.id) { trackImpression(rec.id) }
                         RecommendationCard(rec, onClick = { onOpenBook(rec.id) })
                     }
                 }
@@ -316,6 +345,35 @@ private fun RecommendationCard(rec: RecommendationItem, onClick: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             SignalPill(it)
         }
+    }
+}
+
+@Preview
+@Composable
+private fun HomePreview() {
+    PaperBoxdTheme {
+        HomeContent(
+            state = HomeUiState(
+                recommendations = listOf(
+                    RecommendationItem(id = "1", title = "The Great Gatsby", authors = listOf("F. Scott Fitzgerald")),
+                    RecommendationItem(id = "2", title = "1984", authors = listOf("George Orwell"))
+                ),
+                lastLoggedBook = LastLoggedBook(
+                    bookId = "1",
+                    title = "The Great Gatsby",
+                    author = "F. Scott Fitzgerald",
+                    cover = "",
+                    currentPage = 50,
+                    totalPages = 100
+                ),
+                latestBooks = emptyList(),
+                isLoading = false
+            ),
+            onRefresh = {},
+            onOpenBook = {},
+            onWrite = {},
+            onBell = {}
+        )
     }
 }
 

@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -39,19 +40,51 @@ import `in`.paperboxd.app.ui.theme.Accent
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 
-/** Auth container: Login / Register / OTP modes switch inline, mirroring iOS. */
 @Composable
 fun AuthScreen(
     onSignedIn: (token: String, user: User) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    // Activity context for the Credential Manager picker UI.
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.authSuccess.collect { onSignedIn(it.token, it.user) }
     }
 
+    AuthContent(
+        state = state,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onOtpChange = viewModel::onOtpChange,
+        onLogin = viewModel::login,
+        onRegister = viewModel::register,
+        onSendOtp = viewModel::sendOtp,
+        onForgotPassword = viewModel::forgotPassword,
+        onLoginWithGoogle = { viewModel.loginWithGoogle(context) },
+        onSwitchMode = viewModel::switchTo
+    )
+}
+
+@Composable
+fun AuthContent(
+    state: AuthUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onOtpChange: (String) -> Unit,
+    onLogin: () -> Unit,
+    onRegister: () -> Unit,
+    onSendOtp: () -> Unit,
+    onForgotPassword: () -> Unit,
+    onLoginWithGoogle: () -> Unit,
+    onSwitchMode: (AuthMode) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -74,9 +107,32 @@ fun AuthScreen(
         Spacer(Modifier.height(32.dp))
 
         when (state.mode) {
-            AuthMode.Login -> LoginForm(state, viewModel)
-            AuthMode.Register -> RegisterForm(state, viewModel)
-            AuthMode.LoginOtp -> OtpForm(state, viewModel)
+            AuthMode.Login -> LoginForm(
+                state = state,
+                onEmailChange = onEmailChange,
+                onPasswordChange = onPasswordChange,
+                onLogin = onLogin,
+                onLoginWithGoogle = onLoginWithGoogle,
+                onSendOtp = onSendOtp,
+                onForgotPassword = onForgotPassword,
+                onSwitchToRegister = { onSwitchMode(AuthMode.Register) }
+            )
+
+            AuthMode.Register -> RegisterForm(
+                state = state,
+                onEmailChange = onEmailChange,
+                onPasswordChange = onPasswordChange,
+                onConfirmPasswordChange = onConfirmPasswordChange,
+                onRegister = onRegister,
+                onSwitchToLogin = { onSwitchMode(AuthMode.Login) }
+            )
+
+            AuthMode.LoginOtp -> OtpForm(
+                state = state,
+                onOtpChange = onOtpChange,
+                onResendOtp = onSendOtp,
+                onSwitchToLogin = { onSwitchMode(AuthMode.Login) }
+            )
         }
 
         state.errorMessage?.let {
@@ -91,10 +147,19 @@ fun AuthScreen(
 }
 
 @Composable
-private fun LoginForm(state: AuthUiState, viewModel: AuthViewModel) {
+private fun LoginForm(
+    state: AuthUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLogin: () -> Unit,
+    onLoginWithGoogle: () -> Unit,
+    onSendOtp: () -> Unit,
+    onForgotPassword: () -> Unit,
+    onSwitchToRegister: () -> Unit
+) {
     DarkTextField(
         value = state.email,
-        onValueChange = viewModel::onEmailChange,
+        onValueChange = onEmailChange,
         label = stringResource(R.string.auth_email),
         keyboardType = KeyboardType.Email,
         modifier = Modifier.fillMaxWidth()
@@ -102,38 +167,45 @@ private fun LoginForm(state: AuthUiState, viewModel: AuthViewModel) {
     Spacer(Modifier.height(12.dp))
     DarkPasswordField(
         value = state.password,
-        onValueChange = viewModel::onPasswordChange,
+        onValueChange = onPasswordChange,
         label = stringResource(R.string.auth_password),
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(20.dp))
     PrimaryButton(
         text = stringResource(R.string.auth_sign_in),
-        onClick = viewModel::login,
+        onClick = onLogin,
         loading = state.isLoading
     )
     Spacer(Modifier.height(10.dp))
     GhostButton(
         text = stringResource(R.string.auth_google),
-        onClick = viewModel::loginWithGoogle
+        onClick = onLoginWithGoogle
     )
     Spacer(Modifier.height(6.dp))
-    TextButton(onClick = viewModel::sendOtp) {
+    TextButton(onClick = onSendOtp) {
         Text(stringResource(R.string.auth_login_with_otp), color = TextSecondary)
     }
-    TextButton(onClick = viewModel::forgotPassword) {
+    TextButton(onClick = onForgotPassword) {
         Text(stringResource(R.string.auth_forgot_password), color = TextSecondary)
     }
-    TextButton(onClick = { viewModel.switchTo(AuthMode.Register) }) {
+    TextButton(onClick = onSwitchToRegister) {
         Text(stringResource(R.string.auth_no_account), color = Accent)
     }
 }
 
 @Composable
-private fun RegisterForm(state: AuthUiState, viewModel: AuthViewModel) {
+private fun RegisterForm(
+    state: AuthUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onRegister: () -> Unit,
+    onSwitchToLogin: () -> Unit
+) {
     DarkTextField(
         value = state.email,
-        onValueChange = viewModel::onEmailChange,
+        onValueChange = onEmailChange,
         label = stringResource(R.string.auth_email),
         keyboardType = KeyboardType.Email,
         modifier = Modifier.fillMaxWidth()
@@ -141,7 +213,7 @@ private fun RegisterForm(state: AuthUiState, viewModel: AuthViewModel) {
     Spacer(Modifier.height(12.dp))
     DarkPasswordField(
         value = state.password,
-        onValueChange = viewModel::onPasswordChange,
+        onValueChange = onPasswordChange,
         label = stringResource(R.string.auth_password),
         modifier = Modifier.fillMaxWidth()
     )
@@ -158,31 +230,36 @@ private fun RegisterForm(state: AuthUiState, viewModel: AuthViewModel) {
     Spacer(Modifier.height(12.dp))
     DarkPasswordField(
         value = state.confirmPassword,
-        onValueChange = viewModel::onConfirmPasswordChange,
+        onValueChange = onConfirmPasswordChange,
         label = stringResource(R.string.auth_confirm_password),
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(20.dp))
     PrimaryButton(
         text = stringResource(R.string.auth_create_account),
-        onClick = viewModel::register,
+        onClick = onRegister,
         loading = state.isLoading
     )
     Spacer(Modifier.height(6.dp))
-    TextButton(onClick = { viewModel.switchTo(AuthMode.Login) }) {
+    TextButton(onClick = onSwitchToLogin) {
         Text(stringResource(R.string.auth_have_account), color = Accent)
     }
 }
 
 @Composable
-private fun OtpForm(state: AuthUiState, viewModel: AuthViewModel) {
+private fun OtpForm(
+    state: AuthUiState,
+    onOtpChange: (String) -> Unit,
+    onResendOtp: () -> Unit,
+    onSwitchToLogin: () -> Unit
+) {
     Text(
         text = stringResource(R.string.auth_otp_sent_to, state.otpEmail),
         style = MaterialTheme.typography.bodyMedium,
         color = TextSecondary
     )
     Spacer(Modifier.height(20.dp))
-    OtpBoxes(code = state.otpCode, onCodeChange = viewModel::onOtpChange)
+    OtpBoxes(code = state.otpCode, onCodeChange = onOtpChange)
     Spacer(Modifier.height(20.dp))
     if (state.otpCountdown > 0) {
         Text(
@@ -191,12 +268,32 @@ private fun OtpForm(state: AuthUiState, viewModel: AuthViewModel) {
             color = TextSecondary
         )
     } else {
-        TextButton(onClick = viewModel::sendOtp) {
+        TextButton(onClick = onResendOtp) {
             Text(stringResource(R.string.auth_resend_code), color = Accent)
         }
     }
     Spacer(Modifier.height(6.dp))
-    TextButton(onClick = { viewModel.switchTo(AuthMode.Login) }) {
+    TextButton(onClick = onSwitchToLogin) {
         Text(stringResource(R.string.auth_login_with_password), color = TextSecondary)
+    }
+}
+
+@Preview
+@Composable
+private fun AuthPreview() {
+    PaperBoxdTheme {
+        AuthContent(
+            state = AuthUiState(mode = AuthMode.Login),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onConfirmPasswordChange = {},
+            onOtpChange = {},
+            onLogin = {},
+            onRegister = {},
+            onSendOtp = {},
+            onForgotPassword = {},
+            onLoginWithGoogle = {},
+            onSwitchMode = {}
+        )
     }
 }

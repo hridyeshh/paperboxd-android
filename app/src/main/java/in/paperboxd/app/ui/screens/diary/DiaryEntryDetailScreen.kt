@@ -52,6 +52,10 @@ import `in`.paperboxd.app.ui.theme.LikeRed
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.VolumeInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -130,9 +134,26 @@ fun DiaryEntryDetailScreen(
     viewModel: DiaryEntryDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
-
     LaunchedEffect(state.deleted) { if (state.deleted) onBack() }
+
+    DiaryEntryDetailContent(
+        state = state,
+        onBack = onBack,
+        onOpenBook = onOpenBook,
+        onToggleLike = viewModel::toggleLike,
+        onDelete = viewModel::delete
+    )
+}
+
+@Composable
+fun DiaryEntryDetailContent(
+    state: DiaryDetailUiState,
+    onBack: () -> Unit,
+    onOpenBook: (String) -> Unit,
+    onToggleLike: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -218,7 +239,7 @@ fun DiaryEntryDetailScreen(
                 Spacer(Modifier.height(14.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = viewModel::toggleLike) {
+                    IconButton(onClick = onToggleLike) {
                         Icon(
                             if (state.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = stringResource(R.string.detail_like),
@@ -245,7 +266,7 @@ fun DiaryEntryDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
-                    viewModel.delete()
+                    onDelete()
                 }) {
                     Text(stringResource(R.string.diary_delete), color = ErrorColor)
                 }
@@ -255,6 +276,41 @@ fun DiaryEntryDetailScreen(
                     Text(stringResource(R.string.write_cancel), color = TextPrimary)
                 }
             }
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DiaryEntryDetailPreview() {
+    PaperBoxdTheme {
+        DiaryEntryDetailContent(
+            state = DiaryDetailUiState(
+                entry = DiaryEntry(
+                    id = "1",
+                    userId = "user1",
+                    username = "alice",
+                    book = Book(
+                        id = "book1",
+                        volumeInfo = VolumeInfo(
+                            title = "The Great Gatsby",
+                            authors = listOf("F. Scott Fitzgerald")
+                        )
+                    ),
+                    content = "Really enjoyed this classic!",
+                    rating = 8,
+                    likesCount = 12,
+                    isLiked = true,
+                    createdAt = "2023-10-27T10:00:00Z"
+                ),
+                isLiked = true,
+                likesCount = 12,
+                isLoading = false
+            ),
+            onBack = {},
+            onOpenBook = {},
+            onToggleLike = {},
+            onDelete = {}
         )
     }
 }

@@ -1,9 +1,12 @@
 package `in`.paperboxd.app.ui.screens.auth
 
+import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import `in`.paperboxd.app.auth.google.GoogleSignInHelper
+import `in`.paperboxd.app.auth.google.GoogleSignInResult
 import `in`.paperboxd.app.data.repository.AuthRepository
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.theme.Accent
@@ -40,7 +43,8 @@ data class AuthSuccess(val token: String, val user: User)
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val googleSignInHelper: GoogleSignInHelper
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthUiState())
@@ -173,10 +177,25 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // TODO: Google Sign-In — backend endpoint POST /api/mobile/auth/google is live;
-    // wire Credential Manager + authRepository.googleAuth(idToken) when enabled.
-    fun loginWithGoogle() {
-        _state.update { it.copy(errorMessage = "Google sign-in is coming soon.") }
+    /**
+     * Google Sign-In: get an ID token via Credential Manager, then reuse the
+     * existing backend exchange + AppState routing. On success emits AuthSuccess
+     * (same path as email/OTP login). User-cancelled picker is a silent no-op;
+     * genuine failures surface an error, matching the other auth flows here.
+     */
+    fun loginWithGoogle(activityContext: Context) {
+        withLoading {
+            when (val result = googleSignInHelper.getIdToken(activityContext)) {
+                is GoogleSignInResult.Cancelled -> Unit // silent, matches iOS
+                is GoogleSignInResult.Failure ->
+                    _state.update { it.copy(errorMessage = result.message) }
+                is GoogleSignInResult.Success ->
+                    authRepository.googleAuth(result.idToken).fold(
+                        onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user)) },
+                        onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
+                    )
+            }
+        }
     }
 
     private fun startCountdown(seconds: Int) {

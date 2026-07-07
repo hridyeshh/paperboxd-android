@@ -73,6 +73,9 @@ import `in`.paperboxd.app.ui.theme.LikeRed
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+import `in`.paperboxd.app.domain.model.VolumeInfo
 
 private enum class DetailTab { Overview, Reviews, Highlights, Lists }
 
@@ -87,12 +90,41 @@ fun BookDetailScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    var showRateSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(user.id) { viewModel.user = user }
     LaunchedEffect(Unit) { viewModel.toast.collect { snackbar.showSnackbar(it) } }
+
+    BookDetailContent(
+        state = state,
+        snackbarHostState = snackbar,
+        onBack = onBack,
+        onOpenBook = onOpenBook,
+        onOpenProfile = onOpenProfile,
+        onToggleBookshelf = viewModel::toggleBookshelf,
+        onToggleLike = viewModel::toggleLike,
+        onToggleTbr = viewModel::toggleTbr,
+        onSubmitReview = { rating, review, callback ->
+            viewModel.submitReview(rating, review, callback)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookDetailContent(
+    state: BookDetailUiState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onOpenBook: (String) -> Unit,
+    onOpenProfile: (String) -> Unit,
+    onToggleBookshelf: () -> Unit,
+    onToggleLike: () -> Unit,
+    onToggleTbr: () -> Unit,
+    onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit
+) {
+    val context = LocalContext.current
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var showRateSheet by rememberSaveable { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(
@@ -133,10 +165,11 @@ fun BookDetailScreen(
                     color = ErrorColor,
                     modifier = Modifier.padding(20.dp)
                 )
+
                 else -> {
                     val book = state.book!!
                     Hero(book)
-                    ActionRow(state, viewModel)
+                    ActionRow(state, onToggleBookshelf, onToggleLike, onToggleTbr)
                     Spacer(Modifier.height(8.dp))
 
                     TabRow(
@@ -171,7 +204,7 @@ fun BookDetailScreen(
                     Spacer(Modifier.height(16.dp))
 
                     when (DetailTab.entries[tab]) {
-                        DetailTab.Overview -> OverviewTab(state, viewModel, onOpenBook, onOpenProfile)
+                        DetailTab.Overview -> OverviewTab(state, onOpenBook, onOpenProfile)
                         DetailTab.Reviews -> ReviewsTab(state, onRate = { showRateSheet = true })
                         DetailTab.Highlights -> EmptyTabState(stringResource(R.string.detail_highlights_empty))
                         DetailTab.Lists -> EmptyTabState(stringResource(R.string.detail_lists_empty))
@@ -181,7 +214,7 @@ fun BookDetailScreen(
             }
         }
 
-        SnackbarHost(hostState = snackbar, modifier = Modifier.align(Alignment.BottomCenter))
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     if (showRateSheet) {
@@ -189,7 +222,7 @@ fun BookDetailScreen(
             isSubmitting = state.isSubmittingReview,
             initialRating = 0,
             onSubmit = { rating, review ->
-                viewModel.submitReview(rating, review) { ok -> if (ok) showRateSheet = false }
+                onSubmitReview(rating, review) { ok -> if (ok) showRateSheet = false }
             },
             onDismiss = { showRateSheet = false }
         )
@@ -253,7 +286,12 @@ private fun Hero(book: Book) {
 }
 
 @Composable
-private fun ActionRow(state: BookDetailUiState, viewModel: BookDetailViewModel) {
+private fun ActionRow(
+    state: BookDetailUiState,
+    onToggleBookshelf: () -> Unit,
+    onToggleLike: () -> Unit,
+    onToggleTbr: () -> Unit
+) {
     val s = state.bookState
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
@@ -268,7 +306,7 @@ private fun ActionRow(state: BookDetailUiState, viewModel: BookDetailViewModel) 
             },
             label = stringResource(if (s.isOnShelf) R.string.detail_on_shelf else R.string.detail_add_shelf),
             active = s.isOnShelf,
-            onClick = viewModel::toggleBookshelf,
+            onClick = onToggleBookshelf,
             modifier = Modifier.weight(1f)
         )
         ActionChip(
@@ -281,14 +319,14 @@ private fun ActionRow(state: BookDetailUiState, viewModel: BookDetailViewModel) 
             },
             label = stringResource(R.string.detail_like),
             active = s.isLiked,
-            onClick = viewModel::toggleLike,
+            onClick = onToggleLike,
             modifier = Modifier.weight(1f)
         )
         ActionChip(
             icon = { tint -> Icon(Icons.Outlined.WatchLater, contentDescription = null, tint = tint) },
             label = stringResource(R.string.detail_tbr),
             active = s.isTbr,
-            onClick = viewModel::toggleTbr,
+            onClick = onToggleTbr,
             modifier = Modifier.weight(1f)
         )
     }
@@ -320,7 +358,6 @@ private fun ActionChip(
 @Composable
 private fun OverviewTab(
     state: BookDetailUiState,
-    viewModel: BookDetailViewModel,
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit
 ) {
@@ -386,6 +423,36 @@ private fun OverviewTab(
                 Text(rec.title, style = MaterialTheme.typography.bodySmall, color = TextPrimary, maxLines = 2)
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun BookDetailPreview() {
+    PaperBoxdTheme {
+        BookDetailContent(
+            state = BookDetailUiState(
+                book = Book(
+                    id = "book1",
+                    volumeInfo = VolumeInfo(
+                        title = "The Great Gatsby",
+                        authors = listOf("F. Scott Fitzgerald"),
+                        description = "A story of wealth, love, and tragedy in the Jazz Age.",
+                        pageCount = 180,
+                        averageRating = 4.5
+                    )
+                ),
+                isLoading = false
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            onBack = {},
+            onOpenBook = {},
+            onOpenProfile = {},
+            onToggleBookshelf = {},
+            onToggleLike = {},
+            onToggleTbr = {},
+            onSubmitReview = { _, _, _ -> }
+        )
     }
 }
 

@@ -63,6 +63,9 @@ import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+import `in`.paperboxd.app.domain.model.RecommendationItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -101,6 +104,43 @@ fun OnboardingScreen(
         }
     }
 
+    OnboardingContent(
+        state = state,
+        onPickAvatar = {
+            pickAvatar.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        onUsernameChange = viewModel::onUsernameChange,
+        onDisplayNameChange = viewModel::onDisplayNameChange,
+        onSubmitUsername = viewModel::submitUsername,
+        onSkip = viewModel::skip,
+        onToggleGenre = viewModel::toggleGenre,
+        onContinueFromGenres = viewModel::continueFromGenres,
+        onSelectTempo = viewModel::selectTempo,
+        onContinueFromTempo = viewModel::continueFromTempo,
+        onSaveToShelf = viewModel::saveToShelf,
+        onShowAnother = viewModel::showAnother,
+        onFinish = viewModel::finish
+    )
+}
+
+@Composable
+fun OnboardingContent(
+    state: OnboardingUiState,
+    onPickAvatar: () -> Unit,
+    onUsernameChange: (String) -> Unit,
+    onDisplayNameChange: (String) -> Unit,
+    onSubmitUsername: () -> Unit,
+    onSkip: () -> Unit,
+    onToggleGenre: (String) -> Unit,
+    onContinueFromGenres: () -> Unit,
+    onSelectTempo: (String) -> Unit,
+    onContinueFromTempo: () -> Unit,
+    onSaveToShelf: () -> Unit,
+    onShowAnother: () -> Unit,
+    onFinish: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -115,17 +155,32 @@ fun OnboardingScreen(
                 when (step) {
                     OnboardingStep.Username -> UsernameStep(
                         state = state,
-                        viewModel = viewModel,
-                        onPickAvatar = {
-                            pickAvatar.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        }
+                        onPickAvatar = onPickAvatar,
+                        onUsernameChange = onUsernameChange,
+                        onDisplayNameChange = onDisplayNameChange,
+                        onSubmitUsername = onSubmitUsername,
+                        onSkip = onSkip
                     )
-                    OnboardingStep.Genres -> GenresStep(state, viewModel)
-                    OnboardingStep.Tempo -> TempoStep(state, viewModel)
+
+                    OnboardingStep.Genres -> GenresStep(
+                        state = state,
+                        onToggleGenre = onToggleGenre,
+                        onContinueFromGenres = onContinueFromGenres
+                    )
+
+                    OnboardingStep.Tempo -> TempoStep(
+                        state = state,
+                        onSelectTempo = onSelectTempo,
+                        onContinueFromTempo = onContinueFromTempo
+                    )
+
                     OnboardingStep.AhaLoading -> AhaLoadingStep()
-                    OnboardingStep.AhaReveal -> AhaRevealStep(state, viewModel)
+                    OnboardingStep.AhaReveal -> AhaRevealStep(
+                        state = state,
+                        onSaveToShelf = onSaveToShelf,
+                        onShowAnother = onShowAnother,
+                        onFinish = onFinish
+                    )
                 }
             }
         }
@@ -160,8 +215,11 @@ private suspend fun readAndDownscale(context: Context, uri: Uri): ByteArray? =
 @Composable
 private fun UsernameStep(
     state: OnboardingUiState,
-    viewModel: OnboardingViewModel,
-    onPickAvatar: () -> Unit
+    onPickAvatar: () -> Unit,
+    onUsernameChange: (String) -> Unit,
+    onDisplayNameChange: (String) -> Unit,
+    onSubmitUsername: () -> Unit,
+    onSkip: () -> Unit
 ) {
     Text(
         text = stringResource(R.string.onboarding_pick_username),
@@ -193,7 +251,7 @@ private fun UsernameStep(
     Spacer(Modifier.height(20.dp))
     DarkTextField(
         value = state.username,
-        onValueChange = viewModel::onUsernameChange,
+        onValueChange = onUsernameChange,
         label = stringResource(R.string.onboarding_username),
         modifier = Modifier.fillMaxWidth()
     )
@@ -220,25 +278,29 @@ private fun UsernameStep(
     Spacer(Modifier.height(12.dp))
     DarkTextField(
         value = state.displayName,
-        onValueChange = viewModel::onDisplayNameChange,
+        onValueChange = onDisplayNameChange,
         label = stringResource(R.string.onboarding_display_name),
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(24.dp))
     PrimaryButton(
         text = stringResource(R.string.onboarding_continue),
-        onClick = viewModel::submitUsername,
+        onClick = onSubmitUsername,
         enabled = state.availability == UsernameAvailability.Available,
         loading = state.isSubmitting
     )
-    TextButton(onClick = viewModel::skip, modifier = Modifier.fillMaxWidth()) {
+    TextButton(onClick = onSkip, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.onboarding_skip), color = TextSecondary)
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun GenresStep(state: OnboardingUiState, viewModel: OnboardingViewModel) {
+private fun GenresStep(
+    state: OnboardingUiState,
+    onToggleGenre: (String) -> Unit,
+    onContinueFromGenres: () -> Unit
+) {
     Text(
         text = stringResource(R.string.onboarding_pick_genres),
         style = MaterialTheme.typography.headlineMedium,
@@ -256,7 +318,7 @@ private fun GenresStep(state: OnboardingUiState, viewModel: OnboardingViewModel)
             val selected = genre.id in state.selectedGenres
             FilterChip(
                 selected = selected,
-                onClick = { viewModel.toggleGenre(genre.id) },
+                onClick = { onToggleGenre(genre.id) },
                 label = { Text(genre.label) },
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = Surface,
@@ -277,13 +339,17 @@ private fun GenresStep(state: OnboardingUiState, viewModel: OnboardingViewModel)
     Spacer(Modifier.height(24.dp))
     PrimaryButton(
         text = stringResource(R.string.onboarding_continue),
-        onClick = viewModel::continueFromGenres,
+        onClick = onContinueFromGenres,
         enabled = state.selectedGenres.size >= 3
     )
 }
 
 @Composable
-private fun TempoStep(state: OnboardingUiState, viewModel: OnboardingViewModel) {
+private fun TempoStep(
+    state: OnboardingUiState,
+    onSelectTempo: (String) -> Unit,
+    onContinueFromTempo: () -> Unit
+) {
     Text(
         text = stringResource(R.string.onboarding_pick_tempo),
         style = MaterialTheme.typography.headlineMedium,
@@ -298,7 +364,7 @@ private fun TempoStep(state: OnboardingUiState, viewModel: OnboardingViewModel) 
                 .padding(vertical = 5.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(if (selected) Accent.copy(alpha = 0.14f) else Surface)
-                .clickable { viewModel.selectTempo(tempo.id) }
+                .clickable { onSelectTempo(tempo.id) }
                 .padding(16.dp)
         ) {
             Text(
@@ -311,7 +377,7 @@ private fun TempoStep(state: OnboardingUiState, viewModel: OnboardingViewModel) 
     Spacer(Modifier.height(24.dp))
     PrimaryButton(
         text = stringResource(R.string.onboarding_continue),
-        onClick = viewModel::continueFromTempo
+        onClick = onContinueFromTempo
     )
 }
 
@@ -332,7 +398,12 @@ private fun AhaLoadingStep() {
 }
 
 @Composable
-private fun AhaRevealStep(state: OnboardingUiState, viewModel: OnboardingViewModel) {
+private fun AhaRevealStep(
+    state: OnboardingUiState,
+    onSaveToShelf: () -> Unit,
+    onShowAnother: () -> Unit,
+    onFinish: () -> Unit
+) {
     val book = state.currentAhaBook ?: return
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -357,16 +428,42 @@ private fun AhaRevealStep(state: OnboardingUiState, viewModel: OnboardingViewMod
         Spacer(Modifier.height(24.dp))
         PrimaryButton(
             text = stringResource(R.string.onboarding_save_to_shelf),
-            onClick = viewModel::saveToShelf,
+            onClick = onSaveToShelf,
             loading = state.isAddingBook
         )
         Spacer(Modifier.height(8.dp))
         GhostButton(
             text = stringResource(R.string.onboarding_show_another),
-            onClick = viewModel::showAnother
+            onClick = onShowAnother
         )
-        TextButton(onClick = viewModel::finish) {
+        TextButton(onClick = onFinish) {
             Text(stringResource(R.string.onboarding_skip), color = TextSecondary)
         }
+    }
+}
+
+@Preview
+@Composable
+private fun OnboardingPreview() {
+    PaperBoxdTheme {
+        OnboardingContent(
+            state = OnboardingUiState(
+                step = OnboardingStep.Username,
+                username = "alice",
+                availability = UsernameAvailability.Available
+            ),
+            onPickAvatar = {},
+            onUsernameChange = {},
+            onDisplayNameChange = {},
+            onSubmitUsername = {},
+            onSkip = {},
+            onToggleGenre = {},
+            onContinueFromGenres = {},
+            onSelectTempo = {},
+            onContinueFromTempo = {},
+            onSaveToShelf = {},
+            onShowAnother = {},
+            onFinish = {}
+        )
     }
 }

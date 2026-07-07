@@ -57,8 +57,10 @@ import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+import `in`.paperboxd.app.domain.model.Book
 
-/** Fullscreen diary composer (iOS WriteView twin). */
 @Composable
 fun WriteScreen(
     user: User,
@@ -66,9 +68,31 @@ fun WriteScreen(
     viewModel: WriteViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.didSubmit) { if (state.didSubmit) onDismiss() }
+
+    WriteContent(
+        state = state,
+        onDismiss = onDismiss,
+        onPost = { viewModel.submit(user.username.orEmpty()) },
+        onContentChange = viewModel::onContentChange,
+        onRate = viewModel::onRate,
+        onSearchChange = viewModel::onSearchChange,
+        onSelectBook = viewModel::selectBook
+    )
+}
+
+@Composable
+fun WriteContent(
+    state: WriteUiState,
+    onDismiss: () -> Unit,
+    onPost: () -> Unit,
+    onContentChange: (String) -> Unit,
+    onRate: (Int) -> Unit,
+    onSearchChange: (String) -> Unit,
+    onSelectBook: (Book?) -> Unit
+) {
+    var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
     val requestClose: () -> Unit = {
         if (state.isDirty) showDiscardDialog = true else onDismiss()
@@ -101,7 +125,7 @@ fun WriteScreen(
             )
             Spacer(Modifier.weight(1f))
             TextButton(
-                onClick = { viewModel.submit(user.username.orEmpty()) },
+                onClick = onPost,
                 enabled = state.canSubmit
             ) {
                 Text(
@@ -139,12 +163,12 @@ fun WriteScreen(
                         Text(book.title, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, maxLines = 1)
                         Text(book.authorLine, style = MaterialTheme.typography.bodySmall, color = TextSecondary, maxLines = 1)
                     }
-                    IconButton(onClick = { viewModel.selectBook(null) }, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = { onSelectBook(null) }, modifier = Modifier.size(24.dp)) {
                         Icon(Icons.Outlined.Close, contentDescription = null, tint = TextSecondary)
                     }
                 }
             } else {
-                BookAttachSearch(state, viewModel)
+                BookAttachSearch(state, onSearchChange, onSelectBook)
             }
 
             Spacer(Modifier.height(14.dp))
@@ -164,7 +188,7 @@ fun WriteScreen(
                 }
                 BasicTextField(
                     value = state.content,
-                    onValueChange = viewModel::onContentChange,
+                    onValueChange = onContentChange,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
                     cursorBrush = SolidColor(Accent),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
@@ -179,7 +203,7 @@ fun WriteScreen(
 
             // Bottom bar: rating + char count
             Row(verticalAlignment = Alignment.CenterVertically) {
-                RatingPicker(rating = state.rating ?: 0, onRate = viewModel::onRate, starSize = 22.dp)
+                RatingPicker(rating = state.rating ?: 0, onRate = onRate, starSize = 22.dp)
                 Spacer(Modifier.weight(1f))
                 Text(
                     stringResource(R.string.write_chars, state.charCount),
@@ -212,7 +236,11 @@ fun WriteScreen(
 }
 
 @Composable
-private fun BookAttachSearch(state: WriteUiState, viewModel: WriteViewModel) {
+private fun BookAttachSearch(
+    state: WriteUiState,
+    onSearchChange: (String) -> Unit,
+    onSelectBook: (Book) -> Unit
+) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -232,7 +260,7 @@ private fun BookAttachSearch(state: WriteUiState, viewModel: WriteViewModel) {
                 }
                 BasicTextField(
                     value = state.bookSearchQuery,
-                    onValueChange = viewModel::onSearchChange,
+                    onValueChange = onSearchChange,
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
                     cursorBrush = SolidColor(Accent),
@@ -245,7 +273,7 @@ private fun BookAttachSearch(state: WriteUiState, viewModel: WriteViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.selectBook(result) }
+                    .clickable { onSelectBook(result) }
                     .padding(vertical = 6.dp)
             ) {
                 BookCoverImage(
@@ -261,5 +289,21 @@ private fun BookAttachSearch(state: WriteUiState, viewModel: WriteViewModel) {
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun WritePreview() {
+    PaperBoxdTheme {
+        WriteContent(
+            state = WriteUiState(content = "This is a preview diary entry."),
+            onDismiss = {},
+            onPost = {},
+            onContentChange = {},
+            onRate = {},
+            onSearchChange = {},
+            onSelectBook = {}
+        )
     }
 }

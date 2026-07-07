@@ -13,4 +13,11 @@ object Config {
 
     /** EncryptedSharedPreferences file name. Stable across builds. */
     const val SECURE_PREFS_NAME: String = "in.paperboxd.app.secure"
+
+    /**
+     * Web-type OAuth client ID passed to Credential Manager as the serverClientId
+     * for Google Sign-In. Sourced from local.properties via BuildConfig; must be
+     * present in the backend's GOOGLE_OAUTH_ALLOWED_AUDIENCES allowlist.
+     */
+    const val GOOGLE_WEB_CLIENT_ID: String = BuildConfig.GOOGLE_WEB_CLIENT_ID
 }

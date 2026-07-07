@@ -58,6 +58,13 @@ import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
+import `in`.paperboxd.app.domain.model.UserProfile
+import `in`.paperboxd.app.domain.model.FavoriteBook
+import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.VolumeInfo
+import `in`.paperboxd.app.domain.model.DiaryEntry
 
 @Composable
 fun ProfileScreen(
@@ -74,10 +81,46 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    var followSheetMode by rememberSaveable { mutableStateOf<FollowListMode?>(null) }
 
     LaunchedEffect(username) { viewModel.start(username, viewer) }
     LaunchedEffect(Unit) { viewModel.toast.collect { snackbar.showSnackbar(it) } }
+
+    ProfileContent(
+        state = state,
+        snackbarHostState = snackbar,
+        isOwnProfile = viewModel.isOwnProfile,
+        showBack = showBack,
+        onBack = onBack,
+        onOpenBook = onOpenBook,
+        onOpenProfile = onOpenProfile,
+        onOpenSettings = onOpenSettings,
+        onOpenEditProfile = onOpenEditProfile,
+        onOpenDiaryEntry = onOpenDiaryEntry,
+        onTabSelected = viewModel::onTabSelected,
+        onToggleFollow = viewModel::toggleFollow,
+        fetchShelfIfNeeded = viewModel::fetchShelfIfNeeded,
+        fetchDiaryIfNeeded = viewModel::fetchDiaryIfNeeded
+    )
+}
+
+@Composable
+fun ProfileContent(
+    state: ProfileUiState,
+    snackbarHostState: SnackbarHostState,
+    isOwnProfile: Boolean,
+    showBack: Boolean,
+    onBack: () -> Unit,
+    onOpenBook: (String) -> Unit,
+    onOpenProfile: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenEditProfile: () -> Unit,
+    onOpenDiaryEntry: (String) -> Unit,
+    onTabSelected: (ProfileTab) -> Unit,
+    onToggleFollow: () -> Unit,
+    fetchShelfIfNeeded: (`in`.paperboxd.app.domain.model.BookWithStatus) -> Unit = {},
+    fetchDiaryIfNeeded: (`in`.paperboxd.app.domain.model.DiaryEntry) -> Unit = {}
+) {
+    var followSheetMode by rememberSaveable { mutableStateOf<FollowListMode?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         LazyVerticalGrid(
@@ -90,10 +133,10 @@ fun ProfileScreen(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Header(
                     state = state,
-                    isOwn = viewModel.isOwnProfile,
+                    isOwn = isOwnProfile,
                     showBack = showBack,
                     onBack = onBack,
-                    onFollow = viewModel::toggleFollow,
+                    onFollow = onToggleFollow,
                     onOpenSettings = onOpenSettings,
                     onOpenEditProfile = onOpenEditProfile,
                     onStats = { followSheetMode = it }
@@ -128,7 +171,7 @@ fun ProfileScreen(
                 }
 
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    TabDock(selected = state.selectedTab, onSelect = viewModel::onTabSelected)
+                    TabDock(selected = state.selectedTab, onSelect = onTabSelected)
                 }
 
                 when (state.selectedTab) {
@@ -139,7 +182,7 @@ fun ProfileScreen(
                             }
                         } else {
                             itemsIndexed(state.shelfBooks, key = { _, b -> b.id }) { _, book ->
-                                LaunchedEffect(book.id) { viewModel.fetchShelfIfNeeded(book) }
+                                LaunchedEffect(book.id) { fetchShelfIfNeeded(book) }
                                 BookCoverImage(
                                     url = book.coverUrl,
                                     title = book.title,
@@ -152,6 +195,7 @@ fun ProfileScreen(
                             }
                         }
                     }
+
                     ProfileTab.Diary -> {
                         if (state.diaryEntries.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -160,12 +204,13 @@ fun ProfileScreen(
                         } else {
                             state.diaryEntries.forEach { entry ->
                                 item(span = { GridItemSpan(maxLineSpan) }, key = "d_${entry.id}") {
-                                    LaunchedEffect(entry.id) { viewModel.fetchDiaryIfNeeded(entry) }
+                                    LaunchedEffect(entry.id) { fetchDiaryIfNeeded(entry) }
                                     DiaryRow(entry = entry, onClick = { onOpenDiaryEntry(entry.id) })
                                 }
                             }
                         }
                     }
+
                     ProfileTab.Lists -> {
                         val lists = state.ownLists + state.savedLists
                         if (lists.isEmpty()) {
@@ -180,6 +225,7 @@ fun ProfileScreen(
                             }
                         }
                     }
+
                     ProfileTab.Tbr -> {
                         if (state.tbrItems.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -199,6 +245,7 @@ fun ProfileScreen(
                             }
                         }
                     }
+
                     ProfileTab.Authors -> {
                         if (state.authors.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -220,7 +267,11 @@ fun ProfileScreen(
                                             cornerRadius = 3.dp
                                         )
                                         Spacer(Modifier.width(12.dp))
-                                        Text(author.name, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+                                        Text(
+                                            author.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = TextPrimary
+                                        )
                                         Spacer(Modifier.weight(1f))
                                         Text(
                                             stringResource(R.string.profile_books_count, author.bookCount),
@@ -247,12 +298,12 @@ fun ProfileScreen(
             }
         }
 
-        SnackbarHost(hostState = snackbar, modifier = Modifier.align(Alignment.BottomCenter))
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     followSheetMode?.let { mode ->
         FollowListSheet(
-            username = username,
+            username = state.profile?.username.orEmpty(),
             mode = mode,
             onOpenProfile = {
                 followSheetMode = null
@@ -519,5 +570,44 @@ private fun ListRow(title: String, bookCount: Long) {
 private fun EmptyTab(message: String) {
     Box(modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp), contentAlignment = Alignment.Center) {
         Text(message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+    }
+}
+
+@Preview
+@Composable
+private fun ProfilePreview() {
+    PaperBoxdTheme {
+        ProfileContent(
+            state = ProfileUiState(
+                profile = UserProfile(
+                    id = "1",
+                    username = "alice",
+                    name = "Alice",
+                    bio = "Book lover and traveler."
+                ),
+                favoriteBooks = listOf(
+                    FavoriteBook(
+                        id = "f1",
+                        bookId = "b1",
+                        book = Book(
+                            id = "b1",
+                            volumeInfo = VolumeInfo(title = "The Great Gatsby")
+                        )
+                    )
+                ),
+                isLoading = false
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            isOwnProfile = true,
+            showBack = true,
+            onBack = {},
+            onOpenBook = {},
+            onOpenProfile = {},
+            onOpenSettings = {},
+            onOpenEditProfile = {},
+            onOpenDiaryEntry = {},
+            onTabSelected = {},
+            onToggleFollow = {}
+        )
     }
 }

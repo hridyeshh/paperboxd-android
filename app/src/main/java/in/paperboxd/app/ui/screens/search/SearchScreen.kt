@@ -56,6 +56,8 @@ import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.Surface
 import `in`.paperboxd.app.ui.theme.TextPrimary
 import `in`.paperboxd.app.ui.theme.TextSecondary
+import androidx.compose.ui.tooling.preview.Preview
+import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +70,30 @@ fun SearchScreen(
 
     LaunchedEffect(Unit) { viewModel.loadWallIfNeeded() }
 
+    SearchContent(
+        state = state,
+        onQueryChange = viewModel::onQueryChanged,
+        onTypeSelect = viewModel::onTypeChanged,
+        onShuffleWall = viewModel::shuffleWall,
+        onLoadMoreWall = viewModel::loadMoreWall,
+        onRemoveFromHistory = viewModel::removeFromHistory,
+        onOpenBook = onOpenBook,
+        onOpenProfile = onOpenProfile
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchContent(
+    state: SearchUiState,
+    onQueryChange: (String) -> Unit,
+    onTypeSelect: (SearchType) -> Unit,
+    onShuffleWall: () -> Unit,
+    onLoadMoreWall: () -> Unit,
+    onRemoveFromHistory: (String) -> Unit,
+    onOpenBook: (String) -> Unit,
+    onOpenProfile: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,17 +102,27 @@ fun SearchScreen(
     ) {
         SearchField(
             query = state.query,
-            onQueryChange = viewModel::onQueryChanged,
+            onQueryChange = onQueryChange,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
         )
-        TypeTabs(selected = state.searchType, onSelect = viewModel::onTypeChanged)
+        TypeTabs(selected = state.searchType, onSelect = onTypeSelect)
         Spacer(Modifier.height(8.dp))
 
         when {
             state.isSearching -> ShimmerRows()
             state.hasQuery -> ResultsList(state, onOpenBook, onOpenProfile)
-            state.searchType == SearchType.Readers -> ReadersIdle(state, onOpenProfile, viewModel)
-            else -> TrendingWall(state, viewModel, onOpenBook)
+            state.searchType == SearchType.Readers -> ReadersIdle(
+                state = state,
+                onOpenProfile = onOpenProfile,
+                onTermClick = onQueryChange,
+                onRemoveFromHistory = onRemoveFromHistory
+            )
+            else -> TrendingWall(
+                state = state,
+                onShuffleWall = onShuffleWall,
+                onLoadMoreWall = onLoadMoreWall,
+                onOpenBook = onOpenBook
+            )
         }
     }
 }
@@ -229,7 +265,8 @@ private fun UserRow(user: UserProfile, onClick: () -> Unit) {
 private fun ReadersIdle(
     state: SearchUiState,
     onOpenProfile: (String) -> Unit,
-    viewModel: SearchViewModel
+    onTermClick: (String) -> Unit,
+    onRemoveFromHistory: (String) -> Unit
 ) {
     LazyColumn(contentPadding = PaddingValues(bottom = 110.dp)) {
         if (state.recentSearches.isNotEmpty()) {
@@ -237,14 +274,14 @@ private fun ReadersIdle(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.onQueryChanged(term) }
+                        .clickable { onTermClick(term) }
                         .padding(horizontal = 20.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Outlined.History, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(term, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f))
-                    IconButton(onClick = { viewModel.removeFromHistory(term) }, modifier = Modifier.size(20.dp)) {
+                    IconButton(onClick = { onRemoveFromHistory(term) }, modifier = Modifier.size(20.dp)) {
                         Icon(Icons.Outlined.Close, contentDescription = null, tint = TextSecondary)
                     }
                 }
@@ -270,12 +307,13 @@ private fun ReadersIdle(
 @Composable
 private fun TrendingWall(
     state: SearchUiState,
-    viewModel: SearchViewModel,
+    onShuffleWall: () -> Unit,
+    onLoadMoreWall: () -> Unit,
     onOpenBook: (String) -> Unit
 ) {
     PullToRefreshBox(
         isRefreshing = state.isLoadingWall,
-        onRefresh = viewModel::shuffleWall
+        onRefresh = onShuffleWall
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -286,7 +324,7 @@ private fun TrendingWall(
         ) {
             itemsIndexed(state.wallBooks, key = { _, b -> b.id }) { index, book ->
                 if (index >= state.wallBooks.size - 4) {
-                    LaunchedEffect(book.id) { viewModel.loadMoreWall() }
+                    LaunchedEffect(book.id) { onLoadMoreWall() }
                 }
                 BookCoverImage(
                     url = book.coverUrl,
@@ -323,5 +361,22 @@ private fun ShimmerRows() {
 private fun EmptyState(message: String) {
     Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
         Text(message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+    }
+}
+
+@Preview
+@Composable
+private fun SearchPreview() {
+    PaperBoxdTheme {
+        SearchContent(
+            state = SearchUiState(searchType = SearchType.Books),
+            onQueryChange = {},
+            onTypeSelect = {},
+            onShuffleWall = {},
+            onLoadMoreWall = {},
+            onRemoveFromHistory = {},
+            onOpenBook = {},
+            onOpenProfile = {}
+        )
     }
 }
