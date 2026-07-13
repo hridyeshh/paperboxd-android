@@ -27,6 +27,7 @@ import dagger.internal.MapBuilder;
 import dagger.internal.Preconditions;
 import dagger.internal.Provider;
 import dagger.internal.SetBuilder;
+import in.paperboxd.app.auth.google.GoogleSignInHelper;
 import in.paperboxd.app.data.local.SecurePrefs;
 import in.paperboxd.app.data.remote.ApiService;
 import in.paperboxd.app.data.remote.AuthInterceptor;
@@ -509,7 +510,7 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
       public T get() {
         switch (id) {
           case 0: // in.paperboxd.app.ui.screens.auth.AuthViewModel 
-          return (T) new AuthViewModel(singletonCImpl.authRepositoryProvider.get());
+          return (T) new AuthViewModel(singletonCImpl.authRepositoryProvider.get(), singletonCImpl.googleSignInHelperProvider.get());
 
           case 1: // in.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel 
           return (T) new BookDetailViewModel(viewModelCImpl.savedStateHandle, singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.recommendationRepositoryProvider.get());
@@ -632,6 +633,8 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
 
     private Provider<AppState> appStateProvider;
 
+    private Provider<GoogleSignInHelper> googleSignInHelperProvider;
+
     private Provider<BookRepository> bookRepositoryProvider;
 
     private Provider<RecommendationRepository> recommendationRepositoryProvider;
@@ -663,10 +666,11 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
       this.provideApiServiceProvider = DoubleCheck.provider(new SwitchingProvider<ApiService>(singletonCImpl, 2));
       this.authRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<AuthRepository>(singletonCImpl, 1));
       this.appStateProvider = DoubleCheck.provider(new SwitchingProvider<AppState>(singletonCImpl, 0));
-      this.bookRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<BookRepository>(singletonCImpl, 7));
-      this.recommendationRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<RecommendationRepository>(singletonCImpl, 8));
-      this.diaryRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DiaryRepository>(singletonCImpl, 9));
-      this.userRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 10));
+      this.googleSignInHelperProvider = DoubleCheck.provider(new SwitchingProvider<GoogleSignInHelper>(singletonCImpl, 7));
+      this.bookRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<BookRepository>(singletonCImpl, 8));
+      this.recommendationRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<RecommendationRepository>(singletonCImpl, 9));
+      this.diaryRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DiaryRepository>(singletonCImpl, 10));
+      this.userRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<UserRepository>(singletonCImpl, 11));
     }
 
     @Override
@@ -723,16 +727,19 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
           case 6: // in.paperboxd.app.data.remote.SessionEvents 
           return (T) new SessionEvents();
 
-          case 7: // in.paperboxd.app.data.repository.BookRepository 
+          case 7: // in.paperboxd.app.auth.google.GoogleSignInHelper 
+          return (T) new GoogleSignInHelper();
+
+          case 8: // in.paperboxd.app.data.repository.BookRepository 
           return (T) new BookRepository(singletonCImpl.provideApiServiceProvider.get());
 
-          case 8: // in.paperboxd.app.data.repository.RecommendationRepository 
+          case 9: // in.paperboxd.app.data.repository.RecommendationRepository 
           return (T) new RecommendationRepository(singletonCImpl.provideApiServiceProvider.get());
 
-          case 9: // in.paperboxd.app.data.repository.DiaryRepository 
+          case 10: // in.paperboxd.app.data.repository.DiaryRepository 
           return (T) new DiaryRepository(singletonCImpl.provideApiServiceProvider.get());
 
-          case 10: // in.paperboxd.app.data.repository.UserRepository 
+          case 11: // in.paperboxd.app.data.repository.UserRepository 
           return (T) new UserRepository(singletonCImpl.provideApiServiceProvider.get());
 
           default: throw new AssertionError(id);

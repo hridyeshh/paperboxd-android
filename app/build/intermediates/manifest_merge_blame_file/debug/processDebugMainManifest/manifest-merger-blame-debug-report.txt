@@ -38,295 +38,300 @@
 24-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:22-76
 25
 26    <application
-26-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-35:19
+26-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-37:19
 27        android:name="in.paperboxd.app.PaperBoxdApp"
 27-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:12:9-37
 28        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 28-->[androidx.core:core:1.15.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/cf60114a5c035f6303b92f8be6eaaa15/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
 29        android:debuggable="true"
 30        android:extractNativeLibs="false"
-31        android:label="@string/app_name"
-31-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:13:9-41
-32        android:supportsRtl="true"
-32-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:14:9-35
-33        android:theme="@style/Theme.PaperBoxd" >
-33-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:15:9-47
-34        <activity
-34-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:17:9-34:20
-35            android:name="in.paperboxd.app.MainActivity"
-35-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:18:13-41
-36            android:exported="true"
-36-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:19:13-36
-37            android:theme="@style/Theme.PaperBoxd"
-37-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:21:13-51
-38            android:windowSoftInputMode="adjustResize" >
-38-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:20:13-55
-39            <intent-filter>
-39-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:22:13-25:29
-40                <action android:name="android.intent.action.MAIN" />
-40-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:23:17-69
-40-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:23:25-66
-41
-42                <category android:name="android.intent.category.LAUNCHER" />
-42-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:24:17-77
-42-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:24:27-74
-43            </intent-filter>
+31        android:icon="@drawable/app_icon"
+31-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:13:9-42
+32        android:label="@string/app_name"
+32-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:15:9-41
+33        android:roundIcon="@drawable/app_icon"
+33-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:14:9-47
+34        android:supportsRtl="true"
+34-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:16:9-35
+35        android:testOnly="true"
+36        android:theme="@style/Theme.PaperBoxd" >
+36-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:17:9-47
+37        <activity
+37-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:19:9-36:20
+38            android:name="in.paperboxd.app.MainActivity"
+38-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:20:13-41
+39            android:exported="true"
+39-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:21:13-36
+40            android:theme="@style/Theme.PaperBoxd"
+40-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:23:13-51
+41            android:windowSoftInputMode="adjustResize" >
+41-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:22:13-55
+42            <intent-filter>
+42-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:24:13-27:29
+43                <action android:name="android.intent.action.MAIN" />
+43-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:25:17-69
+43-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:25:25-66
 44
-45            <!-- Deep links: paperboxd.in book + profile pages -->
-46            <intent-filter android:autoVerify="true" >
-46-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:28:13-33:29
-46-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:28:28-53
-47                <action android:name="android.intent.action.VIEW" />
-47-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:29:17-69
-47-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:29:25-66
-48
-49                <category android:name="android.intent.category.DEFAULT" />
-49-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:30:17-76
-49-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:30:27-73
-50                <category android:name="android.intent.category.BROWSABLE" />
-50-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:31:17-78
-50-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:31:27-75
+45                <category android:name="android.intent.category.LAUNCHER" />
+45-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:26:17-77
+45-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:26:27-74
+46            </intent-filter>
+47
+48            <!-- Deep links: paperboxd.in book + profile pages -->
+49            <intent-filter android:autoVerify="true" >
+49-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:30:13-35:29
+49-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:30:28-53
+50                <action android:name="android.intent.action.VIEW" />
+50-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:31:17-69
+50-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:31:25-66
 51
-52                <data
+52                <category android:name="android.intent.category.DEFAULT" />
 52-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:32:17-76
-53                    android:host="paperboxd.in"
-53-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:32:46-73
-54                    android:scheme="https" />
-54-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:32:23-45
-55            </intent-filter>
-56        </activity>
-57        <!--
-58        Service for holding metadata. Cannot be instantiated.
-59        Metadata will be merged from other manifests.
-60        -->
-61        <service
-61-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:29:9-33:78
-62            android:name="androidx.camera.core.impl.MetadataHolderService"
-62-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:30:13-75
-63            android:enabled="false"
-63-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:31:13-36
-64            android:exported="false" >
-64-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:32:13-37
-65            <meta-data
-65-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:30:13-32:89
-66                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
-66-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:31:17-103
-67                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
-67-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:32:17-86
-68        </service>
-69        <service
-69-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:9:9-15:19
-70            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
-70-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:10:13-91
-71            android:directBootAware="true"
-71-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:17:13-43
-72            android:exported="false" >
-72-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:11:13-37
-73            <meta-data
-73-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:12:13-14:85
-74                android:name="com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar"
-74-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:13:17-120
-75                android:value="com.google.firebase.components.ComponentRegistrar" />
-75-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:14:17-82
+52-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:32:27-73
+53                <category android:name="android.intent.category.BROWSABLE" />
+53-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:33:17-78
+53-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:33:27-75
+54
+55                <data
+55-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:34:17-76
+56                    android:host="paperboxd.in"
+56-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:34:46-73
+57                    android:scheme="https" />
+57-->/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:34:23-45
+58            </intent-filter>
+59        </activity>
+60        <!--
+61        Service for holding metadata. Cannot be instantiated.
+62        Metadata will be merged from other manifests.
+63        -->
+64        <service
+64-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:29:9-33:78
+65            android:name="androidx.camera.core.impl.MetadataHolderService"
+65-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:30:13-75
+66            android:enabled="false"
+66-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:31:13-36
+67            android:exported="false" >
+67-->[androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:32:13-37
+68            <meta-data
+68-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:30:13-32:89
+69                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+69-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:31:17-103
+70                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+70-->[androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:32:17-86
+71        </service>
+72        <service
+72-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:9:9-15:19
+73            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
+73-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:10:13-91
+74            android:directBootAware="true"
+74-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:17:13-43
+75            android:exported="false" >
+75-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:11:13-37
 76            <meta-data
-76-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:12:13-14:85
-77                android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar"
-77-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:13:17-124
+76-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:12:13-14:85
+77                android:name="com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar"
+77-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:13:17-120
 78                android:value="com.google.firebase.components.ComponentRegistrar" />
-78-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:14:17-82
+78-->[com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:14:17-82
 79            <meta-data
-79-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:20:13-22:85
-80                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
-80-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:21:17-120
+79-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:12:13-14:85
+80                android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar"
+80-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:13:17-124
 81                android:value="com.google.firebase.components.ComponentRegistrar" />
-81-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:22:17-82
-82        </service>
-83
-84        <provider
-84-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:9:9-13:38
-85            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
-85-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:10:13-78
-86            android:authorities="in.paperboxd.app.mlkitinitprovider"
-86-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:11:13-69
-87            android:exported="false"
-87-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:12:13-37
-88            android:initOrder="99" />
-88-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:13:13-35
-89
-90        <service
-90-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:24:9-32:19
-91            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
-91-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:25:13-94
-92            android:enabled="true"
-92-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:26:13-35
-93            android:exported="false" >
-93-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:27:13-37
-94            <meta-data
-94-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:29:13-31:104
-95                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
-95-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:30:17-76
-96                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
-96-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:31:17-101
-97        </service>
-98
-99        <activity
-99-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:34:9-41:20
-100            android:name="androidx.credentials.playservices.HiddenActivity"
-100-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:35:13-76
-101            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-101-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:36:13-87
-102            android:enabled="true"
-102-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:37:13-35
-103            android:exported="false"
-103-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:38:13-37
-104            android:fitsSystemWindows="true"
-104-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:39:13-45
-105            android:theme="@style/Theme.Hidden" >
-105-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:40:13-48
-106        </activity>
-107        <activity
-107-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:23:9-27:75
-108            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
-108-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:24:13-93
-109            android:excludeFromRecents="true"
-109-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:25:13-46
-110            android:exported="false"
-110-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:26:13-37
-111            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-111-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:27:13-72
-112        <!--
-113            Service handling Google Sign-In user revocation. For apps that do not integrate with
-114            Google Sign-In, this service will never be started.
-115        -->
-116        <service
-116-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:33:9-37:51
-117            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
-117-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:34:13-89
-118            android:exported="true"
-118-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:35:13-36
-119            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
-119-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:36:13-107
-120            android:visibleToInstantApps="true" />
-120-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:37:13-48
-121
-122        <activity
-122-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:9-22:45
-123            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-123-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:19-85
-124            android:exported="false"
-124-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:22:19-43
-125            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-125-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:21:19-78
-126
-127        <meta-data
-127-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
-128            android:name="com.google.android.gms.version"
-128-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
-129            android:value="@integer/google_play_services_version" />
-129-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
-130
-131        <activity
-131-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
-132            android:name="androidx.compose.ui.tooling.PreviewActivity"
-132-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
-133            android:exported="true" />
-133-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
-134
-135        <provider
-135-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-136            android:name="androidx.startup.InitializationProvider"
-136-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
-137            android:authorities="in.paperboxd.app.androidx-startup"
-137-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
-138            android:exported="false" >
-138-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
-139            <meta-data
-139-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
-140                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-140-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
-141                android:value="androidx.startup" />
-141-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+81-->[com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:14:17-82
+82            <meta-data
+82-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:20:13-22:85
+83                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
+83-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:21:17-120
+84                android:value="com.google.firebase.components.ComponentRegistrar" />
+84-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:22:17-82
+85        </service>
+86
+87        <provider
+87-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:9:9-13:38
+88            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+88-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:10:13-78
+89            android:authorities="in.paperboxd.app.mlkitinitprovider"
+89-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:11:13-69
+90            android:exported="false"
+90-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:12:13-37
+91            android:initOrder="99" />
+91-->[com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:13:13-35
+92
+93        <service
+93-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:24:9-32:19
+94            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
+94-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:25:13-94
+95            android:enabled="true"
+95-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:26:13-35
+96            android:exported="false" >
+96-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:27:13-37
+97            <meta-data
+97-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:29:13-31:104
+98                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
+98-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:30:17-76
+99                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
+99-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:31:17-101
+100        </service>
+101
+102        <activity
+102-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:34:9-41:20
+103            android:name="androidx.credentials.playservices.HiddenActivity"
+103-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:35:13-76
+104            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+104-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:36:13-87
+105            android:enabled="true"
+105-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:37:13-35
+106            android:exported="false"
+106-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:38:13-37
+107            android:fitsSystemWindows="true"
+107-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:39:13-45
+108            android:theme="@style/Theme.Hidden" >
+108-->[androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:40:13-48
+109        </activity>
+110        <activity
+110-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:23:9-27:75
+111            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+111-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:24:13-93
+112            android:excludeFromRecents="true"
+112-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:25:13-46
+113            android:exported="false"
+113-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:26:13-37
+114            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+114-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:27:13-72
+115        <!--
+116            Service handling Google Sign-In user revocation. For apps that do not integrate with
+117            Google Sign-In, this service will never be started.
+118        -->
+119        <service
+119-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:33:9-37:51
+120            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+120-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:34:13-89
+121            android:exported="true"
+121-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:35:13-36
+122            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+122-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:36:13-107
+123            android:visibleToInstantApps="true" />
+123-->[com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:37:13-48
+124
+125        <activity
+125-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:9-22:45
+126            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+126-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:19-85
+127            android:exported="false"
+127-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:22:19-43
+128            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+128-->[com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:21:19-78
+129
+130        <meta-data
+130-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
+131            android:name="com.google.android.gms.version"
+131-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
+132            android:value="@integer/google_play_services_version" />
+132-->[com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
+133
+134        <activity
+134-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
+135            android:name="androidx.compose.ui.tooling.PreviewActivity"
+135-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
+136            android:exported="true" />
+136-->[androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
+137
+138        <provider
+138-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+139            android:name="androidx.startup.InitializationProvider"
+139-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+140            android:authorities="in.paperboxd.app.androidx-startup"
+140-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+141            android:exported="false" >
+141-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
 142            <meta-data
-142-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:29:13-31:52
-143                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-143-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:30:17-78
+142-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+143                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+143-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
 144                android:value="androidx.startup" />
-144-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:31:17-49
+144-->[androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
 145            <meta-data
-145-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
-146                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-146-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+145-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:29:13-31:52
+146                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+146-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:30:17-78
 147                android:value="androidx.startup" />
-147-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
-148        </provider>
-149
-150        <receiver
-150-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
-151            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-151-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
-152            android:directBootAware="false"
-152-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
-153            android:enabled="true"
-153-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
-154            android:exported="true"
-154-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
-155            android:permission="android.permission.DUMP" >
-155-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
-156            <intent-filter>
-156-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
-157                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-157-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
-157-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
-158            </intent-filter>
+147-->[androidx.lifecycle:lifecycle-process:2.8.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/250c992589e7e5c1867bae5ab010617d/transformed/lifecycle-process-2.8.3/AndroidManifest.xml:31:17-49
+148            <meta-data
+148-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+149                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+149-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+150                android:value="androidx.startup" />
+150-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+151        </provider>
+152
+153        <receiver
+153-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+154            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+154-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+155            android:directBootAware="false"
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+156            android:enabled="true"
+156-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+157            android:exported="true"
+157-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+158            android:permission="android.permission.DUMP" >
+158-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
 159            <intent-filter>
-159-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
-160                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
-160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+159-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+160                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
 161            </intent-filter>
 162            <intent-filter>
-162-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
-163                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-163-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
-163-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+162-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+163                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+163-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+163-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
 164            </intent-filter>
 165            <intent-filter>
-165-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
-166                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-166-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
-166-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+165-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+166                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
 167            </intent-filter>
-168        </receiver>
-169
-170        <service
-170-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:29:9-35:19
-171            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
-171-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:30:13-103
-172            android:exported="false" >
-172-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:31:13-37
-173            <meta-data
-173-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:32:13-34:39
-174                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
-174-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:33:17-94
-175                android:value="cct" />
-175-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:34:17-36
-176        </service>
-177        <service
-177-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:26:9-30:19
-178            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
-178-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:27:13-117
-179            android:exported="false"
-179-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:28:13-37
-180            android:permission="android.permission.BIND_JOB_SERVICE" >
-180-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:29:13-69
-181        </service>
-182
-183        <receiver
-183-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:32:9-34:40
-184            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
-184-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:33:13-132
-185            android:exported="false" />
-185-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:34:13-37
-186    </application>
-187
-188</manifest>
+168            <intent-filter>
+168-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+169                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+170            </intent-filter>
+171        </receiver>
+172
+173        <service
+173-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:29:9-35:19
+174            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+174-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:30:13-103
+175            android:exported="false" >
+175-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:31:13-37
+176            <meta-data
+176-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:32:13-34:39
+177                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+177-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:33:17-94
+178                android:value="cct" />
+178-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:34:17-36
+179        </service>
+180        <service
+180-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:26:9-30:19
+181            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+181-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:27:13-117
+182            android:exported="false"
+182-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:28:13-37
+183            android:permission="android.permission.BIND_JOB_SERVICE" >
+183-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:29:13-69
+184        </service>
+185
+186        <receiver
+186-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:32:9-34:40
+187            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+187-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:33:13-132
+188            android:exported="false" />
+188-->[com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:34:13-37
+189    </application>
+190
+191</manifest>

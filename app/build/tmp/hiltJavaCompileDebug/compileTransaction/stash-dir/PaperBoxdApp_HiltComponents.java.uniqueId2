@@ -50,6 +50,7 @@ import in.paperboxd.app.ui.screens.auth.AuthViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.diary.DiaryEntryDetailViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.home.HomeViewModel_HiltModules;
+import in.paperboxd.app.ui.screens.leaderboard.LeaderboardViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.onboarding.OnboardingViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.profile.FollowListViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.profile.ProfileViewModel_HiltModules;
@@ -170,6 +171,7 @@ public final class PaperBoxdApp_HiltComponents {
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           HiltWrapper_SavedStateHandleModule.class,
           HomeViewModel_HiltModules.KeyModule.class,
+          LeaderboardViewModel_HiltModules.KeyModule.class,
           OnboardingViewModel_HiltModules.KeyModule.class,
           ActivityCBuilderModule.class,
           ViewModelCBuilderModule.class,
@@ -217,6 +219,7 @@ public final class PaperBoxdApp_HiltComponents {
           FollowListViewModel_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
           HomeViewModel_HiltModules.BindsModule.class,
+          LeaderboardViewModel_HiltModules.BindsModule.class,
           OnboardingViewModel_HiltModules.BindsModule.class,
           ProfileViewModel_HiltModules.BindsModule.class,
           SearchViewModel_HiltModules.BindsModule.class,
