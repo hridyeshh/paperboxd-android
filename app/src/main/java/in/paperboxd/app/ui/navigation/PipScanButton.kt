@@ -53,12 +53,15 @@ import kotlin.math.abs
  *  1. Line-boil — every path point is re-jittered off a seeded RNG that
  *     re-rolls every [BOIL_MS] (~6.7fps at speed 1). This deliberately low,
  *     stepped rate is what makes the ink read as hand-drawn instead of glassy.
- *     Driven off withFrameMillis (not a coalescible timer). amp = 0.65*wobble.
- *  2. Sway — whole-body rotate -1.4°→1.4° over 3.4s, origin at 50%/78%.
+ *     Driven off withFrameMillis (not a coalescible timer). amp = 0.55*wobble.
+ *  2. Sway — whole-body rotate ±SWAY_DEG over 3.4s, origin at 50%/78%.
  *  3. Pose machine — idle blink/glance loop + tap startle.
  */
 private const val BOIL_MS = 150L          // 150ms ≈ 6.7fps re-jitter
-private const val WOBBLE = 1.1f           // global wobble multiplier
+// ponytail: WOBBLE and SWAY_DEG are the calibration knobs — turn these, not the
+// per-point amps in drawPip, which all derive from AMP.
+private const val WOBBLE = 0.5f           // global wobble multiplier
+private const val SWAY_DEG = 0.9f         // whole-body sway half-range, degrees
 private const val BLINK_EVERY = 3.4       // seconds between blink attempts
 private const val AMP = 0.55f * WOBBLE     // jitter amplitude in glyph units (40-wide canvas)
 
@@ -87,11 +90,11 @@ fun PipScanButton(
         }
     }
 
-    // System 2 — sway. -1.4°..1.4° over 3.4s, ease-in-out.
+    // System 2 — sway. ±SWAY_DEG over 3.4s, ease-in-out.
     val swayTransition = rememberInfiniteTransition(label = "pip-sway")
     val sway by swayTransition.animateFloat(
-        initialValue = -1.4f,
-        targetValue = 1.4f,
+        initialValue = -SWAY_DEG,
+        targetValue = SWAY_DEG,
         animationSpec = infiniteRepeatable(
             animation = tween(1700, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse

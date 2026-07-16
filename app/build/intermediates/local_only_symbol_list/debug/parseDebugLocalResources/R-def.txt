@@ -154,3 +154,4 @@ string write_keep_editing
 string write_placeholder
 string write_post
 style Theme.PaperBoxd
+xml file_paths

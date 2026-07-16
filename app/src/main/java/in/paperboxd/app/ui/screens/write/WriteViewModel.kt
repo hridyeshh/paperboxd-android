@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.DiaryRepository
+import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.DiaryCreateBody
+import `in`.paperboxd.app.ui.components.CelebrationCenter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +40,9 @@ data class WriteUiState(
 @HiltViewModel
 class WriteViewModel @Inject constructor(
     private val diaryRepository: DiaryRepository,
-    private val bookRepository: BookRepository
+    private val bookRepository: BookRepository,
+    private val userRepository: UserRepository,
+    private val celebrationCenter: CelebrationCenter
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(WriteUiState())
@@ -84,7 +88,12 @@ class WriteViewModel @Inject constructor(
                     readingDate = readingDate
                 )
             ).fold(
-                onSuccess = { _state.update { it.copy(didSubmit = true) } },
+                onSuccess = {
+                    _state.update { it.copy(didSubmit = true) }
+                    // Logging extends the reading streak — refetch it and
+                    // celebrate if it grew past the last value we've seen.
+                    userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
+                },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
             _state.update { it.copy(isLoading = false) }

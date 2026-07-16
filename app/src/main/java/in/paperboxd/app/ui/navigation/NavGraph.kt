@@ -33,6 +33,8 @@ import `in`.paperboxd.app.ui.screens.onboarding.OnboardingScreen
 import `in`.paperboxd.app.ui.screens.profile.ProfileScreen
 import `in`.paperboxd.app.ui.screens.search.SearchScreen
 import `in`.paperboxd.app.ui.screens.splash.SplashScreen
+import `in`.paperboxd.app.ui.components.CelebrationOverlayHost
+import `in`.paperboxd.app.ui.screens.scan.ScanFlowScreen
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.TextSecondary
 
@@ -109,7 +111,7 @@ fun MainScaffold(user: User, appState: AppState) {
                     onBack = {},
                     onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
-                    onOpenSettings = { navController.navigate("settings") },
+                    onSignOut = { appState.signOut() },
                     onOpenEditProfile = { navController.navigate("edit-profile") },
                     onOpenDiaryEntry = {
                         navController.navigate("diary-entry/${sessionUser.username.orEmpty()}/$it")
@@ -133,12 +135,11 @@ fun MainScaffold(user: User, appState: AppState) {
                     onBack = { navController.popBackStack() },
                     onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
-                    onOpenSettings = { navController.navigate("settings") },
+                    onSignOut = {},
                     onOpenEditProfile = { navController.navigate("edit-profile") },
                     onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") }
                 )
             }
-            composable("settings") { PlaceholderScreen("Settings") }
             composable("edit-profile") { PlaceholderScreen("Edit Profile") }
             composable("diary-entry/{username}/{entryId}") {
                 DiaryEntryDetailScreen(
@@ -179,8 +180,15 @@ fun MainScaffold(user: User, appState: AppState) {
             )
         }
         if (showScan) {
-            PlaceholderScreen("Scan")
+            ScanFlowScreen(
+                user = sessionUser,
+                onDismiss = { showScan = false }
+            )
         }
+
+        // Full-screen celebration takeovers (shelved / streak / level-up),
+        // above the dock and the write sheet. iOS twin: MainTabView overlay.
+        CelebrationOverlayHost()
     }
 }
 

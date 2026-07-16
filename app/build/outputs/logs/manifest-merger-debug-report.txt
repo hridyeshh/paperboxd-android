@@ -1,9 +1,20 @@
 -- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:39:9-47:20
+	android:grantUriPermissions
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:43:13-47
+	android:authorities
+		INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:41:13-64
+	android:exported
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:42:13-37
+	android:name
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:40:13-62
 manifest
-ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
+ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-50:12
+INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-50:12
 MERGED from [androidx.camera:camera-video:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/1becc5e7a9b54c5e8c9eda606ab16258/transformed/camera-video-1.4.2/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:17:1-36:12
 MERGED from [androidx.camera:camera-view:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/25ef05781da3483416b7af56fb11b44b/transformed/camera-view-1.4.2/AndroidManifest.xml:2:1-7:12
@@ -140,8 +151,8 @@ ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-and
 	android:name
 		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:8:9-47
 application
-ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-37:19
-INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-37:19
+ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-48:19
+INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-48:19
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:23:5-34:19
@@ -242,6 +253,12 @@ ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-and
 		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:34:46-73
 	android:scheme
 		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:34:23-45
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:44:13-46:54
+	android:resource
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:46:17-51
+	android:name
+		ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:45:17-67
 uses-sdk
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml

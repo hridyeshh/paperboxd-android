@@ -74,10 +74,14 @@ data class BookStatusResponse(
     val isOnShelf: Boolean = false
 )
 
-/** Bodies for bookshelf mutations. */
+/**
+ * Bodies for bookshelf mutations. The backend accepts book_id (UUID) or isbn to
+ * identify the book — the scan flow adds by ISBN (auto-creates uncached books).
+ */
 data class AddToBookshelfBody(
-    @SerializedName("book_id") val bookId: String,
-    val status: String
+    @SerializedName("book_id") val bookId: String? = null,
+    val status: String,
+    val isbn: String? = null
 )
 
 data class ReviewBody(

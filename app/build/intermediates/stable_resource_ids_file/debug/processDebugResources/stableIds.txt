@@ -1,3 +1,4 @@
+in.paperboxd.app:xml/file_paths = 0x7f100000
 in.paperboxd.app:styleable/ViewStubCompat = 0x7f0f0039
 in.paperboxd.app:styleable/Toolbar = 0x7f0f0036
 in.paperboxd.app:styleable/TextAppearance = 0x7f0f0035

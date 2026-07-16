@@ -3,13 +3,18 @@ package `in`.paperboxd.app.ui.screens.bookdetail
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -88,7 +94,9 @@ import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.components.AvatarImage
 import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.components.brutalButton
 import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.components.popEffect
 import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel.LibraryShelf
 import `in`.paperboxd.app.ui.theme.LikeRed
 import kotlin.math.roundToInt
@@ -118,6 +126,7 @@ fun BookDetailScreen(
     BookDetailContent(
         state = state,
         toast = toast,
+        handle = user.username,
         myReview = viewModel.myReview,
         currentShelf = viewModel.currentShelf,
         onBack = onBack,
@@ -134,6 +143,7 @@ fun BookDetailScreen(
 private fun BookDetailContent(
     state: BookDetailUiState,
     toast: String?,
+    handle: String?,
     myReview: BookReview?,
     currentShelf: LibraryShelf?,
     onBack: () -> Unit,
@@ -145,6 +155,7 @@ private fun BookDetailContent(
     onUpdateProgress: (Int, Int) -> Unit
 ) {
     var showLibrarySheet by remember { mutableStateOf(false) }
+    var showShare by remember { mutableStateOf(false) }
     var activePanel by remember { mutableStateOf<InlinePanel?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
@@ -171,6 +182,7 @@ private fun BookDetailContent(
                     myReview = myReview,
                     activePanel = activePanel,
                     onOpenBook = onOpenBook,
+                    onShare = { showShare = true },
                     onSetPanel = { activePanel = it },
                     onSubmitReview = onSubmitReview,
                     onDeleteReview = onDeleteReview,
@@ -201,6 +213,26 @@ private fun BookDetailContent(
                 onSelectShelf(it)
             },
             onDismiss = { showLibrarySheet = false }
+        )
+    }
+
+    if (showShare && state.book != null) {
+        BookShareSheet(
+            book = state.book,
+            handle = handle,
+            rating = myReview?.rating,
+            note = myReview?.review,
+            // Mirrors iOS `shareStatus`: shelf state picks the badge, null hides it.
+            status = with(state.bookState) {
+                when {
+                    isRead -> ShareStatus.Finished
+                    isOnShelf -> ShareStatus.Reading
+                    isTbr -> ShareStatus.Want
+                    isLiked -> ShareStatus.Favourite
+                    else -> null
+                }
+            },
+            onDismiss = { showShare = false }
         )
     }
 }
@@ -259,6 +291,7 @@ private fun DetailBody(
     myReview: BookReview?,
     activePanel: InlinePanel?,
     onOpenBook: (String) -> Unit,
+    onShare: () -> Unit,
     onSetPanel: (InlinePanel?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
     onDeleteReview: ((Boolean) -> Unit) -> Unit,
@@ -291,7 +324,8 @@ private fun DetailBody(
                     book = book,
                     myReview = myReview,
                     activePanel = activePanel,
-                    onTogglePanel = { onSetPanel(if (activePanel == it) null else it) }
+                    onTogglePanel = { onSetPanel(if (activePanel == it) null else it) },
+                    onShare = onShare
                 )
                 InlinePanelView(
                     panel = activePanel,
@@ -479,9 +513,9 @@ private fun ActionRow(
     book: Book,
     myReview: BookReview?,
     activePanel: InlinePanel?,
-    onTogglePanel: (InlinePanel) -> Unit
+    onTogglePanel: (InlinePanel) -> Unit,
+    onShare: () -> Unit
 ) {
-    val context = LocalContext.current
     val rated = (myReview?.rating ?: 0) > 0
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ActionTile(
@@ -503,18 +537,9 @@ private fun ActionRow(
             label = "Share",
             active = false,
             modifier = Modifier.weight(1f),
-            onClick = { shareBook(context, book) }
+            onClick = onShare
         )
     }
-}
-
-private fun shareBook(context: Context, book: Book) {
-    val text = "${book.title} — ${book.authorLine}\nhttps://paperboxd.in/book/${book.slug ?: book.id}"
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, text)
-    }
-    context.startActivity(Intent.createChooser(intent, null))
 }
 
 @Composable
@@ -528,8 +553,7 @@ private fun ActionTile(
     val fg = if (active) HL.Paper else HL.Ink
     Column(
         modifier = modifier
-            .brutalPlate(fill = if (active) HL.Accent else HL.Paper, borderWidth = 2.dp, offset = 3.dp, shadow = Color.Transparent)
-            .clickable(onClick = onClick)
+            .brutalButton(onClick = onClick, fill = if (active) HL.Accent else HL.Paper, borderWidth = 2.dp, offset = 3.dp, shadow = Color.Transparent)
             .padding(vertical = 13.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -560,8 +584,11 @@ private fun InlinePanelView(
     val hasReviewOrRating = (myReview?.rating ?: 0) > 0 || !myReview?.review.isNullOrEmpty()
     AnimatedVisibility(
         visible = panel != null,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
+        // iOS `.brutalReveal`: drops in from the top with a slight bounce, fades out flat.
+        enter = fadeIn(tween(180)) +
+            expandVertically(spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow), expandFrom = Alignment.Top) +
+            slideInVertically(spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow)) { -it / 5 },
+        exit = fadeOut(tween(140)) + shrinkVertically(tween(160))
     ) {
         when (panel) {
             InlinePanel.Rate -> RatePanel(
@@ -595,6 +622,7 @@ private fun RatePanel(
     onClose: () -> Unit
 ) {
     var pending by remember { mutableIntStateOf(initial) }
+    val starPulse = remember { mutableStateListOf(0, 0, 0, 0, 0, 0) }
     PanelShell {
         Text(
             "TAP TO SET YOUR RATING",
@@ -611,7 +639,13 @@ private fun RatePanel(
                     if (n <= pending) Icons.Filled.Star else Icons.Outlined.StarOutline,
                     contentDescription = "star $n",
                     tint = if (n <= pending) HL.Accent else HL.Muted.copy(alpha = 0.4f),
-                    modifier = Modifier.size(30.dp).clickable { pending = n }
+                    modifier = Modifier
+                        .size(30.dp)
+                        .popEffect(trigger = starPulse[n])
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                            pending = n
+                            starPulse[n]++
+                        }
                 )
             }
         }
@@ -1065,6 +1099,8 @@ private fun BottomDock(
         LibraryShelf.Read -> "Read"
         null -> "Add to Library"
     }
+    // Pop fires only on like-on, mirroring iOS `if !isLiked { likePulse += 1 }`.
+    var likePulse by remember { mutableIntStateOf(0) }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -1083,13 +1119,13 @@ private fun BottomDock(
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp)
-                .brutalPlate(
+                .brutalButton(
+                    onClick = onAdd,
                     fill = if (currentShelf == null) HL.Ink else HL.Accent,
                     borderWidth = 2.dp,
                     offset = 4.dp,
                     shadow = HL.Accent
-                )
-                .clickable(onClick = onAdd),
+                ),
             horizontalArrangement = Arrangement.spacedBy(9.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1106,15 +1142,23 @@ private fun BottomDock(
         Box(
             modifier = Modifier
                 .size(width = 56.dp, height = 52.dp)
-                .brutalPlate(fill = HL.Paper, borderWidth = 2.dp, offset = 4.dp, shadow = Line)
-                .clickable(onClick = onLike),
+                .brutalButton(
+                    onClick = {
+                        if (!isLiked) likePulse++
+                        onLike()
+                    },
+                    fill = HL.Paper,
+                    borderWidth = 2.dp,
+                    offset = 4.dp,
+                    shadow = Line
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 null,
                 tint = if (isLiked) LikeRed else HL.Ink,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp).popEffect(trigger = likePulse)
             )
         }
     }

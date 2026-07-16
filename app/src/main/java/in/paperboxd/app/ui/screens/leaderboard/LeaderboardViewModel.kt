@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.LeaderboardEntry
+import `in`.paperboxd.app.ui.components.CelebrationCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +46,8 @@ data class LeaderboardUiState(
 
 @HiltViewModel
 class LeaderboardViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val celebrationCenter: CelebrationCenter
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LeaderboardUiState())
@@ -89,6 +91,8 @@ class LeaderboardViewModel @Inject constructor(
     private suspend fun loadMyStats() {
         userRepository.myLeaderboardStats().onSuccess { stats ->
             _state.update { it.copy(myStats = stats) }
+            // Celebrate when the reader's tier rises past the last one seen.
+            celebrationCenter.checkLevel(stats.level)
         }
     }
 }

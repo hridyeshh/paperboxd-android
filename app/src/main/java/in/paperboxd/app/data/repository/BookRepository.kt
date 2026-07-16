@@ -53,6 +53,12 @@ class BookRepository @Inject constructor(
     suspend fun addToBookshelf(username: String, bookId: String, status: String): Result<Unit> =
         safeApiCall { api.addToBookshelf(username, AddToBookshelfBody(bookId, status)); Unit }
 
+    /** Scan flow: add by ISBN — the backend auto-creates the book if uncached. */
+    suspend fun addToBookshelfByIsbn(username: String, isbn: String, status: String): Result<Unit> =
+        safeApiCall {
+            api.addToBookshelf(username, AddToBookshelfBody(status = status, isbn = isbn)); Unit
+        }
+
     suspend fun removeFromBookshelf(username: String, bookId: String): Result<Unit> =
         safeApiCall { api.removeFromBookshelf(username, bookId); Unit }
 

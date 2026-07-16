@@ -1,34 +1,38 @@
 [
     {
-        "merged": "in.paperboxd.app-debug-76:/drawable_google_logo.png.flat",
-        "source": "in.paperboxd.app-main-78:/drawable/google_logo.png"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_space_grotesk_regular.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/space_grotesk_regular.ttf"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_space_grotesk_semibold.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/space_grotesk_semibold.ttf"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_space_grotesk_light.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/space_grotesk_light.ttf"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/drawable_app_icon.png.flat",
-        "source": "in.paperboxd.app-main-78:/drawable/app_icon.png"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_pinyon_script.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/pinyon_script.ttf"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_space_grotesk_medium.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/space_grotesk_medium.ttf"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_space_grotesk_bold.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/space_grotesk_bold.ttf"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_space_grotesk_light.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/space_grotesk_light.ttf"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_space_grotesk_medium.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/space_grotesk_medium.ttf"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_space_grotesk_regular.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/space_grotesk_regular.ttf"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/drawable_google_logo.png.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/drawable/google_logo.png"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_pinyon_script.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/pinyon_script.ttf"
+        "merged": "in.paperboxd.app-debug-76:/xml_file_paths.xml.flat",
+        "source": "in.paperboxd.app-main-78:/xml/file_paths.xml"
     },
     {
-        "merged": "in.paperboxd.app-debug-76:/font_space_grotesk_bold.ttf.flat",
-        "source": "in.paperboxd.app-main-78:/font/space_grotesk_bold.ttf"
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/font_space_grotesk_semibold.ttf.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/font/space_grotesk_semibold.ttf"
+    },
+    {
+        "merged": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-debug-76:/drawable_app_icon.png.flat",
+        "source": "/Users/hridyesh/.gradle/daemon/8.11.1/in.paperboxd.app-main-78:/drawable/app_icon.png"
     }
 ]

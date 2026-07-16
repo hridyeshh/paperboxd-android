@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.RecommendationRepository
+import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookReview
 import `in`.paperboxd.app.domain.model.FriendBookReview
@@ -13,6 +14,9 @@ import `in`.paperboxd.app.domain.model.FriendOnBook
 import `in`.paperboxd.app.domain.model.ReadingProgress
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
+import `in`.paperboxd.app.ui.components.Celebration
+import `in`.paperboxd.app.ui.components.CelebrationCenter
+import `in`.paperboxd.app.ui.components.toCelebShelf
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +55,9 @@ data class BookDetailUiState(
 class BookDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val bookRepository: BookRepository,
-    private val recommendationRepository: RecommendationRepository
+    private val recommendationRepository: RecommendationRepository,
+    private val userRepository: UserRepository,
+    private val celebrationCenter: CelebrationCenter
 ) : ViewModel() {
 
     val bookId: String = savedStateHandle.get<String>("bookId").orEmpty()
@@ -275,10 +281,23 @@ class BookDetailViewModel @Inject constructor(
                 onSuccess = {
                     if (target == LibraryShelf.Read) {
                         _state.value.book?.pageCount?.takeIf { it > 0 }?.let { total ->
-                            updateProgress(total, total)
+                            // Suppressed: the shelved takeover plays for this moment.
+                            updateProgress(total, total, celebrateStreak = false)
                         }
                     }
-                    _toast.tryEmit(target?.toast ?: "Removed from library")
+                    if (target != null) {
+                        val book = _state.value.book
+                        celebrationCenter.show(
+                            Celebration.Shelved(
+                                shelf = target.toCelebShelf(),
+                                title = book?.title.orEmpty(),
+                                author = book?.authorLine.orEmpty(),
+                                coverUrl = book?.coverUrl
+                            )
+                        )
+                    } else {
+                        _toast.tryEmit("Removed from library")
+                    }
                     _state.update { it.copy(bookState = it.bookState.copy(isMutating = false)) }
                 },
                 onFailure = { e ->
@@ -289,7 +308,13 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
-    fun updateProgress(currentPage: Int, totalPages: Int) {
+    /**
+     * Logging pages is what extends the reading streak (the server counts any
+     * UTC day with >=1 page logged), so a successful log refetches it and
+     * celebrates a growth. [celebrateStreak] is false for the mark-as-read path —
+     * that moment already gets the shelved takeover, and only one can play.
+     */
+    fun updateProgress(currentPage: Int, totalPages: Int, celebrateStreak: Boolean = true) {
         val username = user?.username ?: return
         viewModelScope.launch {
             _state.update { it.copy(isSavingProgress = true) }
@@ -307,6 +332,9 @@ class BookDetailViewModel @Inject constructor(
                         )
                     }
                     _toast.tryEmit("Progress saved")
+                    if (celebrateStreak) {
+                        userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
+                    }
                 },
                 onFailure = { e -> _toast.tryEmit(e.message ?: "Couldn't save progress") }
             )

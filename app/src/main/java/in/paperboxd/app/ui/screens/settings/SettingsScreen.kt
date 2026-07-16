@@ -6,17 +6,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
@@ -26,9 +31,12 @@ import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,9 +47,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import `in`.paperboxd.app.ui.screens.scan.ScanPrefs
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,7 +57,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
-import `in`.paperboxd.app.ui.components.brutalPlate
 import `in`.paperboxd.app.ui.theme.PBScript
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,6 +70,83 @@ fun SettingsScreen(
     onSignOut: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    SettingsBody(
+        email = email,
+        onSignOut = onSignOut,
+        viewModel = viewModel,
+        modifier = Modifier.fillMaxSize(),
+        header = {
+            CircleChip(onBack) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.ArrowBack, "Back",
+                    tint = HL.Ink, modifier = Modifier.size(16.dp)
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Text("Settings", fontFamily = PBScript, fontSize = 24.sp, color = HL.Ink)
+            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.size(36.dp))
+        }
+    )
+}
+
+/** Slide-up sheet twin of iOS `.sheet(isPresented: $showSettings)` — same body,
+ *  presented as a ModalBottomSheet over the profile instead of a full screen. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsSheet(
+    email: String,
+    onDismiss: () -> Unit,
+    onSignOut: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = HL.Paper,
+        dragHandle = null
+    ) {
+        SettingsBody(
+            email = email,
+            onSignOut = onSignOut,
+            viewModel = viewModel,
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f),
+            header = {
+                Spacer(Modifier.width(72.dp)) // balances the Done pill so title centres
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "Settings",
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 19.sp,
+                    color = HL.Ink
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "Done",
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = HL.Accent,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(HL.Card)
+                        .clickable(onClick = onDismiss)
+                        .padding(horizontal = 16.dp, vertical = 9.dp)
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun SettingsBody(
+    email: String,
+    onSignOut: () -> Unit,
+    viewModel: SettingsViewModel,
+    header: @Composable RowScope.() -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -75,7 +159,7 @@ fun SettingsScreen(
         }.getOrNull() ?: "1.0"
     }
 
-    Box(Modifier.fillMaxSize().background(HL.Paper)) {
+    Box(modifier.background(HL.Paper)) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -84,19 +168,9 @@ fun SettingsScreen(
         ) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CircleChip(onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Outlined.ArrowBack, "Back",
-                        tint = HL.Ink, modifier = Modifier.size(16.dp)
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                Text("Settings", fontFamily = PBScript, fontSize = 24.sp, color = HL.Ink)
-                Spacer(Modifier.weight(1f))
-                Spacer(Modifier.size(36.dp))
-            }
+                verticalAlignment = Alignment.CenterVertically,
+                content = header
+            )
 
             Section("Account") {
                 SettingsRow(Icons.Outlined.Lock, "Change Password") {
@@ -111,8 +185,11 @@ fun SettingsScreen(
             }
 
             Section("Scan & Know") {
-                // ponytail: scan quota not persisted on Android yet — mirrors iOS default of 7.
-                InfoRow(Icons.Outlined.QrCodeScanner, "Free Scans Remaining", "7 remaining")
+                InfoRow(
+                    Icons.Outlined.QrCodeScanner,
+                    "Free Scans Remaining",
+                    "${ScanPrefs.scansRemaining(LocalContext.current)} remaining"
+                )
             }
 
             Section("Your Data") {
@@ -146,7 +223,8 @@ fun SettingsScreen(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .brutalPlate(fill = HL.Card, borderWidth = 2.dp, offset = 3.dp, shadow = Color.Transparent)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(HL.Card)
                     .clickable { onSignOut() }
                     .padding(vertical = 15.dp),
                 contentAlignment = Alignment.Center
@@ -230,7 +308,8 @@ private fun Section(title: String, content: @Composable () -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
-                .brutalPlate(fill = HL.Card, borderWidth = 2.dp, offset = 3.dp, shadow = Color.Transparent)
+                .clip(RoundedCornerShape(18.dp))
+                .background(HL.Card)
         ) { content() }
     }
 }
@@ -244,6 +323,11 @@ private fun SettingsRow(icon: ImageVector, label: String, onClick: () -> Unit) {
         Icon(icon, null, tint = HL.Ink.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
         Spacer(Modifier.size(14.dp))
         Text(label, fontSize = 15.sp, color = HL.Ink)
+        Spacer(Modifier.weight(1f))
+        Icon(
+            Icons.Outlined.ChevronRight, null,
+            tint = HL.Muted.copy(alpha = 0.6f), modifier = Modifier.size(18.dp)
+        )
     }
 }
 

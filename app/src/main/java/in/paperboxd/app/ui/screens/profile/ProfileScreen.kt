@@ -72,6 +72,7 @@ import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.screens.settings.SettingsSheet
 import `in`.paperboxd.app.ui.theme.PBScript
 import java.time.Instant
 import java.time.ZoneId
@@ -96,7 +97,7 @@ fun ProfileScreen(
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit,
-    onOpenSettings: () -> Unit,
+    onSignOut: () -> Unit,
     onOpenEditProfile: () -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
@@ -122,9 +123,10 @@ fun ProfileScreen(
         isOwnProfile = viewModel.isOwnProfile,
         showBack = showBack,
         onBack = onBack,
+        viewerEmail = viewer.email,
+        onSignOut = onSignOut,
         onOpenBook = onOpenBook,
         onOpenProfile = onOpenProfile,
-        onOpenSettings = onOpenSettings,
         onOpenEditProfile = onOpenEditProfile,
         onOpenDiaryEntry = onOpenDiaryEntry,
         onTabSelected = viewModel::onTabSelected,
@@ -142,9 +144,10 @@ fun ProfileContent(
     isOwnProfile: Boolean,
     showBack: Boolean,
     onBack: () -> Unit,
+    viewerEmail: String,
+    onSignOut: () -> Unit,
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit,
-    onOpenSettings: () -> Unit,
     onOpenEditProfile: () -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
     onTabSelected: (ProfileTab) -> Unit,
@@ -155,6 +158,7 @@ fun ProfileContent(
 ) {
     var followSheet by remember { mutableStateOf<FollowListMode?>(null) }
     var showShare by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) } // SHOW MORE lifts the 9-item cap
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
@@ -178,7 +182,7 @@ fun ProfileContent(
                 val profile = state.profile!!
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().statusBarsPadding(),
-                    contentPadding = PaddingValues(top = 52.dp, bottom = 140.dp)
+                    contentPadding = PaddingValues(top = 68.dp, bottom = 140.dp)
                 ) {
                     item {
                         ProfileHeader(
@@ -278,7 +282,7 @@ fun ProfileContent(
             showBack = showBack && !isOwnProfile,
             showSettings = isOwnProfile,
             onBack = onBack,
-            onSettings = onOpenSettings,
+            onSettings = { showSettings = true },
             modifier = Modifier.statusBarsPadding()
         )
 
@@ -300,6 +304,14 @@ fun ProfileContent(
             onDismiss = { showShare = false }
         )
     }
+
+    if (showSettings) {
+        SettingsSheet(
+            email = viewerEmail,
+            onDismiss = { showSettings = false },
+            onSignOut = onSignOut
+        )
+    }
 }
 
 // ---- Floating top bar ----
@@ -316,7 +328,7 @@ private fun TopBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .padding(top = 8.dp),
+            .padding(top = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (showBack) {

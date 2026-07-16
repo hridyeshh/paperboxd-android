@@ -1,19 +1,32 @@
 package `in`.paperboxd.app.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 /**
  * Fixed light-mode palette for the brutalist "paper" screens (Home, Book page).
@@ -48,6 +61,86 @@ fun Modifier.brutalPlate(
     }
     .background(fill)
     .border(borderWidth, border)
+
+/**
+ * Interactive brutalist button — iOS `BrutalButtonStyle` twin. Identical to
+ * [brutalPlate] at rest, but on press the hard offset shadow collapses to 0 and
+ * the face pushes into where the shadow was. Instant (no easing), brutalist.
+ * Owns the click so it can read the press state; pass [onClick] instead of a
+ * separate `.clickable`.
+ */
+fun Modifier.brutalButton(
+    onClick: () -> Unit,
+    fill: Color = HL.Card,
+    border: Color = HL.Ink,
+    borderWidth: Dp = 2.dp,
+    offset: Dp = 4.dp,
+    shadow: Color = border,
+    enabled: Boolean = true
+): Modifier = composed {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    this
+        .padding(end = offset, bottom = offset)
+        .drawBehind {
+            val o = offset.toPx()
+            val s = if (pressed) 0f else o
+            drawRect(color = shadow, topLeft = Offset(s, s), size = size)
+        }
+        .graphicsLayer {
+            val o = offset.toPx()
+            val f = if (pressed) o else 0f
+            translationX = f
+            translationY = f
+        }
+        .background(fill)
+        .border(borderWidth, border)
+        .clickable(
+            interactionSource = interaction,
+            indication = null,
+            enabled = enabled,
+            onClick = onClick
+        )
+}
+
+/**
+ * Pop keyframe — iOS `popEffect` twin. Each time [trigger] changes (bump an Int),
+ * fires scale 0.6 → 1.35 → 1.0 with a −12° → 4° → 0° rotation wobble. Reused for
+ * like-on and star-fill. trigger 0 = no-op so it doesn't fire on first composition.
+ */
+fun Modifier.popEffect(trigger: Int): Modifier = composed {
+    val scale = remember { Animatable(1f) }
+    val rotation = remember { Animatable(0f) }
+    LaunchedEffect(trigger) {
+        if (trigger == 0) return@LaunchedEffect
+        scale.snapTo(0.6f)
+        rotation.snapTo(-12f)
+        launch {
+            // Bounded 320ms keyframe — twin of iOS SpringKeyframe(1.35, .snappy) →
+            // SpringKeyframe(1.0, .bouncy), undershoot included. An unbounded spring
+            // here keeps ringing after the icon looks settled, which reads floppy.
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = keyframes {
+                    durationMillis = 320
+                    0.6f at 0 using FastOutSlowInEasing
+                    1.35f at 140 using FastOutSlowInEasing
+                    0.96f at 240 using FastOutSlowInEasing
+                    1f at 320
+                }
+            )
+        }
+        launch {
+            rotation.animateTo(4f, tween(140))
+            rotation.animateTo(0f, tween(180))
+        }
+    }
+    graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+        rotationZ = rotation.value
+    }
+}
 
 /** Mono uppercase eyebrow with wide tracking — iOS `Eyebrow` twin. */
 @Composable
