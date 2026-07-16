@@ -108,8 +108,12 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Scan & Know: camera + barcode
-    implementation("androidx.camera:camera-camera2:1.3.1")
-    implementation("androidx.camera:camera-lifecycle:1.3.1")
-    implementation("androidx.camera:camera-view:1.3.1")
-    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    // QR generation for the Share Profile card (scan side stays on ML Kit)
+    implementation("com.google.zxing:core:3.5.3")
+
+    // 1.4.0+ / 17.3.0+ ship 16 KB page-size-aligned .so files (Play requirement)
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

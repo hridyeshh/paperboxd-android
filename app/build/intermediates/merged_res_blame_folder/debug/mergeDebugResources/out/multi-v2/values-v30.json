@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "in.paperboxd.app-mergeDebugResources-73:/values-v30/values-v30.xml",
+            "outputFile": "in.paperboxd.app-mergeDebugResources-74:/values-v30/values-v30.xml",
             "map": [
                 {
                     "source": "/Users/hridyesh/.gradle/caches/8.11.1/transforms/9b949e29559b2a075a8ed7cc38d469bf/transformed/material3-release/res/values-v30/values-v30.xml",

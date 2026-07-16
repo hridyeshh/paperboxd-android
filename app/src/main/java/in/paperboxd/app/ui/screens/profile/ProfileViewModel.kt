@@ -10,6 +10,7 @@ import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.FavoriteBook
 import `in`.paperboxd.app.domain.model.LastLoggedBook
+import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.TbrItem
 import `in`.paperboxd.app.domain.model.User
@@ -42,7 +43,9 @@ data class ProfileUiState(
     val favoriteBooks: List<FavoriteBook> = emptyList(),
     val lastLoggedBook: LastLoggedBook? = null,
     val streak: Int? = null,
-    val isFollowLoading: Boolean = false
+    val isFollowLoading: Boolean = false,
+    val activity: ReadingActivity? = null,
+    val activityYear: Int = java.time.Year.now().value
 )
 
 @HiltViewModel
@@ -60,9 +63,16 @@ class ProfileViewModel @Inject constructor(
     private var profileUsername: String = ""
     private var viewer: User? = null
 
+    // Shelf — the profile bookshelf tab shows 'read' + 'reading' merged
+    // client-side (reading first, deduped) so a freshly added book shows up.
+    // Backend has no "shelf" status; valid ones are read / reading / to-read.
     private var shelfPage = 1
     private var shelfHasMore = true
     private var isLoadingShelf = false
+    private var didLoadReading = false
+    private var readingBooks: List<BookWithStatus> = emptyList()
+    private var readBooks: List<BookWithStatus> = emptyList()
+    private var readTotal = 0
     private var diaryPage = 1
     private var diaryHasMore = true
     private var isLoadingDiary = false
@@ -80,13 +90,17 @@ class ProfileViewModel @Inject constructor(
     fun fetchAll() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
-            shelfPage = 1; shelfHasMore = true
+            shelfPage = 1; shelfHasMore = true; didLoadReading = false
+            readingBooks = emptyList(); readBooks = emptyList(); readTotal = 0
             diaryPage = 1; diaryHasMore = true
 
             val profileTask = async { userRepository.profile(profileUsername) }
             val lastBookTask = async { userRepository.lastLoggedBook(profileUsername).getOrNull()?.lastBook }
             val favoritesTask = async { userRepository.favorites(profileUsername).getOrNull().orEmpty() }
             val streakTask = async { userRepository.streak(profileUsername).getOrNull()?.streak }
+            val activityTask = async {
+                userRepository.readingActivity(profileUsername, _state.value.activityYear).getOrNull()
+            }
 
             profileTask.await().fold(
                 onSuccess = { p -> _state.update { it.copy(profile = p) } },
@@ -97,6 +111,7 @@ class ProfileViewModel @Inject constructor(
                     lastLoggedBook = lastBookTask.await(),
                     favoriteBooks = favoritesTask.await(),
                     streak = streakTask.await(),
+                    activity = activityTask.await(),
                     shelfBooks = emptyList(),
                     diaryEntries = emptyList(),
                     isLoading = false
@@ -122,21 +137,36 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun fetchShelf() {
-        if (!shelfHasMore || isLoadingShelf) return
+        if ((!shelfHasMore && didLoadReading) || isLoadingShelf) return
         isLoadingShelf = true
         viewModelScope.launch {
-            userRepository.bookshelf(profileUsername, status = "shelf", page = shelfPage, pageSize = 20)
-                .onSuccess { resp ->
-                    _state.update {
-                        it.copy(
-                            shelfBooks = it.shelfBooks + resp.books,
-                            shelfTotal = resp.totalCount.toInt()
-                        )
+            // Currently-reading books have no finished_at and never come back
+            // under status=read, so fetch them once and pin them to the top.
+            if (!didLoadReading) {
+                didLoadReading = true
+                userRepository.bookshelf(profileUsername, status = "reading", page = 1, pageSize = 40)
+                    .onSuccess { readingBooks = it.books }
+            }
+            if (shelfHasMore) {
+                userRepository.bookshelf(profileUsername, status = "read", page = shelfPage, pageSize = 20)
+                    .onSuccess { resp ->
+                        readBooks = readBooks + resp.books
+                        readTotal = resp.totalCount.toInt()
+                        shelfPage += 1
+                        shelfHasMore = resp.books.size == 20
                     }
-                    shelfPage += 1
-                    shelfHasMore = resp.books.size == 20
-                }
+            }
+            rebuildShelf()
             isLoadingShelf = false
+        }
+    }
+
+    /** Reading books first, then read books, de-duplicated by id — iOS twin. */
+    private fun rebuildShelf() {
+        val seen = HashSet<String>()
+        val merged = (readingBooks + readBooks).filter { seen.add(it.id) }
+        _state.update {
+            it.copy(shelfBooks = merged, shelfTotal = readingBooks.size + readTotal)
         }
     }
 
@@ -180,6 +210,16 @@ class ProfileViewModel @Inject constructor(
         if (_state.value.authors.isNotEmpty()) return
         userRepository.authors(profileUsername).onSuccess { items ->
             _state.update { it.copy(authors = items) }
+        }
+    }
+
+    /** Switches the heatmap year and reloads just the activity payload — iOS twin. */
+    fun selectActivityYear(year: Int) {
+        if (year == _state.value.activityYear) return
+        _state.update { it.copy(activityYear = year) }
+        viewModelScope.launch {
+            val act = userRepository.readingActivity(profileUsername, year).getOrNull()
+            _state.update { it.copy(activity = act) }
         }
     }
 

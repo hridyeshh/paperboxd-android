@@ -3,6 +3,7 @@ package `in`.paperboxd.app.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -146,8 +148,15 @@ fun MainScaffold(user: User, appState: AppState) {
             }
         }
 
-        // Dock only on tab roots — detail screens get full-bleed content.
+        // Dock + floating Pip only on tab roots — detail screens are full-bleed.
         if (currentRoute in tabRoutes.values) {
+            // Pip scan button floats bottom-right above the dock (iOS twin).
+            PipScanButton(
+                onClick = { showScan = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 18.dp, bottom = 84.dp)
+            )
             BottomNavBar(
                 selected = tabRoutes.entries.firstOrNull { it.value == currentRoute }?.key
                     ?: DockTab.Home,
@@ -159,7 +168,6 @@ fun MainScaffold(user: User, appState: AppState) {
                         restoreState = true
                     }
                 },
-                onScan = { showScan = true },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

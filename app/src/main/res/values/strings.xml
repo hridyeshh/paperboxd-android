@@ -66,9 +66,19 @@
 
     <!-- Home -->
     <string name="home_picked_eyebrow">For you</string>
-    <string name="home_picked_title">Picked for you</string>
-    <string name="home_fresh_eyebrow">Community</string>
-    <string name="home_fresh_title">Fresh shelves</string>
+    <string name="home_picked_title">Your friends are liking these.</string>
+    <string name="home_fresh_eyebrow">Just added</string>
+    <string name="home_fresh_title">New on the shelves.</string>
+    <string name="home_hello">Hello, %1$s</string>
+    <string name="home_reading_prompt">what are you reading?</string>
+    <string name="home_currently_reading">Currently reading</string>
+    <string name="home_log_pages">Log today\'s pages</string>
+    <string name="home_friends_eyebrow">Your friends</string>
+    <string name="home_friends_title">Between covers.</string>
+    <string name="home_updates">Updates</string>
+    <string name="home_no_updates">No updates yet</string>
+    <string name="home_follow_hint">Follow people to see their reading activity here.</string>
+    <string name="common_retry">Retry</string>
     <string name="home_keep_reading">Keep reading</string>
     <string name="home_progress_percent">%1$d%% read</string>
     <string name="home_write">Write</string>

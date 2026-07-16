@@ -8,8 +8,10 @@ import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import `in`.paperboxd.app.data.repository.BookRepository
+import `in`.paperboxd.app.data.repository.RecommendationRepository
 import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.UserProfile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -34,6 +36,7 @@ data class SearchUiState(
     val isLoadingWall: Boolean = false,
     val isLoadingMoreWall: Boolean = false,
     val suggestedReaders: List<UserProfile> = emptyList(),
+    val recommendations: List<RecommendationItem> = emptyList(),
     val recentSearches: List<String> = emptyList()
 ) {
     val currentBooks: List<Book>
@@ -49,7 +52,8 @@ data class SearchUiState(
 class SearchViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val bookRepository: BookRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val recommendationRepository: RecommendationRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchUiState())
@@ -158,6 +162,18 @@ class SearchViewModel @Inject constructor(
             _state.update { it.copy(isLoadingWall = false) }
         }
     }
+
+    /** "Picked for you" rail above the wall — iOS loadRecommendationsIfNeeded twin. */
+    fun loadRecommendationsIfNeeded() {
+        if (recsLoaded) return
+        recsLoaded = true
+        viewModelScope.launch {
+            val recs = recommendationRepository.home().getOrNull()?.recommendations.orEmpty()
+            _state.update { it.copy(recommendations = recs.take(8)) }
+        }
+    }
+
+    private var recsLoaded = false
 
     private fun loadSuggestedReaders() {
         if (suggestedLoaded) return

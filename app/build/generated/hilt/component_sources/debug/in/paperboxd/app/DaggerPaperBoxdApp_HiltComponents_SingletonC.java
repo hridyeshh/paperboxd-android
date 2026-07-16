@@ -534,7 +534,7 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
           return (T) new ProfileViewModel(singletonCImpl.userRepositoryProvider.get(), singletonCImpl.diaryRepositoryProvider.get());
 
           case 8: // in.paperboxd.app.ui.screens.search.SearchViewModel 
-          return (T) new SearchViewModel(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.userRepositoryProvider.get());
+          return (T) new SearchViewModel(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.userRepositoryProvider.get(), singletonCImpl.recommendationRepositoryProvider.get());
 
           case 9: // in.paperboxd.app.ui.screens.write.WriteViewModel 
           return (T) new WriteViewModel(singletonCImpl.diaryRepositoryProvider.get(), singletonCImpl.bookRepositoryProvider.get());

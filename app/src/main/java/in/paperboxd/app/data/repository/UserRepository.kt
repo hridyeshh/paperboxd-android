@@ -63,6 +63,9 @@ class UserRepository @Inject constructor(
     suspend fun lastLoggedBook(username: String): Result<LastLoggedBookResponse> =
         safeApiCall { api.lastLoggedBook(username) }
 
+    suspend fun readingActivity(username: String, year: Int): Result<`in`.paperboxd.app.domain.model.ReadingActivity> =
+        safeApiCall { api.readingActivity(username, year) }
+
     suspend fun uploadBanner(bytes: ByteArray, fileName: String = "banner.jpg"): Result<UserProfile> =
         safeApiCall {
             val part = MultipartBody.Part.createFormData(

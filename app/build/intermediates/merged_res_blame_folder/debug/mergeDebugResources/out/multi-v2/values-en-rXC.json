@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "in.paperboxd.app-mergeDebugResources-73:/values-en-rXC/values-en-rXC.xml",
+            "outputFile": "in.paperboxd.app-mergeDebugResources-74:/values-en-rXC/values-en-rXC.xml",
             "map": [
                 {
                     "source": "/Users/hridyesh/.gradle/caches/8.11.1/transforms/e208580c2572c1abb00f040cd62c2e26/transformed/foundation-release/res/values-en-rXC/values-en-rXC.xml",

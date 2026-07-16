@@ -4,6 +4,7 @@ import `in`.paperboxd.app.domain.model.AddToBookshelfBody
 import `in`.paperboxd.app.domain.model.AuthResponse
 import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
+import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
@@ -261,6 +262,12 @@ interface ApiService {
 
     @GET("api/v1/users/{username}/reading/last")
     suspend fun lastLoggedBook(@Path("username") username: String): LastLoggedBookResponse
+
+    @GET("api/v1/users/{username}/reading/activity")
+    suspend fun readingActivity(
+        @Path("username") username: String,
+        @Query("year") year: Int
+    ): ReadingActivity
 
     // Diary
     @GET("api/v1/users/{username}/diary")

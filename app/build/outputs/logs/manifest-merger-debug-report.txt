@@ -4,16 +4,27 @@ ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-and
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:2:1-39:12
-MERGED from [androidx.camera:camera-video:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ca402a1f5a9313c6b85f5879c5972fe1/transformed/camera-video-1.3.1/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:17:1-36:12
-MERGED from [androidx.camera:camera-view:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2b8160583320463e59907ae6cc1368c2/transformed/camera-view-1.3.1/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.camera:camera-lifecycle:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2dbd55a0539657876d5abe59c2716ba0/transformed/camera-lifecycle-1.3.1/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:17:1-36:12
-MERGED from [com.google.mlkit:barcode-scanning:17.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/baef87845c27c5db429195c0c98037f6/transformed/barcode-scanning-17.2.0/AndroidManifest.xml:2:1-7:12
-MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:2:1-18:12
+MERGED from [androidx.camera:camera-video:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/1becc5e7a9b54c5e8c9eda606ab16258/transformed/camera-video-1.4.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:17:1-36:12
+MERGED from [androidx.camera:camera-view:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/25ef05781da3483416b7af56fb11b44b/transformed/camera-view-1.4.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.camera:camera-lifecycle:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/71a6263c428ef2c299a9759db898b8cd/transformed/camera-lifecycle-1.4.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:17:1-36:12
+MERGED from [com.google.mlkit:barcode-scanning:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7c4006d0ab97b9f079354035897a3cb4/transformed/barcode-scanning-17.3.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:17:1-44:12
+MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:17:1-40:12
+MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:2:1-10:12
+MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:2:1-18:12
 MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bf6295810a875763529455737b8ae03/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:2:1-18:12
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:2:1-26:12
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:2:1-26:12
+MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.mlkit:vision-interfaces:16.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c2283bac565708326664c3f427777880/transformed/vision-interfaces-16.3.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2ecdd192016d14e9bdf78737d0d9ff9b/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:2:1-5:12
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:2:1-9:12
 MERGED from [com.google.accompanist:accompanist-pager:0.32.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9320753be2dd87a8745cc9fbceecbd66/transformed/accompanist-pager-0.32.0/AndroidManifest.xml:17:1-23:12
 MERGED from [com.google.accompanist:accompanist-permissions:0.32.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8602d0f0775185b2323d9ea86905d5d2/transformed/accompanist-permissions-0.32.0/AndroidManifest.xml:17:1-23:12
 MERGED from [io.coil-kt:coil-compose:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/22c76f7b34608c2f5cc68a5208aa5d9c/transformed/coil-compose-2.5.0/AndroidManifest.xml:2:1-7:12
@@ -28,17 +39,6 @@ MERGED from [androidx.navigation:navigation-common-ktx:2.7.6] /Users/hridyesh/.g
 MERGED from [androidx.navigation:navigation-runtime-ktx:2.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe4864941a8b66ed64f1acdb5d6f86d8/transformed/navigation-runtime-ktx-2.7.6/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigation:navigation-compose:2.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/3d1c4ddd05c80eb2f426ddf3849feb70/transformed/navigation-compose-2.7.6/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.dagger:hilt-android:2.50] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fc7554045f4d53ea78d960cb1973a486/transformed/hilt-android-2.50/AndroidManifest.xml:16:1-19:12
-MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:17:1-44:12
-MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:17:1-40:12
-MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:2:1-10:12
-MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:2:1-7:12
-MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:2:1-7:12
-MERGED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:16:1-24:12
-MERGED from [com.google.mlkit:vision-interfaces:16.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c296268071420f0523ce052632b0042c/transformed/vision-interfaces-16.2.0/AndroidManifest.xml:2:1-7:12
-MERGED from [com.google.android.gms:play-services-tasks:18.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d5b35530cc066f39b511af96adaabc38/transformed/play-services-tasks-18.1.0/AndroidManifest.xml:2:1-6:12
-MERGED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:16:1-26:12
 MERGED from [io.coil-kt:coil:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b7c083fe4db3ac8bca74126e6eb9a2c9/transformed/coil-2.5.0/AndroidManifest.xml:2:1-7:12
 MERGED from [io.coil-kt:coil-base:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9a83af2aab9ab4f29b952faac1421039/transformed/coil-base-2.5.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ad39a9d156541c033430768660d81f7a/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -85,9 +85,9 @@ MERGED from [androidx.compose.foundation:foundation-android:1.7.6] /Users/hridye
 MERGED from [androidx.autofill:autofill:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d1d6026890ddaad7fb08d5b7d3a130e4/transformed/autofill-1.0.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c88a35251f45b5b04bc29e77f5f6821/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e30336b6911e1d4139c103bf848c6a8e/transformed/drawerlayout-1.0.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/4eb29eb5baf121c17929f6e14ff86559/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7101bfe76297253f622f7b23e54e4f4a/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/60afb6604fd9c15c4ec92b94bb9439f9/transformed/graphics-path-1.0.1/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.core:core:1.15.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/cf60114a5c035f6303b92f8be6eaaa15/transformed/core-1.15.0/AndroidManifest.xml:17:1-30:12
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce38556c87788b43b5ac0bb2082e8da2/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:17:1-23:12
@@ -96,11 +96,13 @@ MERGED from [androidx.datastore:datastore-preferences:1.0.0] /Users/hridyesh/.gr
 MERGED from [androidx.datastore:datastore:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e5eac23ba3515a4b8bee9dd2b848113e/transformed/datastore-1.0.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e83d0b707876cd85ab5b7062cb6c37fc/transformed/runtime-saveable-release/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/3ba0169d211759dc820bb33075a7a61d/transformed/runtime-release/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:17:1-55:12
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ede640e374002d98904e2a57379395bd/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8d337f0df1e4439f69a9320af24ce938/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/972a973ee3871ce2a135b182645052c2/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e44dabca24e0f8b1496426def2c007c0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
 MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:15:1-38:12
 MERGED from [com.google.android.datatransport:transport-runtime:2.2.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/0591923a701d41a31e48407ebd9e6534/transformed/transport-runtime-2.2.6/AndroidManifest.xml:15:1-41:12
@@ -110,7 +112,6 @@ MERGED from [com.google.firebase:firebase-encoders-json:17.1.0] /Users/hridyesh/
 MERGED from [androidx.exifinterface:exifinterface:1.3.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e744e07c68aba6e9f97d5c0c0e891516/transformed/exifinterface-1.3.6/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e7a0426cac7c7ac3479fa1a134a365eb/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6778f818e116bbf973a17e6d26f2f6a7/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:2:1-7:12
 MERGED from [io.github.aakira:napier-android-debug:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bd23a976f2f86e81d6636ceae7ceb4b8/transformed/napier-debug/AndroidManifest.xml:2:1-11:12
 MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/hridyesh/.gradle/caches/8.11.1/transforms/4aa2f71107fec229dcfa6930ec599a37/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:16:1-19:12
 MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/1514bea28bf966df6f186a4174e67193/transformed/image-1.0.0-beta1/AndroidManifest.xml:2:1-9:12
@@ -141,28 +142,28 @@ ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-and
 application
 ADDED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-37:19
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml:11:5-37:19
-MERGED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:23:5-34:19
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:23:5-34:19
-MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:8:5-16:19
-MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:8:5-16:19
-MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:8:5-16:19
-MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:8:5-16:19
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:8:5-24:19
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:8:5-24:19
+MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:23:5-42:19
 MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:23:5-42:19
 MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:22:5-38:19
 MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:22:5-38:19
 MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:7:5-8:19
 MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:7:5-8:19
-MERGED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:19:5-23:19
-MERGED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:19:5-23:19
-MERGED from [com.google.android.gms:play-services-tasks:18.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d5b35530cc066f39b511af96adaabc38/transformed/play-services-tasks-18.1.0/AndroidManifest.xml:5:5-20
-MERGED from [com.google.android.gms:play-services-tasks:18.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d5b35530cc066f39b511af96adaabc38/transformed/play-services-tasks-18.1.0/AndroidManifest.xml:5:5-20
-MERGED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:20:5-24:19
-MERGED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:20:5-24:19
+MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:8:5-24:19
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:8:5-24:19
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:4:5-6:19
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:4:5-6:19
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2ecdd192016d14e9bdf78737d0d9ff9b/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:4:5-20
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2ecdd192016d14e9bdf78737d0d9ff9b/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:4:5-20
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:5:5-7:19
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:5:5-7:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/aa95a15a405fc18394437332ad63418d/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
@@ -245,26 +246,48 @@ uses-sdk
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml
 INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml
-MERGED from [androidx.camera:camera-video:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ca402a1f5a9313c6b85f5879c5972fe1/transformed/camera-video-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-video:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ca402a1f5a9313c6b85f5879c5972fe1/transformed/camera-video-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:21:5-44
-MERGED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:21:5-44
-MERGED from [androidx.camera:camera-view:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2b8160583320463e59907ae6cc1368c2/transformed/camera-view-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-view:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2b8160583320463e59907ae6cc1368c2/transformed/camera-view-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-lifecycle:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2dbd55a0539657876d5abe59c2716ba0/transformed/camera-lifecycle-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-lifecycle:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2dbd55a0539657876d5abe59c2716ba0/transformed/camera-lifecycle-1.3.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:21:5-44
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:21:5-44
-MERGED from [com.google.mlkit:barcode-scanning:17.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/baef87845c27c5db429195c0c98037f6/transformed/barcode-scanning-17.2.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.mlkit:barcode-scanning:17.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/baef87845c27c5db429195c0c98037f6/transformed/barcode-scanning-17.2.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:6:5-44
-MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:6:5-44
+MERGED from [androidx.camera:camera-video:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/1becc5e7a9b54c5e8c9eda606ab16258/transformed/camera-video-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-video:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/1becc5e7a9b54c5e8c9eda606ab16258/transformed/camera-video-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-view:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/25ef05781da3483416b7af56fb11b44b/transformed/camera-view-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-view:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/25ef05781da3483416b7af56fb11b44b/transformed/camera-view-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-lifecycle:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/71a6263c428ef2c299a9759db898b8cd/transformed/camera-lifecycle-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-lifecycle:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/71a6263c428ef2c299a9759db898b8cd/transformed/camera-lifecycle-1.4.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:21:5-44
+MERGED from [com.google.mlkit:barcode-scanning:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7c4006d0ab97b9f079354035897a3cb4/transformed/barcode-scanning-17.3.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.mlkit:barcode-scanning:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7c4006d0ab97b9f079354035897a3cb4/transformed/barcode-scanning-17.3.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:6:5-44
+MERGED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:6:5-44
 MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bf6295810a875763529455737b8ae03/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:5:5-44
 MERGED from [com.google.mlkit:barcode-scanning-common:17.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bf6295810a875763529455737b8ae03/transformed/barcode-scanning-common-17.0.0/AndroidManifest.xml:5:5-44
 MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:6:5-44
 MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:6:5-44
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:6:5-44
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:6:5-44
+MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.mlkit:vision-interfaces:16.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c2283bac565708326664c3f427777880/transformed/vision-interfaces-16.3.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.mlkit:vision-interfaces:16.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c2283bac565708326664c3f427777880/transformed/vision-interfaces-16.3.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2ecdd192016d14e9bdf78737d0d9ff9b/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/2ecdd192016d14e9bdf78737d0d9ff9b/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:3:5-44
 MERGED from [com.google.accompanist:accompanist-pager:0.32.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9320753be2dd87a8745cc9fbceecbd66/transformed/accompanist-pager-0.32.0/AndroidManifest.xml:21:5-44
 MERGED from [com.google.accompanist:accompanist-pager:0.32.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9320753be2dd87a8745cc9fbceecbd66/transformed/accompanist-pager-0.32.0/AndroidManifest.xml:21:5-44
 MERGED from [com.google.accompanist:accompanist-permissions:0.32.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8602d0f0775185b2323d9ea86905d5d2/transformed/accompanist-permissions-0.32.0/AndroidManifest.xml:21:5-44
@@ -293,28 +316,6 @@ MERGED from [androidx.navigation:navigation-compose:2.7.6] /Users/hridyesh/.grad
 MERGED from [androidx.navigation:navigation-compose:2.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/3d1c4ddd05c80eb2f426ddf3849feb70/transformed/navigation-compose-2.7.6/AndroidManifest.xml:5:5-44
 MERGED from [com.google.dagger:hilt-android:2.50] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fc7554045f4d53ea78d960cb1973a486/transformed/hilt-android-2.50/AndroidManifest.xml:18:3-42
 MERGED from [com.google.dagger:hilt-android:2.50] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fc7554045f4d53ea78d960cb1973a486/transformed/hilt-android-2.50/AndroidManifest.xml:18:3-42
-MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.libraries.identity.googleid:googleid:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8b7d984f1c4163b150c4e4ebaff5995b/transformed/googleid-1.1.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:5:5-44
-MERGED from [androidx.credentials:credentials:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/606bc653a23773b7618d6f27ad38617a/transformed/credentials-1.3.0/AndroidManifest.xml:5:5-44
-MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:21:5-44
-MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:21:5-44
-MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:20:5-44
-MERGED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:20:5-44
-MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-fido:21.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/eda833c6ab4ae41cf06322ea81bd3bd0/transformed/play-services-fido-21.0.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/55ed5be8340166a904e7ef830109fe45/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-auth-base:18.0.10] /Users/hridyesh/.gradle/caches/8.11.1/transforms/06389e847b1e4bba3a8b59f7880a74d8/transformed/play-services-auth-base-18.0.10/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:18:5-43
-MERGED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:18:5-43
-MERGED from [com.google.mlkit:vision-interfaces:16.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c296268071420f0523ce052632b0042c/transformed/vision-interfaces-16.2.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.mlkit:vision-interfaces:16.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/c296268071420f0523ce052632b0042c/transformed/vision-interfaces-16.2.0/AndroidManifest.xml:5:5-44
-MERGED from [com.google.android.gms:play-services-tasks:18.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d5b35530cc066f39b511af96adaabc38/transformed/play-services-tasks-18.1.0/AndroidManifest.xml:4:5-43
-MERGED from [com.google.android.gms:play-services-tasks:18.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d5b35530cc066f39b511af96adaabc38/transformed/play-services-tasks-18.1.0/AndroidManifest.xml:4:5-43
-MERGED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:18:5-43
-MERGED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:18:5-43
 MERGED from [io.coil-kt:coil:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b7c083fe4db3ac8bca74126e6eb9a2c9/transformed/coil-2.5.0/AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt:coil:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b7c083fe4db3ac8bca74126e6eb9a2c9/transformed/coil-2.5.0/AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt:coil-base:2.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9a83af2aab9ab4f29b952faac1421039/transformed/coil-base-2.5.0/AndroidManifest.xml:5:5-44
@@ -407,12 +408,12 @@ MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/hridyesh/.gradle/caches/
 MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c88a35251f45b5b04bc29e77f5f6821/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e30336b6911e1d4139c103bf848c6a8e/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e30336b6911e1d4139c103bf848c6a8e/transformed/drawerlayout-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/4eb29eb5baf121c17929f6e14ff86559/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/4eb29eb5baf121c17929f6e14ff86559/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7101bfe76297253f622f7b23e54e4f4a/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7101bfe76297253f622f7b23e54e4f4a/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/fe5bfc9cca42fd2cf415dcbed1159890/transformed/customview-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/60afb6604fd9c15c4ec92b94bb9439f9/transformed/graphics-path-1.0.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.graphics:graphics-path:1.0.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/60afb6604fd9c15c4ec92b94bb9439f9/transformed/graphics-path-1.0.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core:1.15.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/cf60114a5c035f6303b92f8be6eaaa15/transformed/core-1.15.0/AndroidManifest.xml:20:5-44
@@ -429,16 +430,20 @@ MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/hri
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e83d0b707876cd85ab5b7062cb6c37fc/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44
 MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/3ba0169d211759dc820bb33075a7a61d/transformed/runtime-release/AndroidManifest.xml:5:5-44
 MERGED from [androidx.compose.runtime:runtime-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/3ba0169d211759dc820bb33075a7a61d/transformed/runtime-release/AndroidManifest.xml:5:5-44
-MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
-MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/d258411975a24c10e1f8e9a1494e2403/transformed/profileinstaller-1.3.1/AndroidManifest.xml:21:5-44
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ede640e374002d98904e2a57379395bd/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ede640e374002d98904e2a57379395bd/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8d337f0df1e4439f69a9320af24ce938/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8d337f0df1e4439f69a9320af24ce938/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/972a973ee3871ce2a135b182645052c2/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/972a973ee3871ce2a135b182645052c2/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.security:security-crypto:1.1.0-alpha06] /Users/hridyesh/.gradle/caches/8.11.1/transforms/576c97b961a2432c24113d7a95077557/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/44976a90b618c73650db95868ded7972/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e44dabca24e0f8b1496426def2c007c0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e44dabca24e0f8b1496426def2c007c0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
 MERGED from [com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/hridyesh/.gradle/caches/8.11.1/transforms/793a4b0556d0d0a292bca4549477458f/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:19:5-21:41
@@ -457,8 +462,6 @@ MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/hridyesh/.gradle
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e7a0426cac7c7ac3479fa1a134a365eb/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6778f818e116bbf973a17e6d26f2f6a7/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6778f818e116bbf973a17e6d26f2f6a7/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ce3976df50bbe402a3ac1635b2c1e64a/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
 MERGED from [io.github.aakira:napier-android-debug:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bd23a976f2f86e81d6636ceae7ceb4b8/transformed/napier-debug/AndroidManifest.xml:7:5-9:41
 MERGED from [io.github.aakira:napier-android-debug:1.4.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bd23a976f2f86e81d6636ceae7ceb4b8/transformed/napier-debug/AndroidManifest.xml:7:5-9:41
 MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/hridyesh/.gradle/caches/8.11.1/transforms/4aa2f71107fec229dcfa6930ec599a37/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:18:3-42
@@ -470,65 +473,23 @@ MERGED from [com.google.android.odml:image:1.0.0-beta1] /Users/hridyesh/.gradle/
 	android:minSdkVersion
 		INJECTED from /Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/src/main/AndroidManifest.xml
 service#androidx.camera.core.impl.MetadataHolderService
-ADDED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:29:9-33:78
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:24:9-33:19
-MERGED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:24:9-33:19
+ADDED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:29:9-33:78
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:24:9-33:19
+MERGED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:24:9-33:19
 	android:enabled
-		ADDED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:31:13-36
+		ADDED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:31:13-36
 	android:exported
-		ADDED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:32:13-37
+		ADDED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:32:13-37
 	tools:ignore
-		ADDED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:33:13-75
+		ADDED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:33:13-75
 	android:name
-		ADDED from [androidx.camera:camera-core:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/e1160677c16b972a6da05671e3b6f0da/transformed/camera-core-1.3.1/AndroidManifest.xml:30:13-75
+		ADDED from [androidx.camera:camera-core:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/03ba4d86c8f012123c3b6eaf10d2909b/transformed/camera-core-1.4.2/AndroidManifest.xml:30:13-75
 meta-data#androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER
-ADDED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:30:13-32:89
+ADDED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:30:13-32:89
 	android:value
-		ADDED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:32:17-86
+		ADDED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:32:17-86
 	android:name
-		ADDED from [androidx.camera:camera-camera2:1.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/59442f2dc94d54a92297b91ec3bc0190/transformed/camera-camera2-1.3.1/AndroidManifest.xml:31:17-103
-service#com.google.mlkit.common.internal.MlKitComponentDiscoveryService
-ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:9:9-15:19
-MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:9:9-15:19
-MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:9:9-15:19
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:15:9-23:19
-MERGED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:15:9-23:19
-	android:exported
-		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:11:13-37
-	tools:targetApi
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:19:13-32
-	android:directBootAware
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:17:13-43
-	android:name
-		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:10:13-91
-meta-data#com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar
-ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:12:13-14:85
-	android:value
-		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:14:17-82
-	android:name
-		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/652fed3d34bc440dbfa00cd3e6adefeb/transformed/play-services-mlkit-barcode-scanning-18.3.0/AndroidManifest.xml:13:17-120
-meta-data#com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar
-ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:12:13-14:85
-	android:value
-		ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:14:17-82
-	android:name
-		ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:13:17-124
-provider#com.google.mlkit.common.internal.MlKitInitProvider
-ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:9:9-13:38
-	android:authorities
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:11:13-69
-	android:exported
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:12:13-37
-	android:initOrder
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:13:13-35
-	android:name
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:10:13-78
-meta-data#com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar
-ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:20:13-22:85
-	android:value
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:22:17-82
-	android:name
-		ADDED from [com.google.mlkit:common:18.9.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/f8f91a73bbd62622f92278d156899450/transformed/common-18.9.0/AndroidManifest.xml:21:17-120
+		ADDED from [androidx.camera:camera-camera2:1.4.2] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bdb351eb5d070ff5a1b31f97770e30f8/transformed/camera-camera2-1.4.2/AndroidManifest.xml:31:17-103
 service#androidx.credentials.playservices.CredentialProviderMetadataHolder
 ADDED from [androidx.credentials:credentials-play-services-auth:1.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9cbf200361f60393f8390b108ab4dcb6/transformed/credentials-play-services-auth-1.3.0/AndroidManifest.xml:24:9-32:19
 	android:enabled
@@ -579,20 +540,62 @@ ADDED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.g
 		ADDED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:36:13-107
 	android:name
 		ADDED from [com.google.android.gms:play-services-auth:21.1.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/7bd83683ff829d21412fd2ef25867c5c/transformed/play-services-auth-21.1.1/AndroidManifest.xml:34:13-89
-activity#com.google.android.gms.common.api.GoogleApiActivity
-ADDED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:9-22:45
+service#com.google.mlkit.common.internal.MlKitComponentDiscoveryService
+ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:15:9-23:19
+MERGED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:15:9-23:19
 	android:exported
-		ADDED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:22:19-43
-	android:theme
-		ADDED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:21:19-78
+		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:11:13-37
+	tools:targetApi
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:19:13-32
+	android:directBootAware
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:17:13-43
 	android:name
-		ADDED from [com.google.android.gms:play-services-base:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/ec83fc6cb130abd2c4e5375bc10b27c8/transformed/play-services-base-18.3.0/AndroidManifest.xml:20:19-85
-meta-data#com.google.android.gms.version
-ADDED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
+		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:10:13-91
+meta-data#com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar
+ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:12:13-14:85
 	android:value
-		ADDED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
+		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:14:17-82
 	android:name
-		ADDED from [com.google.android.gms:play-services-basement:18.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/6792bfa97378ff4c5a51d6f167864c95/transformed/play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
+		ADDED from [com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1] /Users/hridyesh/.gradle/caches/8.11.1/transforms/9c8f295e7d6d1b6e6bdea79cd57dcd91/transformed/play-services-mlkit-barcode-scanning-18.3.1/AndroidManifest.xml:13:17-120
+meta-data#com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar
+ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:12:13-14:85
+	android:value
+		ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:14:17-82
+	android:name
+		ADDED from [com.google.mlkit:vision-common:17.3.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bc83647777a131ba15a43fb5ec3ece02/transformed/vision-common-17.3.0/AndroidManifest.xml:13:17-124
+provider#com.google.mlkit.common.internal.MlKitInitProvider
+ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:9:9-13:38
+	android:authorities
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:11:13-69
+	android:exported
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:12:13-37
+	android:initOrder
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:13:13-35
+	android:name
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:10:13-78
+meta-data#com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar
+ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:20:13-22:85
+	android:value
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:22:17-82
+	android:name
+		ADDED from [com.google.mlkit:common:18.11.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/bf06fac091915edc2c8c23f3b756b02f/transformed/common-18.11.0/AndroidManifest.xml:21:17-120
+activity#com.google.android.gms.common.api.GoogleApiActivity
+ADDED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:9-173
+	android:exported
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:146-170
+	android:theme
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:86-145
+	android:name
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/589db2460740f1cae114cfa2974a58d1/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:19-85
+meta-data#com.google.android.gms.version
+ADDED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
+	android:value
+		ADDED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
+	android:name
+		ADDED from [com.google.android.gms:play-services-basement:18.4.0] /Users/hridyesh/.gradle/caches/8.11.1/transforms/8c591393a644d2f1976c335016339e87/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
 activity#androidx.compose.ui.tooling.PreviewActivity
 ADDED from [androidx.compose.ui:ui-tooling-android:1.7.6] /Users/hridyesh/.gradle/caches/8.11.1/transforms/b8a4c5050f3039ee0786cc818a34e55b/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
 	android:exported

@@ -1,8 +1,19 @@
 package in.paperboxd.app.ui.screens.profile;
 
-@kotlin.Metadata(mv = {1, 9, 0}, k = 2, xi = 48, d1 = {"\u0000n\n\u0000\n\u0002\u0010\u0002\n\u0000\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000b\n\u0002\b\u0006\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0010\t\n\u0002\b\u0004\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010\b\n\u0002\b\u0005\u001a\u001e\u0010\u0000\u001a\u00020\u00012\u0006\u0010\u0002\u001a\u00020\u00032\f\u0010\u0004\u001a\b\u0012\u0004\u0012\u00020\u00010\u0005H\u0003\u001a\u0010\u0010\u0006\u001a\u00020\u00012\u0006\u0010\u0007\u001a\u00020\bH\u0003\u001al\u0010\t\u001a\u00020\u00012\u0006\u0010\n\u001a\u00020\u000b2\u0006\u0010\f\u001a\u00020\r2\u0006\u0010\u000e\u001a\u00020\r2\f\u0010\u000f\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\f\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\f\u0010\u0011\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\f\u0010\u0012\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0012\u0010\u0013\u001a\u000e\u0012\u0004\u0012\u00020\u0015\u0012\u0004\u0012\u00020\u00010\u0014H\u0003\u001a\u0018\u0010\u0016\u001a\u00020\u00012\u0006\u0010\u0017\u001a\u00020\b2\u0006\u0010\u0018\u001a\u00020\u0019H\u0003\u001a\u0010\u0010\u001a\u001a\u00020\u00012\u0006\u0010\u001b\u001a\u00020\bH\u0003\u001a\u00dc\u0001\u0010\u001c\u001a\u00020\u00012\u0006\u0010\n\u001a\u00020\u000b2\u0006\u0010\u001d\u001a\u00020\u001e2\u0006\u0010\u001f\u001a\u00020\r2\u0006\u0010\u000e\u001a\u00020\r2\f\u0010\u000f\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0012\u0010 \u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\u0012\u0010!\u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\f\u0010\u0011\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\f\u0010\u0012\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0012\u0010\"\u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\u0012\u0010#\u001a\u000e\u0012\u0004\u0012\u00020$\u0012\u0004\u0012\u00020\u00010\u00142\f\u0010%\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0014\b\u0002\u0010&\u001a\u000e\u0012\u0004\u0012\u00020\'\u0012\u0004\u0012\u00020\u00010\u00142\u0014\b\u0002\u0010(\u001a\u000e\u0012\u0004\u0012\u00020\u0003\u0012\u0004\u0012\u00020\u00010\u0014H\u0007\u001a\b\u0010)\u001a\u00020\u0001H\u0003\u001a\u0090\u0001\u0010*\u001a\u00020\u00012\u0006\u0010+\u001a\u00020\b2\u0006\u0010,\u001a\u00020-2\u0006\u0010\u000e\u001a\u00020\r2\f\u0010\u000f\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0012\u0010 \u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\u0012\u0010!\u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\f\u0010\u0011\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\f\u0010\u0012\u001a\b\u0012\u0004\u0012\u00020\u00010\u00052\u0012\u0010\"\u001a\u000e\u0012\u0004\u0012\u00020\b\u0012\u0004\u0012\u00020\u00010\u00142\b\b\u0002\u0010.\u001a\u00020/H\u0007\u001a&\u00100\u001a\u00020\u00012\u0006\u00101\u001a\u0002022\u0006\u00103\u001a\u00020\b2\f\u0010\u0004\u001a\b\u0012\u0004\u0012\u00020\u00010\u0005H\u0003\u001a$\u00104\u001a\u00020\u00012\u0006\u00105\u001a\u00020$2\u0012\u00106\u001a\u000e\u0012\u0004\u0012\u00020$\u0012\u0004\u0012\u00020\u00010\u0014H\u0003\u00a8\u00067"}, d2 = {"DiaryRow", "", "entry", "Lin/paperboxd/app/domain/model/DiaryEntry;", "onClick", "Lkotlin/Function0;", "EmptyTab", "message", "", "Header", "state", "Lin/paperboxd/app/ui/screens/profile/ProfileUiState;", "isOwn", "", "showBack", "onBack", "onFollow", "onOpenSettings", "onOpenEditProfile", "onStats", "Lkotlin/Function1;", "Lin/paperboxd/app/ui/screens/profile/FollowListMode;", "ListRow", "title", "bookCount", "", "Pill", "text", "ProfileContent", "snackbarHostState", "Landroidx/compose/material3/SnackbarHostState;", "isOwnProfile", "onOpenBook", "onOpenProfile", "onOpenDiaryEntry", "onTabSelected", "Lin/paperboxd/app/ui/screens/profile/ProfileTab;", "onToggleFollow", "fetchShelfIfNeeded", "Lin/paperboxd/app/domain/model/BookWithStatus;", "fetchDiaryIfNeeded", "ProfilePreview", "ProfileScreen", "username", "viewer", "Lin/paperboxd/app/domain/model/User;", "viewModel", "Lin/paperboxd/app/ui/screens/profile/ProfileViewModel;", "Stat", "count", "", "label", "TabDock", "selected", "onSelect", "app_debug"})
+@kotlin.Metadata(mv = {1, 9, 0}, k = 2, xi = 48, d1 = {"\u0000\u00aa\u0001\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010\u0002\n\u0000\n\u0002\u0010 \n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0000\n\u0002\u0010\u000b\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0018\u0002\n\u0002\b\u0004\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\b\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010\b\n\u0000\n\u0002\u0018\u0002\n\u0002\b\f\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\b\u000f\n\u0002\u0018\u0002\n\u0002\b\u0003\u001a\u0016\u0010\u0003\u001a\u00020\u00042\f\u0010\u0005\u001a\b\u0012\u0004\u0012\u00020\u00070\u0006H\u0003\u001a:\u0010\b\u001a\u00020\u00042\u0006\u0010\t\u001a\u00020\n2\u0006\u0010\u000b\u001a\u00020\f2\b\b\u0002\u0010\r\u001a\u00020\f2\b\b\u0002\u0010\u000e\u001a\u00020\u000f2\f\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u00040\u0011H\u0003\u001a)\u0010\u0012\u001a\u00020\u00042\f\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0011\u0010\u0013\u001a\r\u0012\u0004\u0012\u00020\u00040\u0011\u00a2\u0006\u0002\b\u0014H\u0003\u001a8\u0010\u0015\u001a\u00020\u00042\u001a\u0010\u0016\u001a\u0016\u0012\u0012\u0012\u0010\u0012\u0006\u0012\u0004\u0018\u00010\n\u0012\u0004\u0012\u00020\n0\u00170\u00062\u0012\u0010\u0018\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u0019H\u0003\u001a\u001e\u0010\u001a\u001a\u00020\u00042\u0006\u0010\u001b\u001a\u00020\u001c2\f\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u00040\u0011H\u0003\u001a\u001a\u0010\u001d\u001a\u00020\u00042\u0006\u0010\u001e\u001a\u00020\u001f2\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a\u0012\u0010 \u001a\u00020\u00042\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a\u0010\u0010!\u001a\u00020\u00042\u0006\u0010\"\u001a\u00020\nH\u0003\u001a,\u0010#\u001a\u00020\u00042\u0006\u0010$\u001a\u00020%2\u0006\u0010\t\u001a\u00020\n2\u0012\u0010&\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u0019H\u0003\u001a\u001e\u0010\'\u001a\u00020\u00042\u0006\u0010(\u001a\u00020\n2\f\u0010)\u001a\b\u0012\u0004\u0012\u00020*0\u0006H\u0003\u001a\u00ee\u0001\u0010+\u001a\u00020\u00042\u0006\u0010$\u001a\u00020%2\u0006\u0010,\u001a\u00020-2\u0006\u0010.\u001a\u00020\f2\u0006\u0010/\u001a\u00020\f2\f\u00100\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0012\u0010&\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u00101\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\f\u00102\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u00103\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0012\u00104\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u00105\u001a\u000e\u0012\u0004\u0012\u000206\u0012\u0004\u0012\u00020\u00040\u00192\f\u00107\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0014\b\u0002\u00108\u001a\u000e\u0012\u0004\u0012\u000209\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u0010:\u001a\u000e\u0012\u0004\u0012\u00020;\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u0010<\u001a\u000e\u0012\u0004\u0012\u00020\u001c\u0012\u0004\u0012\u00020\u00040\u0019H\u0007\u001ah\u0010=\u001a\u00020\u00042\u0006\u0010\u001e\u001a\u00020\u001f2\u0006\u0010>\u001a\u0002092\u0006\u0010?\u001a\u0002092\u0006\u0010.\u001a\u00020\f2\u0006\u0010@\u001a\u00020\f2\f\u0010A\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u0010B\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u0010C\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u0010D\u001a\b\u0012\u0004\u0012\u00020\u00040\u0011H\u0003\u001a\u0090\u0001\u0010E\u001a\u00020\u00042\u0006\u0010F\u001a\u00020\n2\u0006\u0010G\u001a\u00020H2\u0006\u0010/\u001a\u00020\f2\f\u00100\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0012\u0010&\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u00101\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\f\u00102\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u00103\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0012\u00104\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\b\b\u0002\u0010I\u001a\u00020JH\u0007\u001a\u001a\u0010K\u001a\u00020\u00042\u0006\u0010L\u001a\u00020M2\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a\u0016\u0010N\u001a\u00020\u00042\f\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u00040\u0011H\u0003\u001a\"\u0010O\u001a\u00020\u00042\u0006\u0010P\u001a\u0002092\u0006\u0010Q\u001a\u00020\n2\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a6\u0010R\u001a\u00020\u00042\u0006\u0010S\u001a\u0002062\u0006\u0010$\u001a\u00020%2\u0012\u0010T\u001a\u000e\u0012\u0004\u0012\u000206\u0012\u0004\u0012\u00020\u00040\u00192\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a>\u0010U\u001a\u00020\u00042\u0006\u0010/\u001a\u00020\f2\u0006\u0010V\u001a\u00020\f2\f\u00100\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\f\u0010W\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\b\b\u0002\u0010\u000e\u001a\u00020\u000fH\u0003\u001a\u0010\u0010X\u001a\u00020\n2\u0006\u0010Y\u001a\u000209H\u0002\u001a\u0010\u0010Z\u001a\u00020\n2\u0006\u0010[\u001a\u00020\nH\u0002\u001az\u0010\\\u001a\u00020\u0004*\u00020]2\u0006\u0010$\u001a\u00020%2\u0006\u0010^\u001a\u00020\f2\f\u0010_\u001a\b\u0012\u0004\u0012\u00020\u00040\u00112\u0012\u0010&\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u00104\u001a\u000e\u0012\u0004\u0012\u00020\n\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u0010:\u001a\u000e\u0012\u0004\u0012\u00020;\u0012\u0004\u0012\u00020\u00040\u00192\u0012\u0010<\u001a\u000e\u0012\u0004\u0012\u00020\u001c\u0012\u0004\u0012\u00020\u00040\u0019H\u0002\"\u0010\u0010\u0000\u001a\u00020\u0001X\u0082\u0004\u00a2\u0006\u0004\n\u0002\u0010\u0002\u00a8\u0006`"}, d2 = {"Line", "Landroidx/compose/ui/graphics/Color;", "J", "AuthorRow", "", "row", "", "Lin/paperboxd/app/domain/model/AuthorSummary;", "BrutalPill", "title", "", "filled", "", "loading", "modifier", "Landroidx/compose/ui/Modifier;", "onClick", "Lkotlin/Function0;", "CircleChip", "content", "Landroidx/compose/runtime/Composable;", "CoverRow", "cells", "Lkotlin/Pair;", "onOpen", "Lkotlin/Function1;", "DiaryRow", "entry", "Lin/paperboxd/app/domain/model/DiaryEntry;", "EditorialSignature", "profile", "Lin/paperboxd/app/domain/model/UserProfile;", "EmptyReadingCard", "EmptyTab", "message", "FavouriteFour", "state", "Lin/paperboxd/app/ui/screens/profile/ProfileUiState;", "onOpenBook", "ListsRail", "eyebrow", "lists", "Lin/paperboxd/app/domain/model/ReadingList;", "ProfileContent", "snackbarHostState", "Landroidx/compose/material3/SnackbarHostState;", "isOwnProfile", "showBack", "onBack", "onOpenProfile", "onOpenSettings", "onOpenEditProfile", "onOpenDiaryEntry", "onTabSelected", "Lin/paperboxd/app/ui/screens/profile/ProfileTab;", "onToggleFollow", "onSelectActivityYear", "", "fetchShelfIfNeeded", "Lin/paperboxd/app/domain/model/BookWithStatus;", "fetchDiaryIfNeeded", "ProfileHeader", "booksCount", "streak", "isFollowLoading", "onFollow", "onEdit", "onShare", "onFollowers", "ProfileScreen", "username", "viewer", "Lin/paperboxd/app/domain/model/User;", "viewModel", "Lin/paperboxd/app/ui/screens/profile/ProfileViewModel;", "ReadingCard", "book", "Lin/paperboxd/app/domain/model/LastLoggedBook;", "ShowMore", "StatCell", "value", "label", "TabDock", "selected", "onSelect", "TopBar", "showSettings", "onSettings", "formatCount", "n", "monthDay", "iso", "tabContent", "Landroidx/compose/foundation/lazy/LazyListScope;", "expanded", "onExpand", "app_debug"})
 public final class ProfileScreenKt {
+    private static final long Line = 0L;
     
+    private static final java.lang.String formatCount(int n) {
+        return null;
+    }
+    
+    /**
+     * Profile — light-mode-only paper screen, iOS ProfileView twin.
+     * Header → currently reading → favourite four → tab dock
+     * (Bookshelf | Diary | Lists | TBR | Authors) → editorial signature.
+     * Heatmap intentionally absent: no activity endpoint wired on Android yet.
+     */
     @androidx.compose.runtime.Composable()
     public static final void ProfileScreen(@org.jetbrains.annotations.NotNull()
     java.lang.String username, @org.jetbrains.annotations.NotNull()
@@ -28,24 +39,59 @@ public final class ProfileScreenKt {
     kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit> onOpenDiaryEntry, @org.jetbrains.annotations.NotNull()
     kotlin.jvm.functions.Function1<? super in.paperboxd.app.ui.screens.profile.ProfileTab, kotlin.Unit> onTabSelected, @org.jetbrains.annotations.NotNull()
     kotlin.jvm.functions.Function0<kotlin.Unit> onToggleFollow, @org.jetbrains.annotations.NotNull()
+    kotlin.jvm.functions.Function1<? super java.lang.Integer, kotlin.Unit> onSelectActivityYear, @org.jetbrains.annotations.NotNull()
     kotlin.jvm.functions.Function1<? super in.paperboxd.app.domain.model.BookWithStatus, kotlin.Unit> fetchShelfIfNeeded, @org.jetbrains.annotations.NotNull()
     kotlin.jvm.functions.Function1<? super in.paperboxd.app.domain.model.DiaryEntry, kotlin.Unit> fetchDiaryIfNeeded) {
     }
     
     @androidx.compose.runtime.Composable()
-    private static final void Header(in.paperboxd.app.ui.screens.profile.ProfileUiState state, boolean isOwn, boolean showBack, kotlin.jvm.functions.Function0<kotlin.Unit> onBack, kotlin.jvm.functions.Function0<kotlin.Unit> onFollow, kotlin.jvm.functions.Function0<kotlin.Unit> onOpenSettings, kotlin.jvm.functions.Function0<kotlin.Unit> onOpenEditProfile, kotlin.jvm.functions.Function1<? super in.paperboxd.app.ui.screens.profile.FollowListMode, kotlin.Unit> onStats) {
+    private static final void TopBar(boolean showBack, boolean showSettings, kotlin.jvm.functions.Function0<kotlin.Unit> onBack, kotlin.jvm.functions.Function0<kotlin.Unit> onSettings, androidx.compose.ui.Modifier modifier) {
     }
     
     @androidx.compose.runtime.Composable()
-    private static final void Stat(int count, java.lang.String label, kotlin.jvm.functions.Function0<kotlin.Unit> onClick) {
+    private static final void CircleChip(kotlin.jvm.functions.Function0<kotlin.Unit> onClick, kotlin.jvm.functions.Function0<kotlin.Unit> content) {
     }
     
     @androidx.compose.runtime.Composable()
-    private static final void Pill(java.lang.String text) {
+    private static final void ProfileHeader(in.paperboxd.app.domain.model.UserProfile profile, int booksCount, int streak, boolean isOwnProfile, boolean isFollowLoading, kotlin.jvm.functions.Function0<kotlin.Unit> onFollow, kotlin.jvm.functions.Function0<kotlin.Unit> onEdit, kotlin.jvm.functions.Function0<kotlin.Unit> onShare, kotlin.jvm.functions.Function0<kotlin.Unit> onFollowers) {
     }
     
     @androidx.compose.runtime.Composable()
-    private static final void TabDock(in.paperboxd.app.ui.screens.profile.ProfileTab selected, kotlin.jvm.functions.Function1<? super in.paperboxd.app.ui.screens.profile.ProfileTab, kotlin.Unit> onSelect) {
+    private static final void StatCell(int value, java.lang.String label, androidx.compose.ui.Modifier modifier) {
+    }
+    
+    /**
+     * iOS PillButton brutalPrimary/brutalGhost — hard border + offset ink shadow.
+     */
+    @androidx.compose.runtime.Composable()
+    private static final void BrutalPill(java.lang.String title, boolean filled, boolean loading, androidx.compose.ui.Modifier modifier, kotlin.jvm.functions.Function0<kotlin.Unit> onClick) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void ReadingCard(in.paperboxd.app.domain.model.LastLoggedBook book, androidx.compose.ui.Modifier modifier) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void EmptyReadingCard(androidx.compose.ui.Modifier modifier) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void FavouriteFour(in.paperboxd.app.ui.screens.profile.ProfileUiState state, java.lang.String title, kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit> onOpenBook) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void TabDock(in.paperboxd.app.ui.screens.profile.ProfileTab selected, in.paperboxd.app.ui.screens.profile.ProfileUiState state, kotlin.jvm.functions.Function1<? super in.paperboxd.app.ui.screens.profile.ProfileTab, kotlin.Unit> onSelect, androidx.compose.ui.Modifier modifier) {
+    }
+    
+    private static final void tabContent(androidx.compose.foundation.lazy.LazyListScope $this$tabContent, in.paperboxd.app.ui.screens.profile.ProfileUiState state, boolean expanded, kotlin.jvm.functions.Function0<kotlin.Unit> onExpand, kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit> onOpenBook, kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit> onOpenDiaryEntry, kotlin.jvm.functions.Function1<? super in.paperboxd.app.domain.model.BookWithStatus, kotlin.Unit> fetchShelfIfNeeded, kotlin.jvm.functions.Function1<? super in.paperboxd.app.domain.model.DiaryEntry, kotlin.Unit> fetchDiaryIfNeeded) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void CoverRow(java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> cells, kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit> onOpen) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void AuthorRow(java.util.List<in.paperboxd.app.domain.model.AuthorSummary> row) {
     }
     
     @androidx.compose.runtime.Composable()
@@ -53,15 +99,22 @@ public final class ProfileScreenKt {
     }
     
     @androidx.compose.runtime.Composable()
-    private static final void ListRow(java.lang.String title, long bookCount) {
+    private static final void ListsRail(java.lang.String eyebrow, java.util.List<in.paperboxd.app.domain.model.ReadingList> lists) {
+    }
+    
+    @androidx.compose.runtime.Composable()
+    private static final void ShowMore(kotlin.jvm.functions.Function0<kotlin.Unit> onClick) {
     }
     
     @androidx.compose.runtime.Composable()
     private static final void EmptyTab(java.lang.String message) {
     }
     
-    @androidx.compose.ui.tooling.preview.Preview()
     @androidx.compose.runtime.Composable()
-    private static final void ProfilePreview() {
+    private static final void EditorialSignature(in.paperboxd.app.domain.model.UserProfile profile, androidx.compose.ui.Modifier modifier) {
+    }
+    
+    private static final java.lang.String monthDay(java.lang.String iso) {
+        return null;
     }
 }

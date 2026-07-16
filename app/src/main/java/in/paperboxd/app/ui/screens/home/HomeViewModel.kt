@@ -69,7 +69,9 @@ class HomeViewModel @Inject constructor(
             }
             val latestTask = async { bookRepository.latestBooks(pageSize = 12).getOrNull()?.items.orEmpty() }
             val activitiesTask = async {
-                recommendationRepository.followingActivities(pageSize = 10).getOrNull()?.activities.orEmpty()
+                // Friends feed, never your own actions — iOS fetchFriendActivities twin.
+                recommendationRepository.followingActivities(pageSize = 10).getOrNull()
+                    ?.activities.orEmpty().filter { it.userId != user?.id }
             }
 
             recsTask.await().fold(

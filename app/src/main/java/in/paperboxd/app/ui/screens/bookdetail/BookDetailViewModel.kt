@@ -211,6 +211,84 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
+    /** Clears the viewer's rating AND review (PATCH rating:0, review:null). */
+    fun deleteReview(onDone: (Boolean) -> Unit = {}) {
+        val username = user?.username ?: return onDone(false)
+        viewModelScope.launch {
+            _state.update { it.copy(isSubmittingReview = true) }
+            bookRepository.updateRating(username, bookId, 0, null).fold(
+                onSuccess = {
+                    val refreshed = bookRepository.reviews(bookId).getOrNull()?.reviews
+                    if (refreshed != null) _state.update { it.copy(reviews = refreshed) }
+                    _toast.tryEmit("Rating & review removed")
+                    onDone(true)
+                },
+                onFailure = { e ->
+                    _toast.tryEmit(e.message ?: "Couldn't remove review")
+                    onDone(false)
+                }
+            )
+            _state.update { it.copy(isSubmittingReview = false) }
+        }
+    }
+
+    // MARK: - Add to Library (3 shelves) — iOS twin
+
+    enum class LibraryShelf(val status: String, val toast: String) {
+        Bookshelf("reading", "Added to Bookshelf"),
+        Tbr("to-read", "Added to TBR"),
+        Read("read", "Marked as read")
+    }
+
+    /** The shelf the book currently sits on, derived from bookState. */
+    val currentShelf: LibraryShelf?
+        get() = _state.value.bookState.let {
+            when {
+                it.isRead -> LibraryShelf.Read
+                it.isTbr -> LibraryShelf.Tbr
+                it.isOnShelf -> LibraryShelf.Bookshelf
+                else -> null
+            }
+        }
+
+    /**
+     * Moves the book to [target], or removes it when [target] is null (tapping
+     * the current shelf again). Mark-as-read pushes progress to 100%.
+     */
+    fun selectShelf(target: LibraryShelf?) {
+        val username = user?.username ?: return
+        val prev = _state.value.bookState
+        val next = when (target) {
+            null -> prev.copy(isOnShelf = false, isTbr = false, isRead = false)
+            LibraryShelf.Bookshelf -> prev.copy(isOnShelf = true, isTbr = false, isRead = false)
+            LibraryShelf.Tbr -> prev.copy(isTbr = true, isOnShelf = false, isRead = false)
+            LibraryShelf.Read -> prev.copy(isRead = true, isOnShelf = true, isTbr = false)
+        }
+        _state.update { it.copy(bookState = next.copy(isMutating = true)) }
+        viewModelScope.launch {
+            val result = if (target != null) {
+                bookRepository.addToBookshelf(username, bookId, target.status)
+            } else {
+                bookRepository.removeFromBookshelf(username, bookId)
+            }
+            result.fold(
+                onSuccess = {
+                    if (target == LibraryShelf.Read) {
+                        _state.value.book?.pageCount?.takeIf { it > 0 }?.let { total ->
+                            updateProgress(total, total)
+                        }
+                    }
+                    _toast.tryEmit(target?.toast ?: "Removed from library")
+                    _state.update { it.copy(bookState = it.bookState.copy(isMutating = false)) }
+                },
+                onFailure = { e ->
+                    _state.update { it.copy(bookState = prev.copy(isMutating = false)) }
+                    _toast.tryEmit(e.message ?: "Couldn't update library")
+                }
+            )
+        }
+    }
+
     fun updateProgress(currentPage: Int, totalPages: Int) {
         val username = user?.username ?: return
         viewModelScope.launch {

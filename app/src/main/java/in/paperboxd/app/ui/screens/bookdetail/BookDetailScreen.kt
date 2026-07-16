@@ -1,44 +1,57 @@
 package `in`.paperboxd.app.ui.screens.bookdetail
 
+import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.BookmarkAdd
-import androidx.compose.material.icons.outlined.BookmarkAdded
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.WatchLater
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,40 +59,42 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookReview
+import `in`.paperboxd.app.domain.model.FriendBookReview
+import `in`.paperboxd.app.domain.model.FriendOnBook
+import `in`.paperboxd.app.domain.model.ReadingProgress
+import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.components.AvatarImage
 import `in`.paperboxd.app.ui.components.BookCoverImage
-import `in`.paperboxd.app.ui.components.DarkTextField
-import `in`.paperboxd.app.ui.components.HorizontalCarousel
-import `in`.paperboxd.app.ui.components.PrimaryButton
-import `in`.paperboxd.app.ui.components.RatingPicker
-import `in`.paperboxd.app.ui.components.ShimmerBox
-import `in`.paperboxd.app.ui.theme.Accent
-import `in`.paperboxd.app.ui.theme.Background
-import `in`.paperboxd.app.ui.theme.Error as ErrorColor
+import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel.LibraryShelf
 import `in`.paperboxd.app.ui.theme.LikeRed
-import `in`.paperboxd.app.ui.theme.Surface
-import `in`.paperboxd.app.ui.theme.TextPrimary
-import `in`.paperboxd.app.ui.theme.TextSecondary
-import androidx.compose.ui.tooling.preview.Preview
-import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
-import `in`.paperboxd.app.domain.model.VolumeInfo
+import kotlin.math.roundToInt
 
-private enum class DetailTab { Overview, Reviews, Highlights, Lists }
+private val Line = HL.Ink
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     user: User,
@@ -89,147 +104,411 @@ fun BookDetailScreen(
     viewModel: BookDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val snackbar = remember { SnackbarHostState() }
+    var toast by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(user.id) { viewModel.user = user }
-    LaunchedEffect(Unit) { viewModel.toast.collect { snackbar.showSnackbar(it) } }
+    LaunchedEffect(Unit) {
+        viewModel.toast.collect {
+            toast = it
+            kotlinx.coroutines.delay(2500)
+            toast = null
+        }
+    }
 
     BookDetailContent(
         state = state,
-        snackbarHostState = snackbar,
+        toast = toast,
+        myReview = viewModel.myReview,
+        currentShelf = viewModel.currentShelf,
         onBack = onBack,
         onOpenBook = onOpenBook,
-        onOpenProfile = onOpenProfile,
-        onToggleBookshelf = viewModel::toggleBookshelf,
         onToggleLike = viewModel::toggleLike,
-        onToggleTbr = viewModel::toggleTbr,
-        onSubmitReview = { rating, review, callback ->
-            viewModel.submitReview(rating, review, callback)
-        }
+        onSelectShelf = viewModel::selectShelf,
+        onSubmitReview = { rating, review, done -> viewModel.submitReview(rating, review, done) },
+        onDeleteReview = { done -> viewModel.deleteReview(done) },
+        onUpdateProgress = viewModel::updateProgress
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookDetailContent(
+private fun BookDetailContent(
     state: BookDetailUiState,
-    snackbarHostState: SnackbarHostState,
+    toast: String?,
+    myReview: BookReview?,
+    currentShelf: LibraryShelf?,
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
-    onOpenProfile: (String) -> Unit,
-    onToggleBookshelf: () -> Unit,
     onToggleLike: () -> Unit,
-    onToggleTbr: () -> Unit,
-    onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit
+    onSelectShelf: (LibraryShelf?) -> Unit,
+    onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
+    onDeleteReview: ((Boolean) -> Unit) -> Unit,
+    onUpdateProgress: (Int, Int) -> Unit
 ) {
-    val context = LocalContext.current
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    var showRateSheet by rememberSaveable { mutableStateOf(false) }
+    var showLibrarySheet by remember { mutableStateOf(false) }
+    var activePanel by remember { mutableStateOf<InlinePanel?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Background)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Top bar: back + share
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = stringResource(R.string.detail_back),
-                        tint = TextPrimary
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                state.book?.let { book ->
-                    IconButton(onClick = { shareBook(context, book) }) {
-                        Icon(
-                            Icons.Outlined.Share,
-                            contentDescription = stringResource(R.string.detail_share),
-                            tint = TextPrimary
-                        )
-                    }
-                }
-            }
+    Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+            MiniHeader(book = state.book, onBack = onBack)
 
             when {
-                state.isLoading -> DetailShimmer()
-                state.book == null -> Text(
-                    state.errorMessage ?: stringResource(R.string.detail_error),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ErrorColor,
-                    modifier = Modifier.padding(20.dp)
-                )
-
-                else -> {
-                    val book = state.book!!
-                    Hero(book)
-                    ActionRow(state, onToggleBookshelf, onToggleLike, onToggleTbr)
-                    Spacer(Modifier.height(8.dp))
-
-                    TabRow(
-                        selectedTabIndex = tab,
-                        containerColor = Background,
-                        contentColor = TextPrimary,
-                        indicator = { positions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                color = Accent,
-                                modifier = Modifier.tabIndicatorOffset(positions[tab])
-                            )
-                        }
-                    ) {
-                        DetailTab.entries.forEachIndexed { index, dt ->
-                            Tab(
-                                selected = tab == index,
-                                onClick = { tab = index },
-                                text = {
-                                    Text(
-                                        text = when (dt) {
-                                            DetailTab.Overview -> stringResource(R.string.detail_tab_overview)
-                                            DetailTab.Reviews -> stringResource(R.string.detail_tab_reviews)
-                                            DetailTab.Highlights -> stringResource(R.string.detail_tab_highlights)
-                                            DetailTab.Lists -> stringResource(R.string.detail_tab_lists)
-                                        },
-                                        color = if (tab == index) TextPrimary else TextSecondary
-                                    )
-                                }
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-
-                    when (DetailTab.entries[tab]) {
-                        DetailTab.Overview -> OverviewTab(state, onOpenBook, onOpenProfile)
-                        DetailTab.Reviews -> ReviewsTab(state, onRate = { showRateSheet = true })
-                        DetailTab.Highlights -> EmptyTabState(stringResource(R.string.detail_highlights_empty))
-                        DetailTab.Lists -> EmptyTabState(stringResource(R.string.detail_lists_empty))
-                    }
-                    Spacer(Modifier.height(48.dp))
+                state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = HL.Ink, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
                 }
+                state.book == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        state.errorMessage ?: "Couldn't load book",
+                        fontFamily = FontFamily.Serif,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 14.sp,
+                        color = HL.Muted,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(40.dp)
+                    )
+                }
+                else -> DetailBody(
+                    state = state,
+                    myReview = myReview,
+                    activePanel = activePanel,
+                    onOpenBook = onOpenBook,
+                    onSetPanel = { activePanel = it },
+                    onSubmitReview = onSubmitReview,
+                    onDeleteReview = onDeleteReview,
+                    onUpdateProgress = onUpdateProgress,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
 
-        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
+        if (state.book != null) {
+            BottomDock(
+                currentShelf = currentShelf,
+                isLiked = state.bookState.isLiked,
+                onAdd = { showLibrarySheet = true },
+                onLike = onToggleLike,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        toast?.let { ToastBar(it, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)) }
     }
 
-    if (showRateSheet) {
-        RateReviewSheet(
-            isSubmitting = state.isSubmittingReview,
-            initialRating = 0,
-            onSubmit = { rating, review ->
-                onSubmitReview(rating, review) { ok -> if (ok) showRateSheet = false }
+    if (showLibrarySheet) {
+        AddToLibrarySheet(
+            current = currentShelf,
+            onSelect = {
+                showLibrarySheet = false
+                onSelectShelf(it)
             },
-            onDismiss = { showRateSheet = false }
+            onDismiss = { showLibrarySheet = false }
         )
     }
 }
 
-private fun shareBook(context: android.content.Context, book: Book) {
+private enum class InlinePanel { Rate, Review }
+
+// ---- Mini header ----
+
+@Composable
+private fun MiniHeader(book: Book?, onBack: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawRect(Line, topLeft = Offset(0f, size.height - 2.dp.toPx()), size = Size(size.width, 2.dp.toPx()))
+            }
+            .padding(horizontal = 14.dp)
+            .padding(top = 16.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SquareIcon(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Back", tint = HL.Ink, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.weight(1f))
+        book?.categories?.takeIf { it.isNotEmpty() }?.let {
+            Text(
+                it.take(2).joinToString(" · ").uppercase(),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                letterSpacing = 1.5.sp,
+                color = HL.Muted,
+                maxLines = 1
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.size(36.dp)) // balance the back button
+    }
+}
+
+@Composable
+private fun SquareIcon(onClick: () -> Unit, content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .border(2.dp, Line, RectangleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) { content() }
+}
+
+// ---- Scroll body ----
+
+@Composable
+private fun DetailBody(
+    state: BookDetailUiState,
+    myReview: BookReview?,
+    activePanel: InlinePanel?,
+    onOpenBook: (String) -> Unit,
+    onSetPanel: (InlinePanel?) -> Unit,
+    onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
+    onDeleteReview: ((Boolean) -> Unit) -> Unit,
+    onUpdateProgress: (Int, Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val book = state.book!!
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(bottom = 140.dp)
+    ) {
+        item { CoverBlock(book, state.friendsOnBook, state.friendsReadingCount) }
+        item { TitleBlock(book) }
+        item { StatStrip(book) }
+
+        item {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp).padding(top = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (book.pageCount != null || (state.progress?.onShelf == true)) {
+                    PageProgressCard(
+                        progress = state.progress,
+                        bookPageCount = book.pageCount,
+                        isSaving = state.isSavingProgress,
+                        onUpdate = onUpdateProgress
+                    )
+                }
+                ActionRow(
+                    book = book,
+                    myReview = myReview,
+                    activePanel = activePanel,
+                    onTogglePanel = { onSetPanel(if (activePanel == it) null else it) }
+                )
+                InlinePanelView(
+                    panel = activePanel,
+                    myReview = myReview,
+                    isSubmitting = state.isSubmittingReview,
+                    onSubmit = { rating, review -> onSubmitReview(rating, review) { ok -> if (ok) onSetPanel(null) } },
+                    onDelete = { onDeleteReview { ok -> if (ok) onSetPanel(null) } },
+                    onClose = { onSetPanel(null) }
+                )
+                DescriptionSection(book)
+            }
+        }
+
+        if (state.similarBooks.isNotEmpty()) {
+            item { SimilarSection(state.similarBooks, onOpenBook) }
+        }
+        item { FriendsSaySection(state.friendReviews) }
+        if (state.reviews.isNotEmpty()) {
+            item { AllReviewsSection(state.reviews) }
+        }
+    }
+}
+
+// ---- Cover + friends ----
+
+@Composable
+private fun CoverBlock(book: Book, friends: List<FriendOnBook>, readingCount: Int) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)) {
+            Box(
+                Modifier
+                    .offset(x = 8.dp, y = 8.dp)
+                    .size(width = 150.dp, height = 225.dp)
+                    .background(Line)
+            )
+            BookCoverImage(
+                url = book.coverUrl,
+                title = book.title,
+                modifier = Modifier
+                    .size(width = 150.dp, height = 225.dp)
+                    .border(2.5.dp, Line, RectangleShape),
+                cornerRadius = 0.dp
+            )
+        }
+
+        if (friends.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .border(2.dp, Line, RectangleShape)
+                    .padding(horizontal = 11.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy((-7).dp)) {
+                    friends.take(3).forEach { f ->
+                        Box(modifier = Modifier.border(1.5.dp, HL.Paper, RectangleShape)) {
+                            AvatarImage(url = f.avatarUrl, name = f.displayName, size = 20.dp)
+                        }
+                    }
+                }
+                val copy = if (readingCount > 0) {
+                    "$readingCount friend${if (readingCount == 1) "" else "s"} reading"
+                } else {
+                    "${friends.size} of your friends"
+                }
+                Text(
+                    copy.uppercase(),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 9.sp,
+                    letterSpacing = 1.sp,
+                    color = HL.Ink
+                )
+            }
+        }
+    }
+}
+
+// ---- Title ----
+
+@Composable
+private fun TitleBlock(book: Book) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            book.title.uppercase(),
+            fontWeight = FontWeight.Black,
+            fontSize = 30.sp,
+            lineHeight = 32.sp,
+            letterSpacing = (-1).sp,
+            color = HL.Ink,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+        bookTagline(book)?.let {
+            Text(
+                it,
+                fontFamily = FontFamily.Serif,
+                fontStyle = FontStyle.Italic,
+                fontSize = 15.sp,
+                color = HL.Ink.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(horizontal = 30.dp)
+            )
+        }
+        if (book.authorLine.isNotEmpty()) {
+            Text(
+                book.authorLine.uppercase(),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                letterSpacing = 1.5.sp,
+                color = HL.Muted,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+private fun bookTagline(book: Book): String? {
+    val desc = book.description ?: return null
+    val first = desc.split(Regex("[.!?]")).firstOrNull()?.trim() ?: return null
+    return if (first.length in 21..139) "$first." else null
+}
+
+// ---- Stat strip ----
+
+@Composable
+private fun StatStrip(book: Book) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(62.dp)
+            .drawBehind {
+                val h = 2.dp.toPx()
+                drawRect(Line, size = Size(size.width, h))
+                drawRect(Line, topLeft = Offset(0f, size.height - h), size = Size(size.width, h))
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        StatCell(book.averageRating?.let { "%.1f".format(it) } ?: "—", "Rating", Modifier.weight(1f))
+        Box(Modifier.width(2.dp).height(62.dp).background(Line))
+        StatCell(readingTime(book), "Time to read", Modifier.weight(1f))
+        Box(Modifier.width(2.dp).height(62.dp).background(Line))
+        StatCell(book.pageCount?.toString() ?: "—", "Pages", Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun StatCell(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(value, fontWeight = FontWeight.Black, fontSize = 20.sp, letterSpacing = (-0.5).sp, color = HL.Ink)
+        Text(
+            label.uppercase(),
+            fontFamily = FontFamily.Monospace,
+            fontSize = 8.sp,
+            letterSpacing = 1.2.sp,
+            color = HL.Muted
+        )
+    }
+}
+
+private fun readingTime(book: Book): String {
+    val pages = book.pageCount ?: return "—"
+    val totalMin = (pages / 40.0 * 60.0).roundToInt()
+    val h = totalMin / 60
+    val m = totalMin % 60
+    return if (h > 0) "${h}h ${m}m" else "${m}m"
+}
+
+// ---- Action row (Review / Rate / Share) ----
+
+@Composable
+private fun ActionRow(
+    book: Book,
+    myReview: BookReview?,
+    activePanel: InlinePanel?,
+    onTogglePanel: (InlinePanel) -> Unit
+) {
+    val context = LocalContext.current
+    val rated = (myReview?.rating ?: 0) > 0
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ActionTile(
+            icon = { Icon(Icons.Filled.Edit, null, tint = it, modifier = Modifier.size(18.dp)) },
+            label = "Review",
+            active = activePanel == InlinePanel.Review,
+            modifier = Modifier.weight(1f),
+            onClick = { onTogglePanel(InlinePanel.Review) }
+        )
+        ActionTile(
+            icon = { Icon(Icons.Filled.Star, null, tint = it, modifier = Modifier.size(18.dp)) },
+            label = if (rated) "${myReview!!.rating}/5" else "Rate",
+            active = activePanel == InlinePanel.Rate || rated,
+            modifier = Modifier.weight(1f),
+            onClick = { onTogglePanel(InlinePanel.Rate) }
+        )
+        ActionTile(
+            icon = { Icon(Icons.Outlined.Share, null, tint = it, modifier = Modifier.size(18.dp)) },
+            label = "Share",
+            active = false,
+            modifier = Modifier.weight(1f),
+            onClick = { shareBook(context, book) }
+        )
+    }
+}
+
+private fun shareBook(context: Context, book: Book) {
     val text = "${book.title} — ${book.authorLine}\nhttps://paperboxd.in/book/${book.slug ?: book.id}"
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
@@ -239,343 +518,707 @@ private fun shareBook(context: android.content.Context, book: Book) {
 }
 
 @Composable
-private fun Hero(book: Book) {
-    Row(modifier = Modifier.padding(horizontal = 20.dp)) {
-        BookCoverImage(
-            url = book.coverUrl,
-            title = book.title,
-            modifier = Modifier.width(120.dp).aspectRatio(2f / 3f),
-            cornerRadius = 10.dp
+private fun ActionTile(
+    icon: @Composable (Color) -> Unit,
+    label: String,
+    active: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val fg = if (active) HL.Paper else HL.Ink
+    Column(
+        modifier = modifier
+            .brutalPlate(fill = if (active) HL.Accent else HL.Paper, borderWidth = 2.dp, offset = 3.dp, shadow = Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(vertical = 13.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        icon(fg)
+        Text(
+            label.uppercase(),
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 9.sp,
+            letterSpacing = 1.sp,
+            color = fg
         )
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(book.title, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
-            Spacer(Modifier.height(4.dp))
-            Text(book.authorLine, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-            Spacer(Modifier.height(8.dp))
-            val meta = listOfNotNull(
-                book.publishedYear,
-                book.pageCount?.let { stringResource(R.string.detail_pages, it) }
-            ).joinToString(" · ")
-            if (meta.isNotEmpty()) {
-                Text(meta, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+    }
+}
+
+// ---- Inline rate / review panels ----
+
+@Composable
+private fun InlinePanelView(
+    panel: InlinePanel?,
+    myReview: BookReview?,
+    isSubmitting: Boolean,
+    onSubmit: (Int, String?) -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit
+) {
+    val hasReviewOrRating = (myReview?.rating ?: 0) > 0 || !myReview?.review.isNullOrEmpty()
+    AnimatedVisibility(
+        visible = panel != null,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
+    ) {
+        when (panel) {
+            InlinePanel.Rate -> RatePanel(
+                initial = myReview?.rating ?: 0,
+                isSubmitting = isSubmitting,
+                canDelete = hasReviewOrRating,
+                onSubmit = { rating -> onSubmit(rating, myReview?.review) },
+                onDelete = onDelete,
+                onClose = onClose
+            )
+            InlinePanel.Review -> ReviewPanel(
+                initial = myReview?.review ?: "",
+                isSubmitting = isSubmitting,
+                canDelete = hasReviewOrRating,
+                onPost = { text -> onSubmit(myReview?.rating ?: 0, text) },
+                onDelete = onDelete,
+                onClose = onClose
+            )
+            null -> {}
+        }
+    }
+}
+
+@Composable
+private fun RatePanel(
+    initial: Int,
+    isSubmitting: Boolean,
+    canDelete: Boolean,
+    onSubmit: (Int) -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit
+) {
+    var pending by remember { mutableIntStateOf(initial) }
+    PanelShell {
+        Text(
+            "TAP TO SET YOUR RATING",
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            fontSize = 9.sp,
+            letterSpacing = 2.sp,
+            color = HL.Muted,
+            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (n in 1..5) {
+                Icon(
+                    if (n <= pending) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                    contentDescription = "star $n",
+                    tint = if (n <= pending) HL.Accent else HL.Muted.copy(alpha = 0.4f),
+                    modifier = Modifier.size(30.dp).clickable { pending = n }
+                )
             }
-            book.averageRating?.let { rating ->
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RatingPicker(rating = rating.toInt(), starSize = 16.dp)
-                    Spacer(Modifier.width(6.dp))
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            if (pending > 0) "$pending.0 / 5" else "—",
+            fontWeight = FontWeight.Black,
+            fontSize = 15.sp,
+            color = HL.Ink,
+            modifier = Modifier.padding(bottom = if (canDelete) 8.dp else 12.dp)
+        )
+        if (canDelete) {
+            Text(
+                "REMOVE RATING & REVIEW",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 9.sp,
+                letterSpacing = 1.2.sp,
+                color = HL.Accent,
+                modifier = Modifier.clickable(enabled = !isSubmitting, onClick = onDelete).padding(bottom = 12.dp)
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+        PanelSubmitRow(
+            label = "SUBMIT RATING",
+            enabled = pending > 0 && !isSubmitting,
+            isSubmitting = isSubmitting,
+            onSubmit = { onSubmit(pending) },
+            onClose = onClose
+        )
+    }
+}
+
+@Composable
+private fun ReviewPanel(
+    initial: String,
+    isSubmitting: Boolean,
+    canDelete: Boolean,
+    onPost: (String) -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit
+) {
+    var text by remember { mutableStateOf(initial) }
+    PanelShell(horizontalAlignment = Alignment.Start) {
+        Text(
+            "WRITE A REVIEW",
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            fontSize = 9.sp,
+            letterSpacing = 2.sp,
+            color = HL.Muted,
+            modifier = Modifier.padding(horizontal = 14.dp).padding(top = 12.dp, bottom = 4.dp)
+        )
+        Box(modifier = Modifier.padding(horizontal = 10.dp)) {
+            if (text.isEmpty()) {
+                Text(
+                    "What stayed with you? Half-formed thoughts welcome…",
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 15.sp,
+                    color = HL.Muted,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                )
+            }
+            BasicTextField(
+                value = text,
+                onValueChange = { text = it },
+                textStyle = TextStyle(
+                    fontFamily = FontFamily.Serif,
+                    fontSize = 15.sp,
+                    color = HL.Ink
+                ),
+                cursorBrush = SolidColor(HL.Accent),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 84.dp).padding(vertical = 8.dp)
+            )
+        }
+        if (canDelete) {
+            Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+            Text(
+                "REMOVE RATING & REVIEW",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 9.sp,
+                letterSpacing = 1.2.sp,
+                color = HL.Accent,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = !isSubmitting, onClick = onDelete)
+                    .padding(vertical = 10.dp)
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+        PanelSubmitRow(
+            label = "POST REVIEW",
+            enabled = text.trim().isNotEmpty() && !isSubmitting,
+            isSubmitting = isSubmitting,
+            onSubmit = { onPost(text) },
+            onClose = onClose
+        )
+    }
+}
+
+@Composable
+private fun PanelShell(
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .brutalPlate(fill = HL.Card, borderWidth = 2.5.dp, offset = 6.dp),
+        horizontalAlignment = horizontalAlignment,
+        content = content
+    )
+}
+
+@Composable
+private fun PanelSubmitRow(
+    label: String,
+    enabled: Boolean,
+    isSubmitting: Boolean,
+    onSubmit: () -> Unit,
+    onClose: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth().height(46.dp)) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .background(if (enabled || isSubmitting) HL.Ink else HL.Ink.copy(alpha = 0.4f))
+                .clickable(enabled = enabled, onClick = onSubmit),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(color = HL.Paper, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+            } else {
+                Text(
+                    label,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.5.sp,
+                    color = HL.Paper
+                )
+            }
+        }
+        Box(Modifier.width(2.dp).fillMaxSize().background(Line))
+        Box(
+            modifier = Modifier.width(50.dp).fillMaxSize().clickable(onClick = onClose),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Filled.Close, "close", tint = HL.Ink, modifier = Modifier.size(14.dp))
+        }
+    }
+}
+
+// ---- Page progress card ----
+
+@Composable
+private fun PageProgressCard(
+    progress: ReadingProgress?,
+    bookPageCount: Int?,
+    isSaving: Boolean,
+    onUpdate: (Int, Int) -> Unit
+) {
+    val savedPage = progress?.currentPage ?: 0
+    val total = progress?.totalPages ?: bookPageCount ?: 0
+    var localPage by remember(savedPage) { mutableIntStateOf(savedPage) }
+    val cellCount = 12
+    val percent = if (total > 0) (localPage.toFloat() / total).coerceIn(0f, 1f) else 0f
+    val litCells = (cellCount * percent).roundToInt()
+    val hasChanges = localPage != savedPage
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .brutalPlate(fill = HL.Paper2, borderWidth = 2.5.dp, offset = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "READING PROGRESS",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
+                letterSpacing = 2.sp,
+                color = HL.Muted
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                "${(percent * 100).roundToInt()}%",
+                fontWeight = FontWeight.Black,
+                fontSize = 20.sp,
+                letterSpacing = (-0.5).sp,
+                color = HL.Ink
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            for (i in 0 until cellCount) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(16.dp)
+                        .background(if (i < litCells) HL.Accent else Color.Transparent)
+                        .border(2.dp, Line, RectangleShape)
+                )
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+        Row(modifier = Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
+            StepButton("−") { if (localPage > 0) localPage-- }
+            Box(Modifier.width(2.dp).fillMaxSize().background(Line))
+            Column(
+                modifier = Modifier.weight(1f).padding(vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("p. $localPage", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = HL.Ink)
+                    if (total > 0) {
+                        Text("/ $total", fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = HL.Muted)
+                    }
+                }
+                if (hasChanges && total > 0) {
+                    Box(
+                        modifier = Modifier
+                            .background(HL.Ink)
+                            .clickable(enabled = !isSaving) { onUpdate(localPage, total) }
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(color = HL.Paper, strokeWidth = 2.dp, modifier = Modifier.size(12.dp))
+                        } else {
+                            Text("TAP TO SAVE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, fontSize = 8.sp, letterSpacing = 1.5.sp, color = HL.Paper)
+                        }
+                    }
+                } else {
                     Text(
-                        String.format(java.util.Locale.US, "%.1f", rating),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        "TAP ± TO LOG PAGES",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 8.sp,
+                        letterSpacing = 1.2.sp,
+                        color = HL.Muted
                     )
                 }
             }
-            if (book.categories.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    book.categories.take(3).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Accent,
-                    maxLines = 2
-                )
+            Box(Modifier.width(2.dp).fillMaxSize().background(Line))
+            StepButton("+") { if (total == 0 || localPage < total) localPage++ }
+        }
+    }
+}
+
+@Composable
+private fun StepButton(symbol: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(52.dp)
+            .fillMaxSize()
+            .background(HL.Paper)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(symbol, fontSize = 22.sp, color = HL.Ink)
+    }
+}
+
+// ---- Sections ----
+
+@Composable
+private fun BrutalSectionHeader(num: String, title: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawRect(Line, topLeft = Offset(0f, size.height - 2.dp.toPx()), size = Size(size.width, 2.dp.toPx()))
+            }
+            .padding(bottom = 6.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(num, fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = HL.Muted)
+        Text(title.uppercase(), fontWeight = FontWeight.Black, fontSize = 13.sp, letterSpacing = 0.5.sp, color = HL.Ink)
+    }
+}
+
+@Composable
+private fun DescriptionSection(book: Book) {
+    val desc = book.description ?: return
+    var expanded by remember { mutableStateOf(false) }
+    val plain = remember(desc) { desc.replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim() }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        BrutalSectionHeader("01", "About this book")
+        Text(
+            plain,
+            fontFamily = FontFamily.Serif,
+            fontSize = 15.sp,
+            lineHeight = 22.sp,
+            color = HL.Ink.copy(alpha = 0.9f),
+            maxLines = if (expanded) Int.MAX_VALUE else 6
+        )
+        if (plain.length > 280) {
+            Text(
+                if (expanded) "SHOW LESS" else "READ MORE",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                letterSpacing = 1.sp,
+                color = HL.Accent,
+                modifier = Modifier.clickable { expanded = !expanded }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SimilarSection(items: List<RecommendationItem>, onOpenBook: (String) -> Unit) {
+    Column(
+        modifier = Modifier.padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            BrutalSectionHeader("02", "Readers also enjoyed")
+        }
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) {
+            items(items, key = { it.id }) { item ->
+                Column(
+                    modifier = Modifier.width(84.dp).clickable { onOpenBook(item.id) },
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    BookCoverImage(
+                        url = item.coverUrl,
+                        title = item.title,
+                        modifier = Modifier.width(84.dp).aspectRatio(2f / 3f).border(1.5.dp, Line, RectangleShape),
+                        cornerRadius = 0.dp
+                    )
+                    Text(item.title, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = HL.Ink, maxLines = 2)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ActionRow(
-    state: BookDetailUiState,
-    onToggleBookshelf: () -> Unit,
-    onToggleLike: () -> Unit,
-    onToggleTbr: () -> Unit
-) {
-    val s = state.bookState
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        ActionChip(
-            icon = { tint ->
-                Icon(
-                    if (s.isOnShelf) Icons.Outlined.BookmarkAdded else Icons.Outlined.BookmarkAdd,
-                    contentDescription = null, tint = tint
-                )
-            },
-            label = stringResource(if (s.isOnShelf) R.string.detail_on_shelf else R.string.detail_add_shelf),
-            active = s.isOnShelf,
-            onClick = onToggleBookshelf,
-            modifier = Modifier.weight(1f)
-        )
-        ActionChip(
-            icon = { tint ->
-                Icon(
-                    if (s.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = null,
-                    tint = if (s.isLiked) LikeRed else tint
-                )
-            },
-            label = stringResource(R.string.detail_like),
-            active = s.isLiked,
-            onClick = onToggleLike,
-            modifier = Modifier.weight(1f)
-        )
-        ActionChip(
-            icon = { tint -> Icon(Icons.Outlined.WatchLater, contentDescription = null, tint = tint) },
-            label = stringResource(R.string.detail_tbr),
-            active = s.isTbr,
-            onClick = onToggleTbr,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun ActionChip(
-    icon: @Composable (androidx.compose.ui.graphics.Color) -> Unit,
-    label: String,
-    active: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val tint = if (active) Accent else TextSecondary
+private fun FriendsSaySection(reviews: List<FriendBookReview>) {
     Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (active) Accent.copy(alpha = 0.12f) else Surface)
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        icon(tint)
-        Spacer(Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = tint, maxLines = 1)
+        BrutalSectionHeader("03", "What friends say")
+        if (reviews.isEmpty()) {
+            Text(
+                "No reviews from people you follow yet.",
+                fontFamily = FontFamily.Serif,
+                fontStyle = FontStyle.Italic,
+                fontSize = 13.sp,
+                color = HL.Muted
+            )
+        } else {
+            reviews.take(5).forEach { r ->
+                Row(horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                    Box(modifier = Modifier.border(2.dp, Line, RectangleShape)) {
+                        AvatarImage(url = r.avatarUrl, name = r.displayName, size = 34.dp)
+                    }
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(r.displayName, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = HL.Ink, modifier = Modifier.weight(1f))
+                            r.rating?.takeIf { it > 0 }?.let {
+                                Text(starsString(it), fontSize = 11.sp, color = HL.Accent)
+                            }
+                        }
+                        r.review?.let {
+                            Text(
+                                it,
+                                fontFamily = FontFamily.Serif,
+                                fontSize = 13.5.sp,
+                                lineHeight = 17.sp,
+                                color = HL.Ink.copy(alpha = 0.88f),
+                                maxLines = 5
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun OverviewTab(
-    state: BookDetailUiState,
-    onOpenBook: (String) -> Unit,
-    onOpenProfile: (String) -> Unit
-) {
-    val book = state.book ?: return
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        book.description?.let { ExpandableDescription(it) }
-
-        if (state.friendsOnBook.isNotEmpty()) {
-            Spacer(Modifier.height(22.dp))
-            Text(
-                stringResource(R.string.detail_friends_reading, state.friendsReadingCount),
-                style = MaterialTheme.typography.headlineSmall,
-                color = TextPrimary
-            )
-            Spacer(Modifier.height(10.dp))
-            state.friendsOnBook.take(5).forEach { friend ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onOpenProfile(friend.username) }
-                        .padding(vertical = 6.dp)
-                ) {
-                    AvatarImage(url = friend.avatarUrl, name = friend.displayName, size = 32.dp)
-                    Spacer(Modifier.width(10.dp))
-                    Text(friend.displayName, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-                    Spacer(Modifier.weight(1f))
-                    if (friend.isReadingNow) {
+private fun AllReviewsSection(reviews: List<BookReview>) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+        BrutalSectionHeader("04", "All reviews")
+        reviews.forEachIndexed { idx, review ->
+            if (idx > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Line.copy(alpha = 0.3f)))
+            Row(
+                modifier = Modifier.padding(vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(11.dp)
+            ) {
+                Box(modifier = Modifier.border(2.dp, Line, RectangleShape)) {
+                    AvatarImage(url = review.avatarUrl, name = review.username, size = 34.dp)
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Text(review.username, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = HL.Ink)
+                        review.rating?.takeIf { it > 0 }?.let {
+                            Text(starsString(it), fontSize = 11.sp, color = HL.Accent)
+                        }
+                    }
+                    review.review?.takeIf { it.isNotEmpty() }?.let {
                         Text(
-                            stringResource(R.string.detail_reading_now),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Accent
+                            it,
+                            fontFamily = FontFamily.Serif,
+                            fontSize = 13.5.sp,
+                            lineHeight = 17.sp,
+                            color = HL.Ink.copy(alpha = 0.88f)
                         )
                     }
                 }
             }
         }
     }
+}
 
-    if (state.similarBooks.isNotEmpty()) {
-        Spacer(Modifier.height(22.dp))
-        Text(
-            stringResource(R.string.detail_similar),
-            style = MaterialTheme.typography.headlineSmall,
-            color = TextPrimary,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
-        Spacer(Modifier.height(10.dp))
-        HorizontalCarousel(items = state.similarBooks, key = { it.id }) { rec ->
-            Column(
-                modifier = Modifier
-                    .width(104.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onOpenBook(rec.id) }
-            ) {
-                BookCoverImage(
-                    url = rec.coverUrl,
-                    title = rec.title,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
-                    cornerRadius = 8.dp
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(rec.title, style = MaterialTheme.typography.bodySmall, color = TextPrimary, maxLines = 2)
+private fun starsString(rating: Int): String {
+    val n = rating.coerceIn(0, 5)
+    return "★".repeat(n) + "☆".repeat(5 - n)
+}
+
+// ---- Bottom dock ----
+
+@Composable
+private fun BottomDock(
+    currentShelf: LibraryShelf?,
+    isLiked: Boolean,
+    onAdd: () -> Unit,
+    onLike: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val label = when (currentShelf) {
+        LibraryShelf.Bookshelf -> "On Bookshelf"
+        LibraryShelf.Tbr -> "On TBR"
+        LibraryShelf.Read -> "Read"
+        null -> "Add to Library"
+    }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawRect(Line, size = Size(size.width, 3.dp.toPx()))
             }
+            .background(HL.Paper)
+            .padding(horizontal = 14.dp)
+            .padding(top = 12.dp)
+            .navigationBarsPadding()
+            .padding(bottom = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp)
+                .brutalPlate(
+                    fill = if (currentShelf == null) HL.Ink else HL.Accent,
+                    borderWidth = 2.dp,
+                    offset = 4.dp,
+                    shadow = HL.Accent
+                )
+                .clickable(onClick = onAdd),
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(Modifier.weight(1f))
+            Icon(
+                if (currentShelf == null) Icons.Filled.Add else Icons.Filled.Check,
+                null,
+                tint = HL.Paper,
+                modifier = Modifier.size(15.dp)
+            )
+            Text(label.uppercase(), fontWeight = FontWeight.Black, fontSize = 15.sp, letterSpacing = 0.5.sp, color = HL.Paper, maxLines = 1)
+            Spacer(Modifier.weight(1f))
         }
-    }
-}
-
-@Preview
-@Composable
-private fun BookDetailPreview() {
-    PaperBoxdTheme {
-        BookDetailContent(
-            state = BookDetailUiState(
-                book = Book(
-                    id = "book1",
-                    volumeInfo = VolumeInfo(
-                        title = "The Great Gatsby",
-                        authors = listOf("F. Scott Fitzgerald"),
-                        description = "A story of wealth, love, and tragedy in the Jazz Age.",
-                        pageCount = 180,
-                        averageRating = 4.5
-                    )
-                ),
-                isLoading = false
-            ),
-            snackbarHostState = remember { SnackbarHostState() },
-            onBack = {},
-            onOpenBook = {},
-            onOpenProfile = {},
-            onToggleBookshelf = {},
-            onToggleLike = {},
-            onToggleTbr = {},
-            onSubmitReview = { _, _, _ -> }
-        )
-    }
-}
-
-@Composable
-private fun ExpandableDescription(description: String) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val plain = remember(description) {
-        description.replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim()
-    }
-    Column {
-        Text(
-            plain,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
-            maxLines = if (expanded) Int.MAX_VALUE else 4
-        )
-        TextButton(onClick = { expanded = !expanded }) {
-            Text(
-                stringResource(if (expanded) R.string.detail_read_less else R.string.detail_read_more),
-                color = Accent
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 52.dp)
+                .brutalPlate(fill = HL.Paper, borderWidth = 2.dp, offset = 4.dp, shadow = Line)
+                .clickable(onClick = onLike),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                null,
+                tint = if (isLiked) LikeRed else HL.Ink,
+                modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
-@Composable
-private fun ReviewsTab(state: BookDetailUiState, onRate: () -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        PrimaryButton(text = stringResource(R.string.detail_rate_review), onClick = onRate)
-        Spacer(Modifier.height(18.dp))
-        if (state.reviews.isEmpty()) {
-            EmptyTabState(stringResource(R.string.detail_reviews_empty))
-        } else {
-            state.reviews.forEach { review -> ReviewRow(review) }
-        }
-    }
-}
+// ---- Add to Library sheet ----
 
-@Composable
-private fun ReviewRow(review: BookReview) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-        AvatarImage(url = review.avatarUrl, name = review.username, size = 34.dp)
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "@${review.username}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextPrimary
-                )
-                Spacer(Modifier.width(8.dp))
-                review.rating?.let { RatingPicker(rating = it, starSize = 13.dp) }
-            }
-            review.review?.takeIf { it.isNotEmpty() }?.let {
-                Spacer(Modifier.height(4.dp))
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyTabState(message: String) {
-    Box(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-    }
-}
-
-@Composable
-private fun DetailShimmer() {
-    Row(modifier = Modifier.padding(20.dp)) {
-        ShimmerBox(
-            modifier = Modifier.width(120.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(10.dp))
-        )
-        Spacer(Modifier.width(16.dp))
-        Column {
-            ShimmerBox(modifier = Modifier.fillMaxWidth(0.8f).height(24.dp).clip(RoundedCornerShape(4.dp)))
-            Spacer(Modifier.height(10.dp))
-            ShimmerBox(modifier = Modifier.fillMaxWidth(0.5f).height(16.dp).clip(RoundedCornerShape(4.dp)))
-        }
-    }
-}
-
-/** Rate + review bottom sheet (iOS RateReviewSheet twin). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RateReviewSheet(
-    isSubmitting: Boolean,
-    initialRating: Int,
-    onSubmit: (rating: Int, review: String?) -> Unit,
+private fun AddToLibrarySheet(
+    current: LibraryShelf?,
+    onSelect: (LibraryShelf?) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var rating by rememberSaveable { mutableIntStateOf(initialRating) }
-    var review by rememberSaveable { mutableStateOf("") }
-
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Surface) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            Text(
-                stringResource(R.string.detail_rate_review),
-                style = MaterialTheme.typography.headlineSmall,
-                color = TextPrimary
-            )
-            Spacer(Modifier.height(16.dp))
-            RatingPicker(rating = rating, onRate = { rating = it }, starSize = 36.dp)
-            Spacer(Modifier.height(16.dp))
-            DarkTextField(
-                value = review,
-                onValueChange = { review = it },
-                label = stringResource(R.string.detail_review_hint),
-                singleLine = false,
-                modifier = Modifier.fillMaxWidth().height(120.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            PrimaryButton(
-                text = stringResource(R.string.detail_post),
-                onClick = { onSubmit(rating, review.trim().ifEmpty { null }) },
-                enabled = rating in 1..5,
-                loading = isSubmitting
-            )
-            Spacer(Modifier.height(28.dp))
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = HL.Paper,
+        dragHandle = null
+    ) {
+        Column(modifier = Modifier.navigationBarsPadding()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawBehind {
+                        drawRect(Line, topLeft = Offset(0f, size.height - 2.dp.toPx()), size = Size(size.width, 2.dp.toPx()))
+                    }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("ADD TO LIBRARY", fontWeight = FontWeight.Black, fontSize = 15.sp, letterSpacing = 0.5.sp, color = HL.Ink)
+                Spacer(Modifier.weight(1f))
+                SquareIcon(onClick = onDismiss) {
+                    Icon(Icons.Filled.Close, "close", tint = HL.Ink, modifier = Modifier.size(13.dp))
+                }
+            }
+            LibraryOption(LibraryShelf.Bookshelf, Icons.Outlined.LibraryBooks, "Add to Bookshelf", "Books you own — lands on your bookshelf", current, onSelect)
+            LibraryOption(LibraryShelf.Tbr, Icons.Outlined.AccessTime, "Add to TBR", "To-be-read — your want-to-read queue", current, onSelect)
+            LibraryOption(LibraryShelf.Read, Icons.Outlined.CheckCircle, "Mark as Read", "Finished — 100% progress on your bookshelf", current, onSelect)
+            Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+@Composable
+private fun LibraryOption(
+    shelf: LibraryShelf,
+    icon: ImageVector,
+    title: String,
+    sub: String,
+    current: LibraryShelf?,
+    onSelect: (LibraryShelf?) -> Unit
+) {
+    val on = current == shelf
+    val fg = if (on) HL.Paper else HL.Ink
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(if (on) HL.Accent else HL.Paper)
+            .drawBehind {
+                drawRect(Line, topLeft = Offset(0f, size.height - 2.dp.toPx()), size = Size(size.width, 2.dp.toPx()))
+            }
+            .clickable { onSelect(if (on) null else shelf) }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(13.dp)
+    ) {
+        Box(
+            modifier = Modifier.size(36.dp).border(2.dp, if (on) HL.Paper else Line, RectangleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, tint = fg, modifier = Modifier.size(18.dp))
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(title.uppercase(), fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 0.3.sp, color = fg)
+            Text(
+                sub,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                color = if (on) HL.Paper.copy(alpha = 0.85f) else HL.Muted
+            )
+        }
+        if (on) Icon(Icons.Filled.Check, null, tint = HL.Paper, modifier = Modifier.size(15.dp))
+    }
+}
+
+// ---- Toast ----
+
+@Composable
+private fun ToastBar(message: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(HL.Ink)
+            .border(2.dp, HL.Accent, RectangleShape)
+            .padding(horizontal = 15.dp, vertical = 9.dp)
+    ) {
+        Text(
+            message.uppercase(),
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+            letterSpacing = 1.sp,
+            color = HL.Paper
+        )
     }
 }
