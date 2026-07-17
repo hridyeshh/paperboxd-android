@@ -118,12 +118,18 @@ class CelebrationCenter @Inject constructor(
     fun show(celebration: Celebration) { _current.value = celebration }
     fun dismiss() { _current.value = null }
 
-    /** Celebrate when the server-computed streak grows past the last one seen. */
+    /**
+     * Celebrate the first successful page-log of each UTC day — that's the moment
+     * a reading day (and thus the streak) is earned. Keyed on the UTC day so repeat
+     * logs the same day don't re-fire, but a fresh day / first-ever log / streak
+     * reset all celebrate (a numeric-increase check missed those).
+     */
     fun checkStreak(new: Int) {
-        val old = prefs.getInt(KEY_STREAK, 0)
-        prefs.edit().putInt(KEY_STREAK, new).apply()
-        // old == 0 means first run — record silently, don't celebrate stale state.
-        if (old > 0 && new > old) show(Celebration.Streak(new))
+        if (new <= 0) return
+        val todayUtc = System.currentTimeMillis() / 86_400_000L // day index since epoch, UTC
+        if (prefs.getLong(KEY_STREAK_DAY, -1L) == todayUtc) return
+        prefs.edit().putLong(KEY_STREAK_DAY, todayUtc).apply()
+        show(Celebration.Streak(new))
     }
 
     /** Celebrate when the user's level rises past the last one seen. */
@@ -135,7 +141,7 @@ class CelebrationCenter @Inject constructor(
     }
 
     private companion object {
-        const val KEY_STREAK = "celebrated_streak"
+        const val KEY_STREAK_DAY = "celebrated_streak_day"
         const val KEY_LEVEL = "celebrated_level"
     }
 }

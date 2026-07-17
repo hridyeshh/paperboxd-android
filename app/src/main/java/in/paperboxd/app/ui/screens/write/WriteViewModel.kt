@@ -90,9 +90,8 @@ class WriteViewModel @Inject constructor(
             ).fold(
                 onSuccess = {
                     _state.update { it.copy(didSubmit = true) }
-                    // Logging extends the reading streak — refetch it and
-                    // celebrate if it grew past the last value we've seen.
-                    userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
+                    // No streak celebration here — the streak takeover fires only on
+                    // the page-log path (BookDetail), not on diary posts.
                 },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )

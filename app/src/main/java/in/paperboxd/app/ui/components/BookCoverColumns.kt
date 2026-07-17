@@ -1,11 +1,5 @@
 package `in`.paperboxd.app.ui.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,16 +87,23 @@ private fun CoverColumn(spec: ColSpec) {
     val setHpx = with(density) { setHDp.toPx() }
     val init0 = spec.frac * setHpx
 
-    val transition = rememberInfiniteTransition(label = "coverCol")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = setHpx,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = spec.durMs, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "phase",
-    )
+    // Frame-clock driven, not rememberInfiniteTransition + tween: an infinite
+    // tween is scaled by the system "Animator duration scale" setting, so with
+    // animations off (common on emulators / dev devices) it never advances and
+    // the wall sits frozen. withFrameNanos ignores that setting — same driver as
+    // the scan orb / Pip button, which is why those animate here and this didn't.
+    var phase by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(setHpx, spec.durMs) {
+        var start = 0L
+        while (true) {
+            withFrameNanos { now ->
+                if (start == 0L) start = now
+                val tMs = (now - start) / 1_000_000f
+                val frac = (tMs % spec.durMs) / spec.durMs
+                phase = frac * setHpx
+            }
+        }
+    }
 
     // Upward runs more negative; downward less negative. Tripled content keeps
     // the strip full through the whole travel; the parent clips overflow.

@@ -100,12 +100,14 @@ fun ProfileScreen(
     onSignOut: () -> Unit,
     onOpenEditProfile: () -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
+    reloadKey: Any = Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
 
-    LaunchedEffect(username) { viewModel.start(username, viewer) }
+    // `reloadKey` bumps after an edit-profile save so the screen re-fetches.
+    LaunchedEffect(username, reloadKey) { viewModel.start(username, viewer) }
     LaunchedEffect(Unit) { viewModel.toast.collect { snackbar.showSnackbar(it) } }
 
     val view = LocalView.current

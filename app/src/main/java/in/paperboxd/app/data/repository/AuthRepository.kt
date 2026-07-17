@@ -64,7 +64,8 @@ class AuthRepository @Inject constructor(
             api.uploadAvatar(part)
         }
 
-    suspend fun deleteAccount(): Result<Unit> = safeApiCall { api.deleteMe(); Unit }
+    suspend fun deleteAccount(reasons: List<String>): Result<Unit> =
+        safeApiCall { api.deleteMe(mapOf("reasons" to reasons)); Unit }
 
     // Session persistence
     fun cachedToken(): String? = securePrefs.getToken()

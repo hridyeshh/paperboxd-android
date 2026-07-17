@@ -30,6 +30,7 @@ import `in`.paperboxd.app.ui.screens.write.WriteScreen
 import `in`.paperboxd.app.ui.screens.home.HomeScreen
 import `in`.paperboxd.app.ui.screens.leaderboard.LeaderboardScreen
 import `in`.paperboxd.app.ui.screens.onboarding.OnboardingScreen
+import `in`.paperboxd.app.ui.screens.profile.EditProfileScreen
 import `in`.paperboxd.app.ui.screens.profile.ProfileScreen
 import `in`.paperboxd.app.ui.screens.search.SearchScreen
 import `in`.paperboxd.app.ui.screens.splash.SplashScreen
@@ -103,7 +104,9 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
                 )
             }
-            composable(Screen.ProfileTab.route) {
+            composable(Screen.ProfileTab.route) { entry ->
+                val reloadKey by entry.savedStateHandle
+                    .getStateFlow("profileUpdated", 0).collectAsState()
                 ProfileScreen(
                     username = sessionUser.username.orEmpty(),
                     viewer = sessionUser,
@@ -115,7 +118,8 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenEditProfile = { navController.navigate("edit-profile") },
                     onOpenDiaryEntry = {
                         navController.navigate("diary-entry/${sessionUser.username.orEmpty()}/$it")
-                    }
+                    },
+                    reloadKey = reloadKey
                 )
             }
             composable(Screen.BookDetail.route) {
@@ -128,6 +132,8 @@ fun MainScaffold(user: User, appState: AppState) {
             }
             composable(Screen.Profile.route) { entry ->
                 val username = entry.arguments?.getString("username").orEmpty()
+                val reloadKey by entry.savedStateHandle
+                    .getStateFlow("profileUpdated", 0).collectAsState()
                 ProfileScreen(
                     username = username,
                     viewer = sessionUser,
@@ -137,10 +143,22 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
                     onSignOut = {},
                     onOpenEditProfile = { navController.navigate("edit-profile") },
-                    onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") }
+                    onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") },
+                    reloadKey = reloadKey
                 )
             }
-            composable("edit-profile") { PlaceholderScreen("Edit Profile") }
+            composable("edit-profile") {
+                EditProfileScreen(
+                    username = sessionUser.username.orEmpty(),
+                    onClose = { navController.popBackStack() },
+                    onSaved = {
+                        navController.previousBackStackEntry?.savedStateHandle?.let { h ->
+                            h["profileUpdated"] = (h.get<Int>("profileUpdated") ?: 0) + 1
+                        }
+                        navController.popBackStack()
+                    }
+                )
+            }
             composable("diary-entry/{username}/{entryId}") {
                 DiaryEntryDetailScreen(
                     onBack = { navController.popBackStack() },

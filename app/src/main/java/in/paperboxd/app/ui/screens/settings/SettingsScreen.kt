@@ -60,6 +60,14 @@ import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.theme.PBScript
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 
 /** iOS SettingsView twin — same sections/rows, restyled to the light brutalist
  *  paper aesthetic used across the ported app. Opened from the profile hamburger. */
@@ -269,33 +277,206 @@ private fun SettingsBody(
         ) { dialog = null }
         SettingsDialog.Privacy -> InfoDialog("Privacy Policy", PRIVACY_TEXT) { dialog = null }
         SettingsDialog.Terms -> InfoDialog("Terms of Service", TERMS_TEXT) { dialog = null }
-        SettingsDialog.Delete -> AlertDialog(
-            onDismissRequest = { dialog = null },
+        SettingsDialog.Delete -> DeleteAccountDialog(
+            onDismiss = { dialog = null },
+            onDeleted = { dialog = null; onSignOut() },
+            onSubmit = viewModel::deleteAccount
+        )
+        null -> {}
+    }
+}
+
+/**
+ * Three-step delete-account flow mirroring iOS DeleteAccountSheet: exit-reason
+ * survey → confirm warning → goodbye. Reasons post as {reasons:[...]} to the same
+ * DELETE /api/v1/users/me endpoint; sign-out fires when goodbye is acknowledged.
+ */
+@Composable
+private fun DeleteAccountDialog(
+    onDismiss: () -> Unit,
+    onDeleted: () -> Unit,
+    onSubmit: suspend (List<String>) -> Result<Unit>
+) {
+    val allReasons = remember {
+        listOf(
+            "I'm not using this account anymore",
+            "I have privacy concerns",
+            "I found a better alternative",
+            "The service doesn't meet my needs",
+            "I'm receiving too many notifications",
+            "I want to start fresh with a new account",
+            "Other",
+        )
+    }
+    val scope = rememberCoroutineScope()
+    var step by remember { mutableStateOf(0) } // 0 reason · 1 confirm · 2 goodbye
+    val selected = remember { mutableStateListOf<String>() }
+    var other by remember { mutableStateOf("") }
+    var deleting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    val formValid = selected.isNotEmpty() &&
+        !(selected.contains("Other") && other.isBlank())
+
+    when (step) {
+        0 -> AlertDialog(
+            onDismissRequest = onDismiss,
             containerColor = HL.Card,
             title = { Text("Delete Account", color = HL.Ink, fontWeight = FontWeight.Bold) },
             text = {
+                Column {
+                    Text(
+                        "We're sorry to see you go. Please let us know why you're deleting your account.",
+                        color = HL.Muted, fontSize = 13.sp
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Column(
+                        Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        allReasons.forEach { r ->
+                            val on = selected.contains(r)
+                            Row(
+                                Modifier.fillMaxWidth().clickable {
+                                    if (on) { selected.remove(r); if (r == "Other") other = "" }
+                                    else selected.add(r)
+                                },
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Box(
+                                    Modifier.size(20.dp)
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(if (on) HL.Accent else Color.Transparent)
+                                        .border(
+                                            1.5.dp,
+                                            if (on) HL.Accent else HL.Muted,
+                                            RoundedCornerShape(5.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (on) Icon(
+                                        Icons.Outlined.Check, null,
+                                        tint = Color.White, modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Text(r, color = HL.Ink, fontSize = 14.sp)
+                            }
+                            if (r == "Other" && on) {
+                                BasicTextField(
+                                    value = other,
+                                    onValueChange = { other = it },
+                                    singleLine = true,
+                                    textStyle = TextStyle(fontSize = 14.sp, color = HL.Ink),
+                                    modifier = Modifier.fillMaxWidth().padding(start = 32.dp)
+                                        .clip(RoundedCornerShape(8.dp)).background(HL.Paper2)
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    decorationBox = { inner ->
+                                        Box(contentAlignment = Alignment.CenterStart) {
+                                            if (other.isEmpty()) Text(
+                                                "Please specify…", color = HL.Muted, fontSize = 14.sp
+                                            )
+                                            inner()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = formValid, onClick = { step = 1 }) {
+                    Text(
+                        "Continue",
+                        color = if (formValid) HL.Accent else HL.Muted,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = HL.Muted) } }
+        )
+
+        1 -> AlertDialog(
+            onDismissRequest = { if (!deleting) onDismiss() },
+            containerColor = HL.Card,
+            title = { Text("Are you sure?", color = HL.Ink, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("This action cannot be undone.", color = HL.Muted, fontSize = 13.sp)
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Deleting your account will permanently remove:",
+                        color = HL.Ink, fontSize = 14.sp
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    listOf(
+                        "Your profile and all personal information",
+                        "All your books, lists, and reading data",
+                        "Your followers and following relationships",
+                        "All your activities and reviews",
+                    ).forEach {
+                        Row(Modifier.padding(top = 4.dp)) {
+                            Text("•  ", color = HL.Muted, fontSize = 13.sp)
+                            Text(it, color = HL.Muted, fontSize = 13.sp)
+                        }
+                    }
+                    error?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(it, color = HL.Accent, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = !deleting, onClick = {
+                    deleting = true; error = null
+                    scope.launch {
+                        onSubmit(buildDeleteReasons(allReasons, selected, other)).fold(
+                            onSuccess = { deleting = false; step = 2 },
+                            onFailure = {
+                                deleting = false
+                                error = "Couldn’t delete account. Try again."
+                            }
+                        )
+                    }
+                }) {
+                    Text(
+                        if (deleting) "Deleting…" else "Delete my account",
+                        color = HL.Accent, fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(enabled = !deleting, onClick = { step = 0 }) {
+                    Text("Go back", color = HL.Muted)
+                }
+            }
+        )
+
+        else -> AlertDialog(
+            onDismissRequest = {}, // must acknowledge — account already gone
+            containerColor = HL.Card,
+            title = { Text("We're sorry to see you go", color = HL.Ink, fontWeight = FontWeight.Bold) },
+            text = {
                 Text(
-                    "This permanently deletes your account and all your reading data. This can't be undone.",
+                    "Your account has been successfully deleted. Thank you for being part of our community.",
                     color = HL.Muted, fontSize = 14.sp
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    dialog = null
-                    scope.launch {
-                        viewModel.deleteAccount().fold(
-                            onSuccess = { onSignOut() },
-                            onFailure = { toast = "Couldn’t delete account" }
-                        )
-                    }
-                }) { Text("Delete", color = HL.Accent, fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = {
-                TextButton(onClick = { dialog = null }) { Text("Cancel", color = HL.Muted) }
+                TextButton(onClick = onDeleted) {
+                    Text("Okay", color = HL.Accent, fontWeight = FontWeight.Bold)
+                }
             }
         )
-        null -> {}
     }
+}
+
+/** Selected reasons in display order; "Other" carries the free-text, matching iOS. */
+private fun buildDeleteReasons(
+    all: List<String>, selected: List<String>, other: String
+): List<String> = all.filter { selected.contains(it) }.map {
+    if (it == "Other") "Other: ${other.trim()}" else it
 }
 
 private enum class SettingsDialog { Rate, Privacy, Terms, Delete }

@@ -50,6 +50,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -98,8 +99,9 @@ interface ApiService {
     suspend fun forgotPassword(@Body body: Map<String, String>): ResponseBody
 
     // Current user
-    @DELETE("api/v1/users/me")
-    suspend fun deleteMe(): ResponseBody
+    // hasBody DELETE so the exit-survey reasons ride along, matching iOS.
+    @HTTP(method = "DELETE", path = "api/v1/users/me", hasBody = true)
+    suspend fun deleteMe(@Body body: Map<String, List<String>>): ResponseBody
 
     @POST("api/v1/users/me/onboarding")
     suspend fun saveOnboarding(@Body body: OnboardingBody): ResponseBody

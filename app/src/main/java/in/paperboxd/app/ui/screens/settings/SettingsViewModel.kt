@@ -21,9 +21,9 @@ class SettingsViewModel @Inject constructor(
         Unit
     }
 
-    /** DELETE /api/v1/users/me — caller signs out on success. */
-    suspend fun deleteAccount(): Result<Unit> = runCatching {
-        api.deleteMe()
+    /** DELETE /api/v1/users/me with the exit-survey reasons — caller signs out on success. */
+    suspend fun deleteAccount(reasons: List<String>): Result<Unit> = runCatching {
+        api.deleteMe(mapOf("reasons" to reasons))
         Unit
     }
 }
