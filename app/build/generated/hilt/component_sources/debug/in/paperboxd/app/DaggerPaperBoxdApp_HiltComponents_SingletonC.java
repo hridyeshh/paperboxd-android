@@ -66,6 +66,8 @@ import in.paperboxd.app.ui.screens.scan.ScanFlowViewModel;
 import in.paperboxd.app.ui.screens.scan.ScanFlowViewModel_HiltModules_KeyModule_ProvideFactory;
 import in.paperboxd.app.ui.screens.search.SearchViewModel;
 import in.paperboxd.app.ui.screens.search.SearchViewModel_HiltModules_KeyModule_ProvideFactory;
+import in.paperboxd.app.ui.screens.settings.GoodreadsImportViewModel;
+import in.paperboxd.app.ui.screens.settings.GoodreadsImportViewModel_HiltModules_KeyModule_ProvideFactory;
 import in.paperboxd.app.ui.screens.settings.SettingsViewModel;
 import in.paperboxd.app.ui.screens.settings.SettingsViewModel_HiltModules_KeyModule_ProvideFactory;
 import in.paperboxd.app.ui.screens.write.WriteViewModel;
@@ -404,7 +406,7 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
 
     @Override
     public Set<String> getViewModelKeys() {
-      return SetBuilder.<String>newSetBuilder(14).add(AuthViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(BookDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(CelebrationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(DiaryEntryDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(EditProfileViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(FollowListViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(HomeViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LeaderboardViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(OnboardingViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ProfileViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ScanFlowViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SearchViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SettingsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(WriteViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
+      return SetBuilder.<String>newSetBuilder(15).add(AuthViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(BookDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(CelebrationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(DiaryEntryDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(EditProfileViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(FollowListViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(GoodreadsImportViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(HomeViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(LeaderboardViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(OnboardingViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ProfileViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ScanFlowViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SearchViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SettingsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(WriteViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
     }
 
     @Override
@@ -454,6 +456,8 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
 
     private Provider<FollowListViewModel> followListViewModelProvider;
 
+    private Provider<GoodreadsImportViewModel> goodreadsImportViewModelProvider;
+
     private Provider<HomeViewModel> homeViewModelProvider;
 
     private Provider<LeaderboardViewModel> leaderboardViewModelProvider;
@@ -489,19 +493,20 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
       this.diaryEntryDetailViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 3);
       this.editProfileViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 4);
       this.followListViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 5);
-      this.homeViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 6);
-      this.leaderboardViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 7);
-      this.onboardingViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 8);
-      this.profileViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 9);
-      this.scanFlowViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 10);
-      this.searchViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 11);
-      this.settingsViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 12);
-      this.writeViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 13);
+      this.goodreadsImportViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 6);
+      this.homeViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 7);
+      this.leaderboardViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 8);
+      this.onboardingViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 9);
+      this.profileViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 10);
+      this.scanFlowViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 11);
+      this.searchViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 12);
+      this.settingsViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 13);
+      this.writeViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 14);
     }
 
     @Override
     public Map<String, javax.inject.Provider<ViewModel>> getHiltViewModelMap() {
-      return MapBuilder.<String, javax.inject.Provider<ViewModel>>newMapBuilder(14).put("in.paperboxd.app.ui.screens.auth.AuthViewModel", ((Provider) authViewModelProvider)).put("in.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel", ((Provider) bookDetailViewModelProvider)).put("in.paperboxd.app.ui.components.CelebrationViewModel", ((Provider) celebrationViewModelProvider)).put("in.paperboxd.app.ui.screens.diary.DiaryEntryDetailViewModel", ((Provider) diaryEntryDetailViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.EditProfileViewModel", ((Provider) editProfileViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.FollowListViewModel", ((Provider) followListViewModelProvider)).put("in.paperboxd.app.ui.screens.home.HomeViewModel", ((Provider) homeViewModelProvider)).put("in.paperboxd.app.ui.screens.leaderboard.LeaderboardViewModel", ((Provider) leaderboardViewModelProvider)).put("in.paperboxd.app.ui.screens.onboarding.OnboardingViewModel", ((Provider) onboardingViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.ProfileViewModel", ((Provider) profileViewModelProvider)).put("in.paperboxd.app.ui.screens.scan.ScanFlowViewModel", ((Provider) scanFlowViewModelProvider)).put("in.paperboxd.app.ui.screens.search.SearchViewModel", ((Provider) searchViewModelProvider)).put("in.paperboxd.app.ui.screens.settings.SettingsViewModel", ((Provider) settingsViewModelProvider)).put("in.paperboxd.app.ui.screens.write.WriteViewModel", ((Provider) writeViewModelProvider)).build();
+      return MapBuilder.<String, javax.inject.Provider<ViewModel>>newMapBuilder(15).put("in.paperboxd.app.ui.screens.auth.AuthViewModel", ((Provider) authViewModelProvider)).put("in.paperboxd.app.ui.screens.bookdetail.BookDetailViewModel", ((Provider) bookDetailViewModelProvider)).put("in.paperboxd.app.ui.components.CelebrationViewModel", ((Provider) celebrationViewModelProvider)).put("in.paperboxd.app.ui.screens.diary.DiaryEntryDetailViewModel", ((Provider) diaryEntryDetailViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.EditProfileViewModel", ((Provider) editProfileViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.FollowListViewModel", ((Provider) followListViewModelProvider)).put("in.paperboxd.app.ui.screens.settings.GoodreadsImportViewModel", ((Provider) goodreadsImportViewModelProvider)).put("in.paperboxd.app.ui.screens.home.HomeViewModel", ((Provider) homeViewModelProvider)).put("in.paperboxd.app.ui.screens.leaderboard.LeaderboardViewModel", ((Provider) leaderboardViewModelProvider)).put("in.paperboxd.app.ui.screens.onboarding.OnboardingViewModel", ((Provider) onboardingViewModelProvider)).put("in.paperboxd.app.ui.screens.profile.ProfileViewModel", ((Provider) profileViewModelProvider)).put("in.paperboxd.app.ui.screens.scan.ScanFlowViewModel", ((Provider) scanFlowViewModelProvider)).put("in.paperboxd.app.ui.screens.search.SearchViewModel", ((Provider) searchViewModelProvider)).put("in.paperboxd.app.ui.screens.settings.SettingsViewModel", ((Provider) settingsViewModelProvider)).put("in.paperboxd.app.ui.screens.write.WriteViewModel", ((Provider) writeViewModelProvider)).build();
     }
 
     @Override
@@ -548,28 +553,31 @@ public final class DaggerPaperBoxdApp_HiltComponents_SingletonC {
           case 5: // in.paperboxd.app.ui.screens.profile.FollowListViewModel 
           return (T) new FollowListViewModel(singletonCImpl.userRepositoryProvider.get());
 
-          case 6: // in.paperboxd.app.ui.screens.home.HomeViewModel 
+          case 6: // in.paperboxd.app.ui.screens.settings.GoodreadsImportViewModel 
+          return (T) new GoodreadsImportViewModel(singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.authRepositoryProvider.get());
+
+          case 7: // in.paperboxd.app.ui.screens.home.HomeViewModel 
           return (T) new HomeViewModel(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.recommendationRepositoryProvider.get(), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.userRepositoryProvider.get());
 
-          case 7: // in.paperboxd.app.ui.screens.leaderboard.LeaderboardViewModel 
+          case 8: // in.paperboxd.app.ui.screens.leaderboard.LeaderboardViewModel 
           return (T) new LeaderboardViewModel(singletonCImpl.userRepositoryProvider.get(), singletonCImpl.celebrationCenterProvider.get());
 
-          case 8: // in.paperboxd.app.ui.screens.onboarding.OnboardingViewModel 
+          case 9: // in.paperboxd.app.ui.screens.onboarding.OnboardingViewModel 
           return (T) new OnboardingViewModel(singletonCImpl.authRepositoryProvider.get(), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.recommendationRepositoryProvider.get());
 
-          case 9: // in.paperboxd.app.ui.screens.profile.ProfileViewModel 
+          case 10: // in.paperboxd.app.ui.screens.profile.ProfileViewModel 
           return (T) new ProfileViewModel(singletonCImpl.userRepositoryProvider.get(), singletonCImpl.diaryRepositoryProvider.get());
 
-          case 10: // in.paperboxd.app.ui.screens.scan.ScanFlowViewModel 
+          case 11: // in.paperboxd.app.ui.screens.scan.ScanFlowViewModel 
           return (T) new ScanFlowViewModel(singletonCImpl.bookRepositoryProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 11: // in.paperboxd.app.ui.screens.search.SearchViewModel 
+          case 12: // in.paperboxd.app.ui.screens.search.SearchViewModel 
           return (T) new SearchViewModel(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.userRepositoryProvider.get(), singletonCImpl.recommendationRepositoryProvider.get());
 
-          case 12: // in.paperboxd.app.ui.screens.settings.SettingsViewModel 
+          case 13: // in.paperboxd.app.ui.screens.settings.SettingsViewModel 
           return (T) new SettingsViewModel(singletonCImpl.provideApiServiceProvider.get());
 
-          case 13: // in.paperboxd.app.ui.screens.write.WriteViewModel 
+          case 14: // in.paperboxd.app.ui.screens.write.WriteViewModel 
           return (T) new WriteViewModel(singletonCImpl.diaryRepositoryProvider.get(), singletonCImpl.bookRepositoryProvider.get(), singletonCImpl.userRepositoryProvider.get(), singletonCImpl.celebrationCenterProvider.get());
 
           default: throw new AssertionError(id);

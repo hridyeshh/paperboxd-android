@@ -58,6 +58,7 @@ import in.paperboxd.app.ui.screens.profile.FollowListViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.profile.ProfileViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.scan.ScanFlowViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.search.SearchViewModel_HiltModules;
+import in.paperboxd.app.ui.screens.settings.GoodreadsImportViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.settings.SettingsViewModel_HiltModules;
 import in.paperboxd.app.ui.screens.write.WriteViewModel_HiltModules;
 import javax.annotation.processing.Generated;
@@ -174,6 +175,7 @@ public final class PaperBoxdApp_HiltComponents {
           DiaryEntryDetailViewModel_HiltModules.KeyModule.class,
           EditProfileViewModel_HiltModules.KeyModule.class,
           FollowListViewModel_HiltModules.KeyModule.class,
+          GoodreadsImportViewModel_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           HiltWrapper_SavedStateHandleModule.class,
           HomeViewModel_HiltModules.KeyModule.class,
@@ -227,6 +229,7 @@ public final class PaperBoxdApp_HiltComponents {
           DiaryEntryDetailViewModel_HiltModules.BindsModule.class,
           EditProfileViewModel_HiltModules.BindsModule.class,
           FollowListViewModel_HiltModules.BindsModule.class,
+          GoodreadsImportViewModel_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
           HomeViewModel_HiltModules.BindsModule.class,
           LeaderboardViewModel_HiltModules.BindsModule.class,

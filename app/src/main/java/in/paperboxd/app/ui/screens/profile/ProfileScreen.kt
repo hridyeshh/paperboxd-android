@@ -32,7 +32,9 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -133,12 +135,14 @@ fun ProfileScreen(
         onOpenDiaryEntry = onOpenDiaryEntry,
         onTabSelected = viewModel::onTabSelected,
         onToggleFollow = viewModel::toggleFollow,
+        onRefresh = viewModel::refresh,
         onSelectActivityYear = viewModel::selectActivityYear,
         fetchShelfIfNeeded = viewModel::fetchShelfIfNeeded,
         fetchDiaryIfNeeded = viewModel::fetchDiaryIfNeeded
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
     state: ProfileUiState,
@@ -154,6 +158,7 @@ fun ProfileContent(
     onOpenDiaryEntry: (String) -> Unit,
     onTabSelected: (ProfileTab) -> Unit,
     onToggleFollow: () -> Unit,
+    onRefresh: () -> Unit,
     onSelectActivityYear: (Int) -> Unit = {},
     fetchShelfIfNeeded: (BookWithStatus) -> Unit,
     fetchDiaryIfNeeded: (DiaryEntry) -> Unit
@@ -182,8 +187,13 @@ fun ProfileContent(
             )
             state.profile != null -> {
                 val profile = state.profile!!
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = onRefresh,
+                    modifier = Modifier.fillMaxSize().statusBarsPadding()
+                ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().statusBarsPadding(),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(top = 68.dp, bottom = 140.dp)
                 ) {
                     item {
@@ -276,6 +286,7 @@ fun ProfileContent(
                             modifier = Modifier.padding(top = 28.dp)
                         )
                     }
+                }
                 }
             }
         }

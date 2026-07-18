@@ -31,6 +31,7 @@ enum class ProfileTab { Bookshelf, Diary, Lists, Tbr, Authors }
 data class ProfileUiState(
     val profile: UserProfile? = null,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val selectedTab: ProfileTab = ProfileTab.Bookshelf,
     val shelfBooks: List<BookWithStatus> = emptyList(),
@@ -87,9 +88,12 @@ class ProfileViewModel @Inject constructor(
         fetchAll()
     }
 
-    fun fetchAll() {
+    /** Pull-to-refresh: re-run fetchAll keeping current content on screen (spinner, not full-screen loader). */
+    fun refresh() = fetchAll(refreshing = true)
+
+    fun fetchAll(refreshing: Boolean = false) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, errorMessage = null) }
+            _state.update { it.copy(isLoading = !refreshing, isRefreshing = refreshing, errorMessage = null) }
             shelfPage = 1; shelfHasMore = true; didLoadReading = false
             readingBooks = emptyList(); readBooks = emptyList(); readTotal = 0
             diaryPage = 1; diaryHasMore = true
@@ -114,7 +118,8 @@ class ProfileViewModel @Inject constructor(
                     activity = activityTask.await(),
                     shelfBooks = emptyList(),
                     diaryEntries = emptyList(),
-                    isLoading = false
+                    isLoading = false,
+                    isRefreshing = false
                 )
             }
             fetchShelf()

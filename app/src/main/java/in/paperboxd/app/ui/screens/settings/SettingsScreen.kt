@@ -160,6 +160,7 @@ private fun SettingsBody(
 
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
+    var showGoodreads by remember { mutableStateOf(false) }
 
     val version = remember {
         runCatching {
@@ -202,7 +203,7 @@ private fun SettingsBody(
 
             Section("Your Data") {
                 SettingsRow(Icons.Outlined.Download, "Import from Goodreads") {
-                    toast = "Goodreads import coming soon"
+                    showGoodreads = true
                 }
             }
 
@@ -283,6 +284,10 @@ private fun SettingsBody(
             onSubmit = viewModel::deleteAccount
         )
         null -> {}
+    }
+
+    if (showGoodreads) {
+        GoodreadsImportSheet(onDismiss = { showGoodreads = false })
     }
 }
 
