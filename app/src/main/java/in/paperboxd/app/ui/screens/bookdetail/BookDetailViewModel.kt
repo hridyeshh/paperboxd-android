@@ -316,6 +316,9 @@ class BookDetailViewModel @Inject constructor(
      */
     fun updateProgress(currentPage: Int, totalPages: Int, celebrateStreak: Boolean = true) {
         val username = user?.username ?: return
+        // Only forward progress earns a reading day / streak celebration. Logging
+        // a lower page (e.g. correcting 192 → 19) is not a reading day.
+        val previousPage = _state.value.progress?.currentPage ?: 0
         viewModelScope.launch {
             _state.update { it.copy(isSavingProgress = true) }
             bookRepository.updateProgress(username, bookId, currentPage, totalPages).fold(
@@ -332,7 +335,7 @@ class BookDetailViewModel @Inject constructor(
                         )
                     }
                     _toast.tryEmit("Progress saved")
-                    if (celebrateStreak) {
+                    if (celebrateStreak && currentPage > previousPage) {
                         userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
                     }
                 },
