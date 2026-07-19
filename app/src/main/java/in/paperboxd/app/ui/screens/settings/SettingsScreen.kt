@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import `in`.paperboxd.app.ui.screens.scan.ScanPrefs
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -276,8 +277,8 @@ private fun SettingsBody(
             "Rate PaperBoxd",
             "We'll enable ratings once we're live on the Play Store. Thank you for your support!"
         ) { dialog = null }
-        SettingsDialog.Privacy -> InfoDialog("Privacy Policy", PRIVACY_TEXT) { dialog = null }
-        SettingsDialog.Terms -> InfoDialog("Terms of Service", TERMS_TEXT) { dialog = null }
+        SettingsDialog.Privacy -> InfoDialog("Privacy Policy", PRIVACY_TEXT, "https://paperboxd.in/privacy") { dialog = null }
+        SettingsDialog.Terms -> InfoDialog("Terms of Service", TERMS_TEXT, "https://paperboxd.in/terms") { dialog = null }
         SettingsDialog.Delete -> DeleteAccountDialog(
             onDismiss = { dialog = null },
             onDeleted = { dialog = null; onSignOut() },
@@ -540,13 +541,17 @@ private fun CircleChip(onClick: () -> Unit, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun InfoDialog(title: String, body: String, onDismiss: () -> Unit) {
+private fun InfoDialog(title: String, body: String, url: String? = null, onDismiss: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = HL.Card,
         title = { Text(title, color = HL.Ink, fontWeight = FontWeight.Bold) },
         text = { Text(body, color = HL.Muted, fontSize = 14.sp) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("OK", color = HL.Ink) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text("OK", color = HL.Ink) } },
+        dismissButton = if (url != null) {
+            { TextButton(onClick = { uriHandler.openUri(url) }) { Text("Read full policy", color = HL.Ink) } }
+        } else null
     )
 }
 
@@ -575,7 +580,7 @@ private const val PRIVACY_TEXT =
     "shelves, and profile details — to run the app and show your activity to people " +
     "you choose to share it with.\n\nWe don't sell your data. Book metadata and ratings " +
     "come from third-party sources (Google Books, Open Library, Hardcover).\n\nYou can " +
-    "request deletion of your account and data at any time by emailing hello@paperboxd.in.\n\n" +
+    "request deletion of your account and data at any time by emailing paperboxd@gmail.com.\n\n" +
     "For the full, current policy see paperboxd.in/privacy."
 
 private const val TERMS_TEXT =

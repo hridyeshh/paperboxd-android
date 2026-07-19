@@ -202,6 +202,16 @@ fun RevealScreen(
                     .padding(top = 11.dp)
                     .alpha(if (verdictIn) 1f else 0f)
             )
+
+            // AI-content disclosure: the score/verdict come from an LLM. Backs the
+            // ToS AI-generated-content clause. iOS RevealScreen twin.
+            Box(
+                Modifier
+                    .padding(top = 14.dp)
+                    .alpha(if (verdictIn) 1f else 0f)
+            ) {
+                MonoLabel(text = "AI-GENERATED · MAY BE INACCURATE", size = 9f, tracking = 1.5f, color = SK.faint)
+            }
         }
 
         Spacer(Modifier.weight(1f))

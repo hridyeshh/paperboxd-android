@@ -26,6 +26,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +55,8 @@ import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.components.BookCoverColumns
 import `in`.paperboxd.app.ui.components.BrutalCard
+import `in`.paperboxd.app.ui.components.LegalBottomSheet
+import `in`.paperboxd.app.ui.components.LegalDoc
 import `in`.paperboxd.app.ui.components.BrutalPrimaryButton
 import `in`.paperboxd.app.ui.components.BrutalSecureField
 import `in`.paperboxd.app.ui.components.BrutalTextField
@@ -311,10 +323,13 @@ private fun RegisterForm(
     onLoginWithGoogle: () -> Unit,
     onSwitchToLogin: () -> Unit,
 ) {
+    var acceptedTerms by remember { mutableStateOf(false) }
+    var legalSheet by remember { mutableStateOf<LegalDoc?>(null) }
     val canSubmit = state.email.isNotEmpty() &&
         state.password.isNotEmpty() &&
         state.password == state.confirmPassword &&
-        PasswordStrength.from(state.password) != PasswordStrength.Weak
+        PasswordStrength.from(state.password) != PasswordStrength.Weak &&
+        acceptedTerms
 
     Column(
         Modifier
@@ -371,6 +386,14 @@ private fun RegisterForm(
                     keyboardActions = KeyboardActions(onGo = { if (canSubmit) onRegister() }),
                 )
 
+                Spacer(Modifier.height(16.dp))
+                TermsConsent(
+                    checked = acceptedTerms,
+                    onCheckedChange = { acceptedTerms = it },
+                    onOpenTerms = { legalSheet = LegalDoc.Terms },
+                    onOpenPrivacy = { legalSheet = LegalDoc.Privacy },
+                )
+
                 FeedbackRow(state)
 
                 Spacer(Modifier.height(18.dp))
@@ -384,7 +407,7 @@ private fun RegisterForm(
                 Spacer(Modifier.height(14.dp))
                 OrDivider()
                 Spacer(Modifier.height(14.dp))
-                GoogleButton(text = stringResource(R.string.auth_google), onClick = onLoginWithGoogle, enabled = !state.isLoading)
+                GoogleButton(text = stringResource(R.string.auth_google), onClick = onLoginWithGoogle, enabled = !state.isLoading && acceptedTerms)
 
                 Spacer(Modifier.height(18.dp))
                 LinkText(
@@ -394,6 +417,52 @@ private fun RegisterForm(
                 )
             }
         }
+
+        legalSheet?.let { doc ->
+            LegalBottomSheet(doc = doc, onDismiss = { legalSheet = null })
+        }
+    }
+}
+
+@Composable
+private fun TermsConsent(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    onOpenTerms: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color.White,
+                uncheckedColor = w(0.5f),
+                checkmarkColor = Color.Black,
+            ),
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            buildAnnotatedString {
+                append("I agree to the ")
+                withLink(
+                    LinkAnnotation.Clickable(
+                        "terms",
+                        TextLinkStyles(SpanStyle(color = Accent, textDecoration = TextDecoration.Underline)),
+                    ) { _ -> onOpenTerms() },
+                ) { append("Terms of Service") }
+                append(" and ")
+                withLink(
+                    LinkAnnotation.Clickable(
+                        "privacy",
+                        TextLinkStyles(SpanStyle(color = Accent, textDecoration = TextDecoration.Underline)),
+                    ) { _ -> onOpenPrivacy() },
+                ) { append("Privacy Policy") }
+                append(".")
+            },
+            color = w(0.6f),
+            fontSize = 12.5.sp,
+        )
     }
 }
 
