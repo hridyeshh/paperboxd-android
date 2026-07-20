@@ -1,0 +1,7 @@
+#Mon Jul 20 09:03:39 IST 2026
+base.0=/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/0/classes.dex
+base.1=/Users/hridyesh/Desktop/everything/Development/Projects/paperboxd-android/app/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/4/classes.dex
+path.0=0/classes.dex
+path.1=4/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

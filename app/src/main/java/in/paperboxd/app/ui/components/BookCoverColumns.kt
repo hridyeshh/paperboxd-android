@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,13 +55,17 @@ private val pbCovers: List<Brush> = listOf(
 
 private data class ColSpec(val covers: List<Brush>, val up: Boolean, val durMs: Int, val frac: Float)
 
-// Durations ~halved vs iOS so motion reads clearly on a phone.
+// Durations ~halved vs iOS so motion reads clearly on a phone. Seven columns
+// (iOS has five) so the rotated, over-scaled wall still spans the full width of
+// a narrow phone instead of leaving bare wash at the edges.
 private val colSpecs = listOf(
     ColSpec(listOf(pbCovers[0], pbCovers[5], pbCovers[10], pbCovers[3], pbCovers[12]), true, 20_000, 0.00f),
     ColSpec(listOf(pbCovers[1], pbCovers[7], pbCovers[14], pbCovers[9], pbCovers[4]), false, 24_000, 0.24f),
     ColSpec(listOf(pbCovers[2], pbCovers[8], pbCovers[11], pbCovers[16], pbCovers[6]), true, 28_000, 0.48f),
     ColSpec(listOf(pbCovers[15], pbCovers[13], pbCovers[17], pbCovers[4], pbCovers[2]), false, 25_000, 0.72f),
     ColSpec(listOf(pbCovers[6], pbCovers[1], pbCovers[9], pbCovers[12], pbCovers[15]), true, 20_000, 0.16f),
+    ColSpec(listOf(pbCovers[11], pbCovers[3], pbCovers[16], pbCovers[8], pbCovers[0]), false, 27_000, 0.60f),
+    ColSpec(listOf(pbCovers[13], pbCovers[10], pbCovers[5], pbCovers[17], pbCovers[7]), true, 22_000, 0.36f),
 )
 
 @Composable
@@ -68,11 +73,18 @@ fun BookCoverColumns(modifier: Modifier = Modifier) {
     Box(modifier.clipToBounds(), contentAlignment = Alignment.Center) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(coverGap),
-            modifier = Modifier.graphicsLayer {
-                rotationZ = -8f
-                scaleX = 1.5f
-                scaleY = 1.5f
-            },
+            modifier = Modifier
+                // Unbounded, or the parent's screen-sized constraints starve the
+                // trailing columns — and every cover past the fold — down to 0dp:
+                // Row/Column with spacedBy give each child only the space left
+                // over. The wall is deliberately wider and taller than the
+                // viewport, so it must be measured free and clipped after.
+                .wrapContentSize(unbounded = true)
+                .graphicsLayer {
+                    rotationZ = -8f
+                    scaleX = 1.5f
+                    scaleY = 1.5f
+                },
         ) {
             colSpecs.forEach { spec -> CoverColumn(spec) }
         }
