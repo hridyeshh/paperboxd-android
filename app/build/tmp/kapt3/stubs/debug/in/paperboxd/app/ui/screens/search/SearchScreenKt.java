@@ -11,7 +11,7 @@ public final class SearchScreenKt {
     /**
      * Search — light-mode-only brutalist paper screen, iOS SearchView twin.
      * Idle: "Picked for you" rail + trending wall. Focused: recents / typed results
-     * with Books | Readers | Vibe chips.
+     * with Books | Readers chips.
      */
     @androidx.compose.runtime.Composable()
     public static final void SearchScreen(@org.jetbrains.annotations.NotNull()

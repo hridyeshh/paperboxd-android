@@ -1232,7 +1232,6 @@ string search_menu_title
 string search_no_results
 string search_readers
 string search_suggested
-string search_vibe
 string selected
 string splash_caption_1
 string splash_caption_2

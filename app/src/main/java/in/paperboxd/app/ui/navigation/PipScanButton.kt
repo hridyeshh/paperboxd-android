@@ -154,6 +154,32 @@ fun PipScanButton(
     }
 }
 
+/**
+ * Pip's face on its own — no circle, no tap. Reused at rest by the Ask Jazy
+ * entry + results header. Keeps the line boil, drops the sway and pose machine.
+ */
+@Composable
+fun PipFace(
+    modifier: Modifier = Modifier,
+    thinking: Boolean = false
+) {
+    var boilSeed by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            withFrameMillis { now ->
+                if (now - last >= BOIL_MS) {
+                    last = now
+                    boilSeed++
+                }
+            }
+        }
+    }
+    Canvas(modifier = modifier) {
+        drawPip(seed = boilSeed, blink = false, gaze = if (thinking) 1f else 0f, excited = false)
+    }
+}
+
 /** Deterministic per-(frame,point) noise in -1..1 — cheap hash, no state. */
 private fun jitter(seed: Int, salt: Int): Float {
     var h = seed * 2654435761L + salt * 40503L

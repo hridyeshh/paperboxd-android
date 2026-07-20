@@ -35,7 +35,7 @@ import `in`.paperboxd.app.ui.screens.profile.ProfileScreen
 import `in`.paperboxd.app.ui.screens.search.SearchScreen
 import `in`.paperboxd.app.ui.screens.splash.SplashScreen
 import `in`.paperboxd.app.ui.components.CelebrationOverlayHost
-import `in`.paperboxd.app.ui.screens.scan.ScanFlowScreen
+import `in`.paperboxd.app.ui.screens.jazy.JazyScreen
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.TextSecondary
 
@@ -197,10 +197,15 @@ fun MainScaffold(user: User, appState: AppState) {
                 onDismiss = { showWrite = false }
             )
         }
+        // Pip opens Ask Jazy; the scanner rises from inside it on the camera tap.
         if (showScan) {
-            ScanFlowScreen(
+            JazyScreen(
                 user = sessionUser,
-                onDismiss = { showScan = false }
+                onDismiss = { showScan = false },
+                onOpenBook = { bookId ->
+                    showScan = false
+                    navController.navigate(Screen.BookDetail.route(bookId))
+                }
             )
         }
 

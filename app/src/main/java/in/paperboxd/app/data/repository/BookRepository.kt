@@ -16,6 +16,7 @@ import `in`.paperboxd.app.domain.model.ReviewBody
 import `in`.paperboxd.app.domain.model.ReviewUpdateResponse
 import `in`.paperboxd.app.domain.model.ScanAnalyzeBody
 import `in`.paperboxd.app.domain.model.ScanAnalyzeResponse
+import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,7 +35,7 @@ class BookRepository @Inject constructor(
     suspend fun randomBooks(pageSize: Int? = null): Result<BookListResponse> =
         safeApiCall { api.randomBooks(pageSize) }
 
-    suspend fun vibeSearch(query: String, limit: Int = 10): Result<BookListResponse> =
+    suspend fun vibeSearch(query: String, limit: Int = 10): Result<VibeSearchResponse> =
         safeApiCall { api.vibeSearch(mapOf("query" to query, "limit" to limit)) }
 
     suspend fun like(bookId: String): Result<Unit> = safeApiCall { api.likeBook(bookId); Unit }

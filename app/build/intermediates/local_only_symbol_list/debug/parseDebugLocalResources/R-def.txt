@@ -139,7 +139,6 @@ string search_hint
 string search_no_results
 string search_readers
 string search_suggested
-string search_vibe
 string splash_caption_1
 string splash_caption_2
 string splash_caption_3

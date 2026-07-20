@@ -22,14 +22,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class SearchType { Books, Readers, Vibe }
+/** Vibe search moved out of here — it lives in Ask Jazy now (`ui/screens/jazy`). */
+enum class SearchType { Books, Readers }
 
 data class SearchUiState(
     val query: String = "",
     val searchType: SearchType = SearchType.Books,
     val books: List<Book> = emptyList(),
     val users: List<UserProfile> = emptyList(),
-    val vibeBooks: List<Book> = emptyList(),
     val isSearching: Boolean = false,
     val errorMessage: String? = null,
     val wallBooks: List<Book> = emptyList(),
@@ -42,7 +42,6 @@ data class SearchUiState(
     val currentBooks: List<Book>
         get() = when (searchType) {
             SearchType.Books -> books
-            SearchType.Vibe -> vibeBooks
             SearchType.Readers -> emptyList()
         }
     val hasQuery: Boolean get() = query.trim().isNotEmpty()
@@ -79,12 +78,11 @@ class SearchViewModel @Inject constructor(
         searchJob?.cancel()
         val q = raw.trim()
         if (q.isEmpty()) {
-            _state.update { it.copy(books = emptyList(), users = emptyList(), vibeBooks = emptyList(), errorMessage = null) }
+            _state.update { it.copy(books = emptyList(), users = emptyList(), errorMessage = null) }
             return
         }
-        val debounce = if (_state.value.searchType == SearchType.Vibe) 600L else 400L
         searchJob = viewModelScope.launch {
-            delay(debounce)
+            delay(400L)
             search(q)
         }
     }
@@ -92,7 +90,7 @@ class SearchViewModel @Inject constructor(
     fun onTypeChanged(type: SearchType) {
         searchJob?.cancel()
         _state.update {
-            it.copy(searchType = type, books = emptyList(), users = emptyList(), vibeBooks = emptyList(), errorMessage = null)
+            it.copy(searchType = type, books = emptyList(), users = emptyList(), errorMessage = null)
         }
         val q = _state.value.query.trim()
         if (q.isNotEmpty()) {
@@ -113,11 +111,6 @@ class SearchViewModel @Inject constructor(
                 val users = userRepository.searchUsers(q, pageSize = 20).getOrNull()?.users.orEmpty()
                 _state.update { it.copy(users = users) }
                 if (users.isNotEmpty()) addToHistory(q)
-            }
-            SearchType.Vibe -> {
-                val items = bookRepository.vibeSearch(q, limit = 10).getOrNull()?.items.orEmpty()
-                _state.update { it.copy(vibeBooks = items) }
-                if (items.isNotEmpty()) addToHistory(q)
             }
         }
         _state.update { it.copy(isSearching = false) }

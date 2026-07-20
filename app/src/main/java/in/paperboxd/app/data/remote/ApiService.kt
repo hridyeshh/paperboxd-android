@@ -5,6 +5,7 @@ import `in`.paperboxd.app.domain.model.AuthResponse
 import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
 import `in`.paperboxd.app.domain.model.ReadingActivity
+import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
@@ -152,9 +153,9 @@ interface ApiService {
     @GET("api/v1/books/{id}/friends-reading")
     suspend fun bookFriendsReading(@Path("id") id: String): FriendsReadingResponse
 
-    // Vibe (semantic) search
+    // Vibe (semantic) search — powers Ask Jazy.
     @POST("api/v1/search/vibe")
-    suspend fun vibeSearch(@Body body: Map<String, @JvmSuppressWildcards Any>): BookListResponse
+    suspend fun vibeSearch(@Body body: Map<String, @JvmSuppressWildcards Any>): VibeSearchResponse
 
     // Bookshelf
     @POST("api/v1/users/{username}/bookshelf")

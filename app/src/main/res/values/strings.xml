@@ -111,10 +111,9 @@
     <string name="detail_lists_empty">Lists featuring this book will live here.</string>
 
     <!-- Search -->
-    <string name="search_hint">Search books, readers, vibes…</string>
+    <string name="search_hint">Search books or readers…</string>
     <string name="search_books">Books</string>
     <string name="search_readers">Readers</string>
-    <string name="search_vibe">Vibe</string>
     <string name="search_no_results">No results — try another search.</string>
     <string name="search_suggested">Suggested readers</string>
 

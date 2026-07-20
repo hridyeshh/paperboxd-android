@@ -86,7 +86,7 @@ private val Line = Color(0xFFE6DFD0)
 /**
  * Search — light-mode-only brutalist paper screen, iOS SearchView twin.
  * Idle: "Picked for you" rail + trending wall. Focused: recents / typed results
- * with Books | Readers | Vibe chips.
+ * with Books | Readers chips.
  */
 @Composable
 fun SearchScreen(
@@ -230,7 +230,6 @@ private fun SearchBarField(
     val placeholder = when (state.searchType) {
         SearchType.Books -> "Title, author, or ISBN..."
         SearchType.Readers -> "Find readers by username..."
-        SearchType.Vibe -> "Describe a mood or feeling..."
     }
 
     Row(
@@ -250,9 +249,9 @@ private fun SearchBarField(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Icon(
-            if (state.searchType == SearchType.Vibe) Icons.Outlined.Star else Icons.Outlined.Search,
+            Icons.Outlined.Search,
             contentDescription = null,
-            tint = if (state.searchType == SearchType.Vibe) HL.Accent else HL.Ink,
+            tint = HL.Ink,
             modifier = Modifier.size(16.dp)
         )
         BasicTextField(
@@ -448,7 +447,7 @@ private fun RecentsOverlay(
                 color = HL.Ink
             )
             Text(
-                "Books, readers, or a vibe.",
+                "Books or readers.",
                 fontFamily = FontFamily.Serif,
                 fontStyle = FontStyle.Italic,
                 fontSize = 18.sp,
