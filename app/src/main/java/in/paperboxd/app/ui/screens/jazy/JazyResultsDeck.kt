@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
@@ -393,27 +394,15 @@ private fun JazyMatchCard(
 
         Spacer(Modifier.weight(1f))
 
-        Row(
+        // Open is the primary action and takes the full width; Next sits under
+        // it, so skipping never competes with opening.
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, JZ.line, RoundedCornerShape(12.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onNext() }
-                    .padding(vertical = 13.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Next", fontSize = 14.sp, color = JZ.sub)
-            }
             Row(
                 modifier = Modifier
-                    .weight(1.6f)
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(JZ.ink)
                     .clickable(
@@ -435,6 +424,27 @@ private fun JazyMatchCard(
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.padding(start = 7.dp).size(15.dp)
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, JZ.line, RoundedCornerShape(12.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onNext() }
+                    .padding(vertical = 13.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Next", fontSize = 14.sp, color = JZ.sub)
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = JZ.sub,
+                    modifier = Modifier.padding(start = 4.dp).size(15.dp)
                 )
             }
         }
