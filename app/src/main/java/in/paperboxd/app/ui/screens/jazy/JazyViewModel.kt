@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.domain.model.VibeMatch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,9 +48,11 @@ class JazyViewModel @Inject constructor(
         searchJob?.cancel()
         _state.update { it.copy(isSearching = true, errorMessage = null) }
         searchJob = viewModelScope.launch {
+            val startedAt = System.currentTimeMillis()
             // The vibe endpoint is the only source of the score + reason the card
             // shows, so a failure has to surface rather than quietly show nothing.
             bookRepository.vibeSearch(q, limit = 5)
+                .also { holdSearchingScreen(startedAt) }
                 .onSuccess { resp ->
                     val items = resp.items.orEmpty()
                     _state.update {
@@ -74,7 +77,20 @@ class JazyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The searching screen holds for at least [MIN_SEARCH_DISPLAY_MS] even when
+     * the backend answers sooner — a 300ms flash of book covers reads as a glitch.
+     */
+    private suspend fun holdSearchingScreen(startedAt: Long) {
+        val remaining = MIN_SEARCH_DISPLAY_MS - (System.currentTimeMillis() - startedAt)
+        if (remaining > 0) delay(remaining)
+    }
+
     fun closeResults() {
         _state.update { it.copy(showResults = false) }
+    }
+
+    private companion object {
+        const val MIN_SEARCH_DISPLAY_MS = 2_000L
     }
 }

@@ -1,5 +1,6 @@
 package `in`.paperboxd.app.domain.model
 
+import com.google.gson.annotations.SerializedName
 import kotlin.math.roundToInt
 
 /**
@@ -14,12 +15,21 @@ data class VibeMatch(
     val paperboxdStats: PaperboxdStats? = null,
     val apiSource: String? = null,
     val similarityScore: Double = 0.0,
-    val matchReason: String = ""
+    val matchReason: String = "",
+    /** One honest note on what might not land. Empty when Claude is unavailable. */
+    val matchCaveat: String = "",
+    /**
+     * Claude's own match number, so the pill and [matchReason] make the same
+     * claim. Null against a backend running without an Anthropic key — Gson
+     * leaves absent fields null regardless of the Kotlin default.
+     */
+    @SerializedName("matchPercent") val serverMatchPercent: Int? = null
 ) {
     val book: Book get() = Book(id, slug, volumeInfo, paperboxdStats, null, apiSource)
 
-    /** 0…1 similarity rendered as the card's "% match" pill. */
-    val matchPercent: Int get() = (similarityScore * 100).roundToInt().coerceIn(0, 100)
+    /** The card's "% match" pill — Claude's number, else raw cosine similarity. */
+    val matchPercent: Int
+        get() = (serverMatchPercent ?: (similarityScore * 100).roundToInt()).coerceIn(0, 100)
 }
 
 /** Response from POST /api/v1/search/vibe. */

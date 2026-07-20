@@ -22,13 +22,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -52,6 +55,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -75,6 +81,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -130,7 +138,7 @@ fun JazyScreen(
     var focused by remember { mutableStateOf(false) }
 
     val hasText = state.query.trim().isNotEmpty()
-    val dimmed = focused || state.showResults
+    val dimmed = focused || state.showResults || state.isSearching
     val scansLeft = remember { ScanPrefs.scansRemaining(context) }
 
     Box(
@@ -146,7 +154,7 @@ fun JazyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                .alpha(if (state.showResults) 0f else 1f)
+                .alpha(if (state.showResults || state.isSearching) 0f else 1f)
                 .padding(top = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -225,6 +233,15 @@ fun JazyScreen(
             )
         }
 
+        // ── the wait while Claude writes the reasons ──
+        AnimatedVisibility(
+            visible = state.isSearching,
+            enter = fadeIn(tween(300)),
+            exit = fadeOut(tween(300))
+        ) {
+            JazySearchingLayer(query = state.query)
+        }
+
         // ── vibe results · the card deck rises ──
         AnimatedVisibility(
             visible = state.showResults,
@@ -244,6 +261,117 @@ fun JazyScreen(
             ScanFlowScreen(user = user, onDismiss = { showScan = false })
         }
     }
+}
+
+// MARK: - Searching
+
+private const val JAZY_TRIP_MS = 3200
+private const val JAZY_COVER_COUNT = 5
+
+private val JAZY_CAPTIONS = listOf(
+    "Reading the shelves…",
+    "Weighing the vibe…",
+    "Writing your reasons…"
+)
+
+/**
+ * The wait while the backend embeds the query and Claude writes the reasons —
+ * a couple of seconds, so it gets a screen rather than a spinner. Covers riffle
+ * off the top of a stack while the caption walks through what Jazy is doing.
+ * iOS twin: `JazySearchingView`.
+ */
+@Composable
+private fun JazySearchingLayer(query: String) {
+    val transition = rememberInfiniteTransition(label = "jazy-searching")
+    // One shared 0…1 clock; each cover reads it at its own offset.
+    val clock by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(JAZY_TRIP_MS, easing = LinearEasing)),
+        label = "jazy-clock"
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize().systemBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier.width(200.dp).height(190.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Highest trip progress draws last, so the leaving cover stays on top.
+            (0 until JAZY_COVER_COUNT)
+                .map { i -> (clock + i.toFloat() / JAZY_COVER_COUNT) % 1f }
+                .sorted()
+                .forEach { t -> JazyLoadingCover(t) }
+        }
+
+        Text(
+            JAZY_CAPTIONS[((clock * JAZY_CAPTIONS.size).toInt()).coerceIn(0, JAZY_CAPTIONS.size - 1)],
+            fontSize = 13.sp,
+            color = JZ.sub,
+            modifier = Modifier.padding(top = 34.dp)
+        )
+
+        Text(
+            "“$query”",
+            fontFamily = FontFamily.Serif,
+            fontStyle = FontStyle.Italic,
+            fontSize = 15.sp,
+            color = JZ.sub,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 20.dp, start = 40.dp, end = 40.dp)
+        )
+    }
+}
+
+/**
+ * One blank cover in the Ask Jazy palette, at trip progress [t] — 0 is the back
+ * of the stack, 1 is gone. The last quarter of the trip is the flick off left.
+ */
+@Composable
+private fun JazyLoadingCover(t: Float) {
+    val leaving = ((t - 0.75f) / 0.25f).coerceAtLeast(0f)
+    val climb = minOf(t, 0.75f) / 0.75f
+
+    Box(
+        modifier = Modifier
+            .width(96.dp)
+            .height(144.dp)
+            .offset(x = (-190 * leaving).dp, y = (22 * (1 - climb)).dp)
+            .scale(0.9f + 0.1f * climb)
+            .rotate(-5f + 5f * climb - 24f * leaving)
+            .alpha(minOf(climb * 4f, 1f) * (1f - leaving))
+            .shadow(12.dp, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .background(JZ.card)
+            .border(1.dp, JZ.line, RoundedCornerShape(8.dp))
+    ) {
+        // The spine.
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(5.dp)
+                .background(JZ.accent.copy(alpha = 0.5f))
+        )
+        // Ruled lines standing in for a title.
+        Column(
+            modifier = Modifier.padding(start = 18.dp, top = 22.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            LoadingRule(46.dp, 6.dp, JZ.ink.copy(alpha = 0.16f))
+            LoadingRule(32.dp, 6.dp, JZ.ink.copy(alpha = 0.16f))
+            LoadingRule(40.dp, 5.dp, JZ.ink.copy(alpha = 0.09f))
+        }
+    }
+}
+
+@Composable
+private fun LoadingRule(w: Dp, h: Dp, color: Color) {
+    Box(modifier = Modifier.width(w).height(h).clip(CircleShape).background(color))
 }
 
 // MARK: - The bar

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,11 +27,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +47,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -70,11 +75,19 @@ fun JazyResultsDeck(
 ) {
     var index by remember { mutableIntStateOf(0) }
     var leaving by remember { mutableStateOf(false) }
+    // Which way the top card flies out: the way it was thrown, or left when the
+    // Next button was tapped.
+    var leavingDirection by remember { mutableFloatStateOf(-1f) }
+    // Live finger position on the top card, in px. Released short of
+    // flickDistancePx it springs back; past it the card leaves.
+    var dragX by remember { mutableFloatStateOf(0f) }
+    val flickDistancePx = with(LocalDensity.current) { 110.dp.toPx() }
     val done = index >= matches.size
 
     // The flick-off runs on its own clock, then the deck advances.
     LaunchedEffect(leaving) {
         if (leaving) {
+            dragX = 0f
             delay(400)
             index += 1
             leaving = false
@@ -159,7 +172,24 @@ fun JazyResultsDeck(
                         match = match,
                         depth = depth,
                         leaving = depth == 0 && leaving,
-                        onSkip = { if (!leaving) leaving = true },
+                        leavingDirection = leavingDirection,
+                        dragX = if (depth == 0) dragX else 0f,
+                        onDrag = { delta -> if (!leaving) dragX += delta },
+                        onDragEnd = {
+                            if (leaving) return@JazyMatchCard
+                            if (kotlin.math.abs(dragX) > flickDistancePx) {
+                                leavingDirection = if (dragX < 0f) -1f else 1f
+                                leaving = true
+                            } else {
+                                dragX = 0f
+                            }
+                        },
+                        onNext = {
+                            if (!leaving) {
+                                leavingDirection = -1f
+                                leaving = true
+                            }
+                        },
                         onOpen = { onOpenBook(match.book.id) }
                     )
                 }
@@ -188,15 +218,43 @@ fun JazyResultsDeck(
 }
 
 @Composable
+private fun ReasonLine(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    tint: Color,
+    ink: Color
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.padding(top = 2.dp).size(13.dp)
+        )
+        Text(text, fontSize = 13.sp, lineHeight = 19.sp, color = ink)
+    }
+}
+
+@Composable
 private fun JazyMatchCard(
     match: VibeMatch,
     depth: Int,
     leaving: Boolean,
-    onSkip: () -> Unit,
+    leavingDirection: Float,
+    dragX: Float,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+    onNext: () -> Unit,
     onOpen: () -> Unit
 ) {
     val book = match.book
-    val offsetX by animateDpAsState(if (leaving) (-520).dp else 0.dp, tween(420), label = "jazy-card-x")
+    val density = LocalDensity.current
+    // The flick uses the animated Dp; a live drag tracks the finger with no
+    // animation in between, so the card doesn't lag behind the touch.
+    val flickX by animateDpAsState(
+        if (leaving) (520 * leavingDirection).dp else 0.dp, tween(420), label = "jazy-card-x"
+    )
+    val dragDp = if (leaving) 0.dp else with(density) { dragX.toDp() }
     val cardAlpha by animateFloatAsState(
         if (leaving) 0f else if (depth == 2) 0.55f else 1f,
         tween(380),
@@ -207,10 +265,27 @@ private fun JazyMatchCard(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = (depth * 14).dp)
-            .offset(x = offsetX)
+            .offset(x = flickX + dragDp)
             .scale(1f - depth * 0.045f)
-            .rotate(if (leaving) -9f else 0f)
+            // Tilt follows the throw, so the card pivots off the wrist rather
+            // than sliding flat.
+            .rotate(if (leaving) 9f * leavingDirection else dragX / 60f)
             .alpha(cardAlpha)
+            .then(
+                if (depth == 0) {
+                    Modifier.pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragEnd = onDragEnd,
+                            onDragCancel = onDragEnd
+                        ) { change, delta ->
+                            change.consume()
+                            onDrag(delta)
+                        }
+                    }
+                } else {
+                    Modifier
+                }
+            )
             .shadow(if (depth == 0) 18.dp else 6.dp, RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
             .background(JZ.card)
@@ -295,7 +370,8 @@ private fun JazyMatchCard(
             }
         }
 
-        // Why Jazy picked it. The backend sends one reason string per match.
+        // Why Jazy picked it, and what it's honest about. Both come from Claude
+        // alongside the match percent above.
         if (match.matchReason.isNotEmpty()) {
             Box(
                 modifier = Modifier
@@ -304,17 +380,14 @@ private fun JazyMatchCard(
                     .height(1.dp)
                     .background(JZ.line)
             )
-            Row(
+            Column(
                 modifier = Modifier.padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(
-                    Icons.Outlined.Check,
-                    contentDescription = null,
-                    tint = JZ.accent,
-                    modifier = Modifier.padding(top = 2.dp).size(13.dp)
-                )
-                Text(match.matchReason, fontSize = 13.sp, lineHeight = 19.sp, color = JZ.ink)
+                ReasonLine(Icons.Outlined.Check, match.matchReason, JZ.accent, JZ.ink)
+                if (match.matchCaveat.isNotEmpty()) {
+                    ReasonLine(Icons.Outlined.Info, match.matchCaveat, JZ.faint, JZ.sub)
+                }
             }
         }
 
@@ -332,11 +405,11 @@ private fun JazyMatchCard(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { onSkip() }
+                    ) { onNext() }
                     .padding(vertical = 13.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Skip", fontSize = 14.sp, color = JZ.sub)
+                Text("Next", fontSize = 14.sp, color = JZ.sub)
             }
             Row(
                 modifier = Modifier
