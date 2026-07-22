@@ -25,6 +25,26 @@ data class UserListsResponse(
     @SerializedName("saved_lists") val savedLists: List<ReadingList> = emptyList()
 )
 
+/** Payload for POST /users/{username}/lists. */
+data class CreateListRequest(
+    val title: String,
+    val description: String?,
+    @SerializedName("is_private") val isPrivate: Boolean
+)
+
+/** Maps types.ListWithBooksResponse (ListResponse fields + books). */
+data class ListWithBooksResponse(
+    val id: String = "",
+    val username: String = "",
+    val title: String = "",
+    val description: String? = null,
+    @SerializedName("is_private") val isPrivate: Boolean = false,
+    @SerializedName("book_count") val bookCount: Long = 0,
+    @SerializedName("save_count") val saveCount: Long = 0,
+    @SerializedName("can_edit") val canEdit: Boolean = false,
+    val books: List<Book> = emptyList()
+)
+
 /** Shelf book: BookResponse + bookshelf fields (flattened by the backend). */
 data class BookWithStatus(
     val id: String,

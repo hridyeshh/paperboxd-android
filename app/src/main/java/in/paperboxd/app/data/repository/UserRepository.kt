@@ -14,6 +14,9 @@ import `in`.paperboxd.app.domain.model.StreakResponse
 import `in`.paperboxd.app.domain.model.TbrItem
 import `in`.paperboxd.app.domain.model.UserListResponse
 import `in`.paperboxd.app.domain.model.UserListsResponse
+import `in`.paperboxd.app.domain.model.CreateListRequest
+import `in`.paperboxd.app.domain.model.ListWithBooksResponse
+import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.UserProfile
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -32,6 +35,18 @@ class UserRepository @Inject constructor(
 
     suspend fun follow(username: String): Result<FollowResponse> = safeApiCall { api.follow(username) }
     suspend fun unfollow(username: String): Result<FollowResponse> = safeApiCall { api.unfollow(username) }
+
+    suspend fun block(username: String): Result<Unit> =
+        safeApiCall { api.blockUser(username) }.map { }
+    suspend fun unblock(username: String): Result<Unit> =
+        safeApiCall { api.unblockUser(username) }.map { }
+
+    suspend fun report(contentType: String, contentId: String, reason: String): Result<Unit> =
+        safeApiCall {
+            api.createReport(
+                mapOf("content_type" to contentType, "content_id" to contentId, "reason" to reason)
+            )
+        }.map { }
 
     suspend fun followers(username: String, page: Int, pageSize: Int = 30): Result<UserListResponse> =
         safeApiCall { api.followers(username, page, pageSize) }
@@ -59,6 +74,12 @@ class UserRepository @Inject constructor(
     suspend fun streak(username: String): Result<StreakResponse> = safeApiCall { api.userStreak(username) }
 
     suspend fun lists(username: String): Result<UserListsResponse> = safeApiCall { api.userLists(username) }
+
+    suspend fun createList(username: String, body: CreateListRequest): Result<ReadingList> =
+        safeApiCall { api.createList(username, body) }
+
+    suspend fun listDetail(username: String, listId: String): Result<ListWithBooksResponse> =
+        safeApiCall { api.listDetail(username, listId) }
 
     suspend fun lastLoggedBook(username: String): Result<LastLoggedBookResponse> =
         safeApiCall { api.lastLoggedBook(username) }

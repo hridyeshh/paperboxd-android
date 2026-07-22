@@ -76,6 +76,16 @@ class BookDetailViewModel @Inject constructor(
             if (wasNull && value != null) fetchAll()
         }
 
+    /** Reports another reader's review (store UGC compliance). */
+    fun reportReview(review: BookReview, reason: String) {
+        viewModelScope.launch {
+            userRepository.report("review", "book:$bookId:user:${review.userId}", reason).fold(
+                onSuccess = { _toast.tryEmit("Report received — we review within 24 hours") },
+                onFailure = { e -> _toast.tryEmit(e.message ?: "Couldn't send report") }
+            )
+        }
+    }
+
     /** The viewer's own review, if present. */
     val myReview: BookReview?
         get() {

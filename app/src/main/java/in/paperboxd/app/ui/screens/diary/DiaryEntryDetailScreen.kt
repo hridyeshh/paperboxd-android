@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,9 +44,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.R
 import `in`.paperboxd.app.data.repository.DiaryRepository
+import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.RatingPicker
+import `in`.paperboxd.app.ui.components.ReportDialog
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.LikeRed
@@ -70,13 +73,15 @@ data class DiaryDetailUiState(
     val isLiked: Boolean = false,
     val likesCount: Long = 0,
     val isDeleting: Boolean = false,
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
+    val notice: String? = null
 )
 
 @HiltViewModel
 class DiaryEntryDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val diaryRepository: DiaryRepository
+    private val diaryRepository: DiaryRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val username: String = savedStateHandle.get<String>("username").orEmpty()
@@ -115,6 +120,15 @@ class DiaryEntryDetailViewModel @Inject constructor(
         }
     }
 
+    fun reportEntry(reason: String) {
+        viewModelScope.launch {
+            userRepository.report("diary_entry", entryId, reason).fold(
+                onSuccess = { _state.update { it.copy(notice = "Report received — we review within 24 hours") } },
+                onFailure = { e -> _state.update { it.copy(notice = e.message ?: "Couldn't send report") } }
+            )
+        }
+    }
+
     fun delete() {
         viewModelScope.launch {
             _state.update { it.copy(isDeleting = true) }
@@ -141,7 +155,8 @@ fun DiaryEntryDetailScreen(
         onBack = onBack,
         onOpenBook = onOpenBook,
         onToggleLike = viewModel::toggleLike,
-        onDelete = viewModel::delete
+        onDelete = viewModel::delete,
+        onReport = viewModel::reportEntry
     )
 }
 
@@ -151,9 +166,19 @@ fun DiaryEntryDetailContent(
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
     onToggleLike: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onReport: (String) -> Unit = {}
 ) {
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
+    var showReportDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showReportDialog) {
+        ReportDialog(
+            title = "Report entry",
+            onDismiss = { showReportDialog = false },
+            onSubmit = onReport
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -182,7 +207,24 @@ fun DiaryEntryDetailContent(
                         tint = ErrorColor
                     )
                 }
+            } else if (state.entry != null) {
+                IconButton(onClick = { showReportDialog = true }) {
+                    Icon(
+                        Icons.Outlined.Flag,
+                        contentDescription = "Report entry",
+                        tint = TextSecondary
+                    )
+                }
             }
+        }
+
+        state.notice?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
         }
 
         state.errorMessage?.let {

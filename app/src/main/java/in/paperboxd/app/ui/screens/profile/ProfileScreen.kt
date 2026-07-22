@@ -29,9 +29,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -52,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
@@ -67,12 +73,14 @@ import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.ReadingList
+import `in`.paperboxd.app.domain.model.ListWithBooksResponse
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.domain.model.UserProfile
 import `in`.paperboxd.app.ui.components.AvatarImage
 import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.components.ReportDialog
 import `in`.paperboxd.app.ui.components.brutalPlate
 import `in`.paperboxd.app.ui.screens.settings.SettingsSheet
 import `in`.paperboxd.app.ui.theme.PBScript
@@ -135,10 +143,14 @@ fun ProfileScreen(
         onOpenDiaryEntry = onOpenDiaryEntry,
         onTabSelected = viewModel::onTabSelected,
         onToggleFollow = viewModel::toggleFollow,
+        onReportUser = viewModel::reportUser,
+        onBlockUser = { viewModel.blockUser(onBlocked = onBack) },
         onRefresh = viewModel::refresh,
         onSelectActivityYear = viewModel::selectActivityYear,
         fetchShelfIfNeeded = viewModel::fetchShelfIfNeeded,
-        fetchDiaryIfNeeded = viewModel::fetchDiaryIfNeeded
+        fetchDiaryIfNeeded = viewModel::fetchDiaryIfNeeded,
+        onCreateList = viewModel::createList,
+        onLoadListDetail = viewModel::loadListDetail
     )
 }
 
@@ -158,15 +170,23 @@ fun ProfileContent(
     onOpenDiaryEntry: (String) -> Unit,
     onTabSelected: (ProfileTab) -> Unit,
     onToggleFollow: () -> Unit,
+    onReportUser: (String) -> Unit = {},
+    onBlockUser: () -> Unit = {},
     onRefresh: () -> Unit,
     onSelectActivityYear: (Int) -> Unit = {},
     fetchShelfIfNeeded: (BookWithStatus) -> Unit,
-    fetchDiaryIfNeeded: (DiaryEntry) -> Unit
+    fetchDiaryIfNeeded: (DiaryEntry) -> Unit,
+    onCreateList: suspend (String, String?, Boolean) -> Boolean = { _, _, _ -> false },
+    onLoadListDetail: suspend (String) -> ListWithBooksResponse? = { null }
 ) {
     var followSheet by remember { mutableStateOf<FollowListMode?>(null) }
+    var showCreateList by remember { mutableStateOf(false) }
+    var openList by remember { mutableStateOf<ReadingList?>(null) }
     var showShare by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) } // SHOW MORE lifts the 9-item cap
+    var showReportUser by remember { mutableStateOf(false) }
+    var showBlockConfirm by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
         when {
@@ -206,7 +226,9 @@ fun ProfileContent(
                             onFollow = onToggleFollow,
                             onEdit = onOpenEditProfile,
                             onShare = { showShare = true },
-                            onFollowers = { followSheet = FollowListMode.Followers }
+                            onFollowers = { followSheet = FollowListMode.Followers },
+                            onReport = { showReportUser = true },
+                            onBlock = { showBlockConfirm = true }
                         )
                     }
 
@@ -277,7 +299,10 @@ fun ProfileContent(
                         onOpenBook = onOpenBook,
                         onOpenDiaryEntry = onOpenDiaryEntry,
                         fetchShelfIfNeeded = fetchShelfIfNeeded,
-                        fetchDiaryIfNeeded = fetchDiaryIfNeeded
+                        fetchDiaryIfNeeded = fetchDiaryIfNeeded,
+                        isOwnProfile = isOwnProfile,
+                        onOpenList = { openList = it },
+                        onNewList = { showCreateList = true }
                     )
 
                     item {
@@ -295,11 +320,40 @@ fun ProfileContent(
             showBack = showBack && !isOwnProfile,
             showSettings = isOwnProfile,
             onBack = onBack,
-            onSettings = { showSettings = true },
-            modifier = Modifier.statusBarsPadding()
+            onSettings = { showSettings = true }
         )
 
         SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+
+    if (showReportUser) {
+        ReportDialog(
+            title = "Report user",
+            onDismiss = { showReportUser = false },
+            onSubmit = onReportUser
+        )
+    }
+
+    if (showBlockConfirm) {
+        AlertDialog(
+            onDismissRequest = { showBlockConfirm = false },
+            containerColor = HL.Card,
+            title = { Text("Block user?", color = HL.Ink, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "They won't be able to follow you, and you'll stop seeing each other's reviews.",
+                    color = HL.Muted
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showBlockConfirm = false; onBlockUser() }) {
+                    Text("Block", color = HL.Accent)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBlockConfirm = false }) { Text("Cancel", color = HL.Muted) }
+            }
+        )
     }
 
     followSheet?.let { mode ->
@@ -325,6 +379,48 @@ fun ProfileContent(
             onSignOut = onSignOut
         )
     }
+
+    if (showCreateList) {
+        CreateListDialog(
+            onCreate = onCreateList,
+            onDismiss = { showCreateList = false }
+        )
+    }
+
+    openList?.let { list ->
+        ListDetailSheet(
+            listId = list.id,
+            onLoadDetail = onLoadListDetail,
+            onOpenBook = { bookId -> openList = null; onOpenBook(bookId) },
+            onDismiss = { openList = null }
+        )
+    }
+}
+
+@Composable
+private fun NewListButton(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .border(1.5.dp, HL.Ink, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Outlined.Add, contentDescription = null, tint = HL.Ink, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "NEW LIST",
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            letterSpacing = 1.sp,
+            color = HL.Ink
+        )
+    }
 }
 
 // ---- Floating top bar ----
@@ -337,11 +433,22 @@ private fun TopBar(
     onSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // ponytail: translucent frosted scrim, not a true backdrop blur — RenderEffect
+    // blur needs API 31 (minSdk here is 26) or the Haze lib. Upgrade to either if a
+    // real blur-behind is wanted.
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    0.0f to HL.Paper.copy(alpha = 0.92f),
+                    0.55f to HL.Paper.copy(alpha = 0.92f),
+                    1.0f to HL.Paper.copy(alpha = 0f)
+                )
+            )
+            .statusBarsPadding()
             .padding(horizontal = 12.dp)
-            .padding(top = 14.dp),
+            .padding(top = 14.dp, bottom = 26.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (showBack) {
@@ -398,7 +505,9 @@ private fun ProfileHeader(
     onFollow: () -> Unit,
     onEdit: () -> Unit,
     onShare: () -> Unit,
-    onFollowers: () -> Unit
+    onFollowers: () -> Unit,
+    onReport: () -> Unit = {},
+    onBlock: () -> Unit = {}
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Row(
@@ -483,6 +592,20 @@ private fun ProfileHeader(
                     modifier = Modifier.weight(1f),
                     onClick = onFollow
                 )
+                var menuOpen by remember { mutableStateOf(false) }
+                Box {
+                    BrutalPill("•••", filled = false, onClick = { menuOpen = true })
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Report user") },
+                            onClick = { menuOpen = false; onReport() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Block user") },
+                            onClick = { menuOpen = false; onBlock() }
+                        )
+                    }
+                }
             }
         }
     }
@@ -770,7 +893,10 @@ private fun LazyListScope.tabContent(
     onOpenBook: (String) -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
     fetchShelfIfNeeded: (BookWithStatus) -> Unit,
-    fetchDiaryIfNeeded: (DiaryEntry) -> Unit
+    fetchDiaryIfNeeded: (DiaryEntry) -> Unit,
+    isOwnProfile: Boolean = false,
+    onOpenList: (ReadingList) -> Unit = {},
+    onNewList: () -> Unit = {}
 ) {
     when (state.selectedTab) {
         ProfileTab.Bookshelf -> {
@@ -800,14 +926,17 @@ private fun LazyListScope.tabContent(
             }
         }
         ProfileTab.Lists -> {
+            if (isOwnProfile) {
+                item { NewListButton(onNewList) }
+            }
             if (state.ownLists.isEmpty() && state.savedLists.isEmpty()) {
-                item { EmptyTab("No lists yet") }
+                item { EmptyTab(if (isOwnProfile) "Create your first list" else "No lists yet") }
             } else {
                 if (state.ownLists.isNotEmpty()) {
-                    item { ListsRail("Made", state.ownLists) }
+                    item { ListsRail("Made", state.ownLists, onOpenList) }
                 }
                 if (state.savedLists.isNotEmpty()) {
-                    item { ListsRail("Saved", state.savedLists) }
+                    item { ListsRail("Saved", state.savedLists, onOpenList) }
                 }
             }
         }
@@ -989,7 +1118,7 @@ private fun DiaryRow(entry: DiaryEntry, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ListsRail(eyebrow: String, lists: List<ReadingList>) {
+private fun ListsRail(eyebrow: String, lists: List<ReadingList>, onOpenList: (ReadingList) -> Unit) {
     Column(
         modifier = Modifier.padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -1005,6 +1134,7 @@ private fun ListsRail(eyebrow: String, lists: List<ReadingList>) {
                         .width(140.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(HL.Card)
+                        .clickable { onOpenList(list) }
                         .padding(6.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

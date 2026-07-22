@@ -44,6 +44,9 @@ import `in`.paperboxd.app.domain.model.TbrItem
 import `in`.paperboxd.app.domain.model.TrackEventBody
 import `in`.paperboxd.app.domain.model.UserListResponse
 import `in`.paperboxd.app.domain.model.UserListsResponse
+import `in`.paperboxd.app.domain.model.CreateListRequest
+import `in`.paperboxd.app.domain.model.ListWithBooksResponse
+import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.UserProfile
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -220,6 +223,15 @@ interface ApiService {
     @DELETE("api/v1/users/{username}/follow")
     suspend fun unfollow(@Path("username") username: String): FollowResponse
 
+    @POST("api/v1/users/{username}/block")
+    suspend fun blockUser(@Path("username") username: String): ResponseBody
+
+    @DELETE("api/v1/users/{username}/block")
+    suspend fun unblockUser(@Path("username") username: String): ResponseBody
+
+    @POST("api/v1/reports")
+    suspend fun createReport(@Body body: Map<String, String>): ResponseBody
+
     @GET("api/v1/users/{username}/followers")
     suspend fun followers(
         @Path("username") username: String,
@@ -262,6 +274,18 @@ interface ApiService {
 
     @GET("api/v1/users/{username}/lists")
     suspend fun userLists(@Path("username") username: String): UserListsResponse
+
+    @POST("api/v1/users/{username}/lists")
+    suspend fun createList(
+        @Path("username") username: String,
+        @Body body: CreateListRequest
+    ): ReadingList
+
+    @GET("api/v1/users/{username}/lists/{listId}")
+    suspend fun listDetail(
+        @Path("username") username: String,
+        @Path("listId") listId: String
+    ): ListWithBooksResponse
 
     @GET("api/v1/users/{username}/reading/last")
     suspend fun lastLoggedBook(@Path("username") username: String): LastLoggedBookResponse

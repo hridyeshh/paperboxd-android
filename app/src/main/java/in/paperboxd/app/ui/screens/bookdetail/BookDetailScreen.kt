@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -94,6 +95,7 @@ import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.components.AvatarImage
 import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.components.ReportDialog
 import `in`.paperboxd.app.ui.components.brutalButton
 import `in`.paperboxd.app.ui.components.brutalPlate
 import `in`.paperboxd.app.ui.components.popEffect
@@ -135,6 +137,7 @@ fun BookDetailScreen(
         onSelectShelf = viewModel::selectShelf,
         onSubmitReview = { rating, review, done -> viewModel.submitReview(rating, review, done) },
         onDeleteReview = { done -> viewModel.deleteReview(done) },
+        onReportReview = viewModel::reportReview,
         onUpdateProgress = viewModel::updateProgress
     )
 }
@@ -152,6 +155,7 @@ private fun BookDetailContent(
     onSelectShelf: (LibraryShelf?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
     onDeleteReview: ((Boolean) -> Unit) -> Unit,
+    onReportReview: (BookReview, String) -> Unit = { _, _ -> },
     onUpdateProgress: (Int, Int) -> Unit
 ) {
     var showLibrarySheet by remember { mutableStateOf(false) }
@@ -186,6 +190,7 @@ private fun BookDetailContent(
                     onSetPanel = { activePanel = it },
                     onSubmitReview = onSubmitReview,
                     onDeleteReview = onDeleteReview,
+                    onReportReview = onReportReview,
                     onUpdateProgress = onUpdateProgress,
                     modifier = Modifier.weight(1f)
                 )
@@ -295,6 +300,7 @@ private fun DetailBody(
     onSetPanel: (InlinePanel?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
     onDeleteReview: ((Boolean) -> Unit) -> Unit,
+    onReportReview: (BookReview, String) -> Unit,
     onUpdateProgress: (Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -344,7 +350,7 @@ private fun DetailBody(
         }
         item { FriendsSaySection(state.friendReviews) }
         if (state.reviews.isNotEmpty()) {
-            item { AllReviewsSection(state.reviews) }
+            item { AllReviewsSection(state.reviews, onReport = onReportReview) }
         }
     }
 }
@@ -1044,7 +1050,11 @@ private fun FriendsSaySection(reviews: List<FriendBookReview>) {
 }
 
 @Composable
-private fun AllReviewsSection(reviews: List<BookReview>) {
+private fun AllReviewsSection(
+    reviews: List<BookReview>,
+    onReport: (BookReview, String) -> Unit = { _, _ -> }
+) {
+    var reportTarget by remember { mutableStateOf<BookReview?>(null) }
     Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
         BrutalSectionHeader("04", "All reviews")
         reviews.forEachIndexed { idx, review ->
@@ -1073,8 +1083,23 @@ private fun AllReviewsSection(reviews: List<BookReview>) {
                         )
                     }
                 }
+                Icon(
+                    Icons.Outlined.Flag,
+                    contentDescription = "Report review",
+                    tint = HL.Muted.copy(alpha = 0.6f),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { reportTarget = review }
+                )
             }
         }
+    }
+    reportTarget?.let { target ->
+        ReportDialog(
+            title = "Report review",
+            onDismiss = { reportTarget = null },
+            onSubmit = { reason -> onReport(target, reason) }
+        )
     }
 }
 

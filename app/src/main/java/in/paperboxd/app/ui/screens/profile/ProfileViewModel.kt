@@ -12,6 +12,8 @@ import `in`.paperboxd.app.domain.model.FavoriteBook
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.ReadingList
+import `in`.paperboxd.app.domain.model.CreateListRequest
+import `in`.paperboxd.app.domain.model.ListWithBooksResponse
 import `in`.paperboxd.app.domain.model.TbrItem
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.domain.model.UserProfile
@@ -204,6 +206,18 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    /** Creates a list on the current profile. Returns true on success and prepends
+     *  the new list to the "Made" rail so the tab updates without a refetch. */
+    suspend fun createList(title: String, description: String?, isPrivate: Boolean): Boolean =
+        userRepository.createList(profileUsername, CreateListRequest(title, description, isPrivate))
+            .map { created ->
+                _state.update { it.copy(ownLists = listOf(created) + it.ownLists) }
+                true
+            }.getOrDefault(false)
+
+    suspend fun loadListDetail(listId: String): ListWithBooksResponse? =
+        userRepository.listDetail(profileUsername, listId).getOrNull()
+
     private suspend fun fetchTbr() {
         if (_state.value.tbrItems.isNotEmpty()) return
         userRepository.tbr(profileUsername).onSuccess { items ->
@@ -252,6 +266,31 @@ class ProfileViewModel @Inject constructor(
                 onFailure = { e -> _toast.tryEmit(e.message ?: "Couldn't update follow") }
             )
             _state.update { it.copy(isFollowLoading = false) }
+        }
+    }
+
+    // MARK: - Moderation
+
+    /** Blocks the profile user, then invokes [onBlocked] (e.g. to pop back). */
+    fun blockUser(onBlocked: () -> Unit) {
+        if (isOwnProfile) return
+        viewModelScope.launch {
+            userRepository.block(profileUsername).fold(
+                onSuccess = {
+                    _toast.tryEmit("Blocked @$profileUsername")
+                    onBlocked()
+                },
+                onFailure = { e -> _toast.tryEmit(e.message ?: "Couldn't block") }
+            )
+        }
+    }
+
+    fun reportUser(reason: String) {
+        viewModelScope.launch {
+            userRepository.report("user", profileUsername, reason).fold(
+                onSuccess = { _toast.tryEmit("Report received — we review within 24 hours") },
+                onFailure = { e -> _toast.tryEmit(e.message ?: "Couldn't send report") }
+            )
         }
     }
 
