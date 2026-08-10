@@ -2,14 +2,10 @@ package `in`.paperboxd.app.ui.screens.bookdetail
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +68,7 @@ import coil.compose.SubcomposeAsyncImage
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.components.rememberGallerySaver
 import `in`.paperboxd.app.ui.theme.PBScript
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -125,6 +122,7 @@ fun BookShareSheet(
 
     var format by remember { mutableStateOf(ShareFormat.Story) }
     var toast by remember { mutableStateOf<String?>(null) }
+    val saveCard = rememberGallerySaver { toast = it }
 
     val bookUrl = "https://paperboxd.in/b/${book.slug ?: book.id}"
 
@@ -247,9 +245,7 @@ fun BookShareSheet(
                     }
                 }
                 OptionTile(Icons.Outlined.Download, "SAVE", Modifier.weight(1f)) {
-                    scope.launch {
-                        toast = if (saveToGallery(context, render())) "Saved to Photos" else "Couldn’t save image"
-                    }
+                    scope.launch { saveCard(render()) }
                 }
                 OptionTile(Icons.Outlined.Link, "COPY", Modifier.weight(1f)) {
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -512,17 +508,3 @@ private fun cacheShareImage(context: Context, bitmap: Bitmap): Uri? = runCatchin
     androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 }.getOrNull()
 
-/** Saves the card into the device gallery (Pictures/PaperBoxd) via MediaStore. */
-private fun saveToGallery(context: Context, bitmap: Bitmap): Boolean = runCatching {
-    val values = ContentValues().apply {
-        put(MediaStore.Images.Media.DISPLAY_NAME, "paperboxd-${System.currentTimeMillis()}.png")
-        put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/PaperBoxd")
-        }
-    }
-    val resolver = context.contentResolver
-    val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
-    resolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-    true
-}.getOrDefault(false)

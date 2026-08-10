@@ -9,6 +9,17 @@ import `in`.paperboxd.app.BuildConfig
 object Config {
     const val BASE_URL: String = "https://paperboxd-backend-production-d9e0.up.railway.app"
 
+    /**
+     * Next.js web tier. The backend's own /api/v1/auth/forgot-password only mints
+     * a reset token and hands it back to its caller — it does not send mail. The
+     * Resend integration lives in the web proxy, so password reset must go there.
+     * iOS twin: Endpoints.forgotPassword.
+     */
+    const val WEB_BASE_URL: String = "https://paperboxd.in"
+
+    /** Absolute URL — deliberately not under [BASE_URL]. See [WEB_BASE_URL]. */
+    const val FORGOT_PASSWORD_URL: String = "$WEB_BASE_URL/api/auth/forgot-password"
+
     val userAgent: String = "PaperBoxd-Android/${BuildConfig.VERSION_NAME} (Android)"
 
     /** EncryptedSharedPreferences file name. Stable across builds. */

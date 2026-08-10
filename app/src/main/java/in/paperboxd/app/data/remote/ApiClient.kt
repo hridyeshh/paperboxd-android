@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -34,32 +35,48 @@ class SessionEvents @Inject constructor() {
     }
 }
 
-/** Injects Authorization: Bearer + User-Agent on every request when a token exists. */
+/**
+ * Host of [Config.BASE_URL]. The session bearer is scoped to it: not every call
+ * the app makes goes to the Go backend (password reset goes to the paperboxd.in
+ * web proxy), and a backend JWT has no business on another host.
+ */
+private val backendHost: String = Config.BASE_URL.toHttpUrl().host
+
+/**
+ * Injects Authorization: Bearer + User-Agent on every request when a token exists.
+ * The bearer is attached only for [backendHost] — see its docs.
+ */
 class AuthInterceptor @Inject constructor(
     private val securePrefs: SecurePrefs
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val builder = chain.request().newBuilder()
+        val request = chain.request()
+        val builder = request.newBuilder()
             .header("User-Agent", Config.userAgent)
             .header("Accept", "application/json")
-        securePrefs.getToken()?.takeIf { it.isNotEmpty() }?.let {
-            builder.header("Authorization", "Bearer $it")
+        if (request.url.host == backendHost) {
+            securePrefs.getToken()?.takeIf { it.isNotEmpty() }?.let {
+                builder.header("Authorization", "Bearer $it")
+            }
         }
         return chain.proceed(builder.build())
     }
 }
 
 /**
- * On any 401: clear credentials and emit the session-expired event so the app
- * routes back to auth from anywhere.
+ * On a 401 from our backend: clear credentials and emit the session-expired event
+ * so the app routes back to auth from anywhere. Scoped to [backendHost] — only
+ * that host can judge our session, so a 401 from elsewhere must not sign the
+ * user out.
  */
 class UnauthorizedInterceptor @Inject constructor(
     private val securePrefs: SecurePrefs,
     private val sessionEvents: SessionEvents
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val response = chain.proceed(chain.request())
-        if (response.code == 401) {
+        val request = chain.request()
+        val response = chain.proceed(request)
+        if (response.code == 401 && request.url.host == backendHost) {
             securePrefs.clearAll()
             sessionEvents.emitExpired()
         }

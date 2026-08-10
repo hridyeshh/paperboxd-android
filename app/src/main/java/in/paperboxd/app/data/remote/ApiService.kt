@@ -62,6 +62,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 /**
  * Every endpoint the app touches, mirroring iOS Endpoints.swift against
@@ -99,8 +100,20 @@ interface ApiService {
     @GET("api/v1/auth/check-username")
     suspend fun checkUsername(@Query("username") username: String): CheckUsernameResponse
 
-    @POST("api/v1/auth/forgot-password")
-    suspend fun forgotPassword(@Body body: Map<String, String>): ResponseBody
+    /**
+     * Password reset. Takes an absolute [url] because this one call goes to the
+     * Next.js web tier, not the Go backend — the backend route only mints a token
+     * and hands it back, the proxy is what emails the link via Resend. Callers
+     * pass Config.FORGOT_PASSWORD_URL. iOS twin: Endpoints.forgotPassword.
+     *
+     * Always 200 with a generic `{message}` so account existence never leaks, and
+     * the response carries no reset token.
+     */
+    @POST
+    suspend fun forgotPassword(
+        @Url url: String,
+        @Body body: Map<String, String>
+    ): ResponseBody
 
     // Current user
     // hasBody DELETE so the exit-survey reasons ride along, matching iOS.
@@ -124,6 +137,10 @@ interface ApiService {
     // Books
     @GET("api/v1/books/{id}")
     suspend fun book(@Path("id") id: String): Book
+
+    /** Resolves a web slug (`paperboxd.in/b/{slug}`) to the full book. */
+    @GET("api/v1/books/by-slug/{slug}")
+    suspend fun bookBySlug(@Path("slug") slug: String): Book
 
     @GET("api/v1/books/search")
     suspend fun searchBooks(

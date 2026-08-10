@@ -1,5 +1,6 @@
 package `in`.paperboxd.app.data.repository
 
+import `in`.paperboxd.app.config.Config
 import `in`.paperboxd.app.data.local.SecurePrefs
 import `in`.paperboxd.app.data.remote.ApiService
 import `in`.paperboxd.app.data.remote.safeApiCall
@@ -43,8 +44,9 @@ class AuthRepository @Inject constructor(
 
     suspend fun refresh(): Result<RefreshResponse> = safeApiCall { api.refresh() }
 
+    /** Goes to the web proxy, not the backend — only the proxy sends the email. */
     suspend fun forgotPassword(email: String): Result<Unit> =
-        safeApiCall { api.forgotPassword(mapOf("email" to email)); Unit }
+        safeApiCall { api.forgotPassword(Config.FORGOT_PASSWORD_URL, mapOf("email" to email)); Unit }
 
     suspend fun checkUsername(username: String): Result<CheckUsernameResponse> =
         safeApiCall { api.checkUsername(username) }

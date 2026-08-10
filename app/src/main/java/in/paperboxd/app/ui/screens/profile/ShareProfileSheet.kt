@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.MailOutline
@@ -37,16 +38,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -58,8 +66,10 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import `in`.paperboxd.app.ui.components.rememberGallerySaver
 import `in`.paperboxd.app.ui.theme.PBScript
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // Fixed warm-light palette so the QR card always scans — iOS ShareProfileSheet twin.
 private val Ink = Color(0xFF1C1A14)
@@ -77,8 +87,11 @@ fun ShareProfileSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val cardLayer = rememberGraphicsLayer()
     val profileUrl = "https://paperboxd.in/u/$username"
     var toast by remember { mutableStateOf<String?>(null) }
+    val saveCard = rememberGallerySaver { toast = it }
 
     LaunchedEffect(toast) {
         if (toast != null) {
@@ -142,8 +155,18 @@ fun ShareProfileSheet(
                     Spacer(Modifier.size(44.dp))
                 }
 
-                // QR card
-                QrCard(username = username, profileUrl = profileUrl, modifier = Modifier.padding(top = 24.dp))
+                // QR card — recorded into `cardLayer` as it draws so Download can
+                // rasterize exactly what is on screen (iOS uses ImageRenderer here).
+                QrCard(
+                    username = username,
+                    profileUrl = profileUrl,
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .drawWithContent {
+                            cardLayer.record { this@drawWithContent.drawContent() }
+                            drawLayer(cardLayer)
+                        }
+                )
 
                 // action tiles
                 Row(
@@ -161,6 +184,12 @@ fun ShareProfileSheet(
                         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(ClipData.newPlainText("PaperBoxd profile", profileUrl))
                         toast = "Link copied"
+                    }
+                    ActionTile(Icons.Outlined.Download, "Download", Modifier.weight(1f)) {
+                        scope.launch {
+                            val card = renderCard(cardLayer)
+                            if (card == null) toast = "Couldn’t render card" else saveCard(card)
+                        }
                     }
                 }
 
@@ -299,6 +328,25 @@ private fun ActionTile(
         Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Ink)
     }
 }
+
+/**
+ * Rasterizes the recorded card for saving. The layer is transparent outside the card's
+ * rounded corners and offset shadow, so it is flattened onto the card's paper colour —
+ * gallery apps render a transparent PNG on black, which would swallow the ink artwork.
+ */
+private suspend fun renderCard(layer: GraphicsLayer): Bitmap? = runCatching {
+    val raw = layer.toImageBitmap().asAndroidBitmap()
+    // A HARDWARE-config bitmap cannot be drawn into a software Canvas.
+    val card = if (raw.config == Bitmap.Config.HARDWARE) {
+        raw.copy(Bitmap.Config.ARGB_8888, false)
+    } else raw
+    Bitmap.createBitmap(card.width, card.height, Bitmap.Config.ARGB_8888).also { out ->
+        android.graphics.Canvas(out).apply {
+            drawColor(QrBg.toArgb())
+            drawBitmap(card, 0f, 0f, null)
+        }
+    }
+}.getOrNull()
 
 /** Ink-on-paper QR bitmap via zxing, error correction H (matches iOS). */
 private fun qrBitmap(content: String, size: Int = 512): Bitmap? = runCatching {

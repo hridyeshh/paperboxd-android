@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import `in`.paperboxd.app.AppDestination
 import `in`.paperboxd.app.AppState
 import `in`.paperboxd.app.domain.model.User
@@ -122,7 +123,10 @@ fun MainScaffold(user: User, appState: AppState) {
                     reloadKey = reloadKey
                 )
             }
-            composable(Screen.BookDetail.route) {
+            composable(
+                Screen.BookDetail.route,
+                deepLinks = listOf(navDeepLink { uriPattern = Screen.BookDetail.DEEP_LINK })
+            ) {
                 BookDetailScreen(
                     user = sessionUser,
                     onBack = { navController.popBackStack() },
@@ -130,7 +134,10 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
                 )
             }
-            composable(Screen.Profile.route) { entry ->
+            composable(
+                Screen.Profile.route,
+                deepLinks = listOf(navDeepLink { uriPattern = Screen.Profile.DEEP_LINK })
+            ) { entry ->
                 val username = entry.arguments?.getString("username").orEmpty()
                 val reloadKey by entry.savedStateHandle
                     .getStateFlow("profileUpdated", 0).collectAsState()

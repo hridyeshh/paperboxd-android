@@ -2,6 +2,9 @@ package `in`.paperboxd.app.ui.screens.scan
 
 import android.Manifest
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.core.RepeatMode
@@ -38,10 +41,12 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.WifiOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,6 +98,7 @@ fun ScanScreen(
     val scope = rememberCoroutineScope()
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
     var permissionRequested by rememberSaveable { mutableStateOf(false) }
+    val isOnline = rememberIsOnline()
 
     var scannedIsbn by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf(ScannerStatus.Scanning) }
@@ -119,10 +125,12 @@ fun ScanScreen(
     }
 
     val showBrackets = status == ScannerStatus.Scanning && scannedIsbn == null &&
-        cameraPermission.status.isGranted
+        cameraPermission.status.isGranted && isOnline
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        if (cameraPermission.status.isGranted) {
+        // Offline: never start the camera — /scan/analyze would fail anyway and the
+        // attempt would still burn a scan from the quota. Fallback card instead.
+        if (cameraPermission.status.isGranted && isOnline) {
             CameraScannerView(
                 torchOn = torchOn,
                 onCode = { handleCode(it) },
@@ -192,6 +200,11 @@ fun ScanScreen(
         ) {
             val isbn = scannedIsbn
             when {
+                !isOnline -> FallbackCard(
+                    icon = Icons.Outlined.WifiOff,
+                    title = "No internet connection",
+                    body = "Scanning needs a connection to score your book. Reconnect and try again."
+                )
                 isbn != null -> IsbnCard(
                     isbn = isbn,
                     bookTitle = bookTitle,
@@ -249,6 +262,52 @@ fun ScanScreen(
             }
         )
     }
+}
+
+// ── Reachability ─────────────────────────────────────────────────────────────
+
+/**
+ * Live network reachability — iOS `Network/NetworkMonitor.swift` twin.
+ *
+ * Every callback edge re-reads the *active* network rather than tracking each
+ * `Network` handle: a Wi-Fi→cellular handover fires `onLost` for a network that is
+ * no longer the default, which would otherwise read as offline while traffic flows.
+ * Requires VALIDATED as well as INTERNET so a captive portal counts as offline —
+ * it is exactly the case where the analyze call would fail.
+ *
+ * ponytail: a composable, not a singleton, because Scan is the only consumer on
+ * either platform. Lift it to a shared monitor if a second screen needs it.
+ */
+@Composable
+private fun rememberIsOnline(): Boolean {
+    val context = LocalContext.current
+    // Optimistic default: if the service is missing we never block the camera.
+    var online by remember { mutableStateOf(true) }
+
+    DisposableEffect(context) {
+        val cm = context.getSystemService(ConnectivityManager::class.java)
+            ?: return@DisposableEffect onDispose { }
+
+        fun hasInternet(): Boolean {
+            val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+            return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        }
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { online = hasInternet() }
+            override fun onLost(network: Network) { online = hasInternet() }
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                online = hasInternet()
+            }
+        }
+
+        online = hasInternet()
+        runCatching { cm.registerDefaultNetworkCallback(callback) }
+            .onFailure { online = true }   // no permission / vendor quirk — don't block
+        onDispose { runCatching { cm.unregisterNetworkCallback(callback) } }
+    }
+    return online
 }
 
 @Composable

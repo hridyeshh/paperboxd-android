@@ -11,9 +11,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +39,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
@@ -70,6 +74,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -81,10 +87,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.time.LocalDate
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.Locale
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookReview
 import `in`.paperboxd.app.domain.model.FriendBookReview
@@ -811,6 +822,7 @@ private fun PanelSubmitRow(
 
 // ---- Page progress card ----
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PageProgressCard(
     progress: ReadingProgress?,
@@ -819,12 +831,39 @@ private fun PageProgressCard(
     onUpdate: (Int, Int) -> Unit
 ) {
     val savedPage = progress?.currentPage ?: 0
-    val total = progress?.totalPages ?: bookPageCount ?: 0
+    // A total typed via SET TOTAL wins over the API's — some books come back
+    // with no page count at all, and without one progress can never be saved.
+    var total by remember(progress?.totalPages, bookPageCount) {
+        mutableIntStateOf(progress?.totalPages ?: bookPageCount ?: 0)
+    }
     var localPage by remember(savedPage) { mutableIntStateOf(savedPage) }
+    var editingPage by remember { mutableStateOf(false) }
+    var editingTotal by remember { mutableStateOf(false) }
+    var pageInput by remember { mutableStateOf("") }
+    var totalInput by remember { mutableStateOf("") }
+    val pageFocus = remember { FocusRequester() }
+    val totalFocus = remember { FocusRequester() }
     val cellCount = 12
     val percent = if (total > 0) (localPage.toFloat() / total).coerceIn(0f, 1f) else 0f
     val litCells = (cellCount * percent).roundToInt()
     val hasChanges = localPage != savedPage
+
+    fun step(delta: Int) {
+        val max = if (total > 0) total else Int.MAX_VALUE
+        localPage = (localPage + delta).coerceIn(0, max)
+    }
+
+    fun commitPage() {
+        pageInput.toIntOrNull()?.let {
+            localPage = it.coerceIn(0, if (total > 0) total else Int.MAX_VALUE)
+        }
+        editingPage = false
+    }
+
+    fun commitTotal() {
+        totalInput.toIntOrNull()?.takeIf { it > 0 }?.let { total = it }
+        editingTotal = false
+    }
 
     Column(
         modifier = Modifier
@@ -869,7 +908,7 @@ private fun PageProgressCard(
         }
         Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
         Row(modifier = Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
-            StepButton("−") { if (localPage > 0) localPage-- }
+            StepButton("−", onStep = { step(-1) }, onLongStep = { step(-10) })
             Box(Modifier.width(2.dp).fillMaxSize().background(Line))
             Column(
                 modifier = Modifier.weight(1f).padding(vertical = 10.dp),
@@ -877,9 +916,74 @@ private fun PageProgressCard(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("p. $localPage", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = HL.Ink)
-                    if (total > 0) {
-                        Text("/ $total", fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = HL.Muted)
+                    when {
+                        // No page count anywhere — let the reader supply one, else
+                        // there is nothing to measure progress against.
+                        total == 0 && editingTotal -> {
+                            Text("p. $localPage /", fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = HL.Muted)
+                            NumberField(
+                                value = totalInput,
+                                onValueChange = { totalInput = it },
+                                onDone = { commitTotal() },
+                                focusRequester = totalFocus
+                            )
+                            LaunchedEffect(Unit) { totalFocus.requestFocus() }
+                        }
+                        total == 0 -> {
+                            Text(
+                                "p. $localPage",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = HL.Ink
+                            )
+                            Text(
+                                "/ SET TOTAL",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.sp,
+                                color = HL.Accent,
+                                modifier = Modifier.clickable { totalInput = ""; editingTotal = true }
+                            )
+                        }
+                        editingPage -> {
+                            Text("p.", fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = HL.Muted)
+                            NumberField(
+                                value = pageInput,
+                                onValueChange = { pageInput = it },
+                                onDone = { commitPage() },
+                                focusRequester = pageFocus
+                            )
+                            Text("/ $total", fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = HL.Muted)
+                            Text(
+                                "DONE",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.sp,
+                                color = HL.Accent,
+                                modifier = Modifier.clickable { commitPage() }
+                            )
+                            LaunchedEffect(Unit) { pageFocus.requestFocus() }
+                        }
+                        else -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.clickable {
+                                    pageInput = localPage.toString()
+                                    editingPage = true
+                                }
+                            ) {
+                                Text("p. $localPage", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = HL.Ink)
+                                Text("/ $total", fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = HL.Muted)
+                                Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = "Edit page",
+                                    tint = HL.Muted,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                            }
+                        }
                     }
                 }
                 if (hasChanges && total > 0) {
@@ -906,19 +1010,77 @@ private fun PageProgressCard(
                 }
             }
             Box(Modifier.width(2.dp).fillMaxSize().background(Line))
-            StepButton("+") { if (total == 0 || localPage < total) localPage++ }
+            StepButton("+", onStep = { step(1) }, onLongStep = { step(10) })
+        }
+        finishLine(progress?.estimatedFinishDate)?.let { line ->
+            Box(Modifier.fillMaxWidth().height(2.dp).background(Line))
+            Text(
+                line.uppercase(),
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                letterSpacing = 1.sp,
+                color = HL.Muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 9.dp)
+            )
         }
     }
 }
 
+/** "at this pace, finished by Tuesday" — iOS twin: PageProgressView.finishLine. */
+private fun finishLine(estimatedFinishDate: String?): String? {
+    val date = estimatedFinishDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return null
+    val day = date.dayOfWeek.getDisplayName(JavaTextStyle.FULL, Locale.getDefault())
+    return "at this pace, finished by $day"
+}
+
+/** Monospace inline number entry for the page / total fields. */
 @Composable
-private fun StepButton(symbol: String, onClick: () -> Unit) {
+private fun NumberField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onDone: () -> Unit,
+    focusRequester: FocusRequester
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = { input -> onValueChange(input.filter { it.isDigit() }.take(5)) },
+        textStyle = TextStyle(
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp,
+            color = HL.Ink,
+            textAlign = TextAlign.Center
+        ),
+        singleLine = true,
+        cursorBrush = SolidColor(HL.Accent),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        modifier = Modifier
+            .width(52.dp)
+            .focusRequester(focusRequester)
+            .drawBehind {
+                drawRect(
+                    HL.Accent,
+                    topLeft = Offset(0f, size.height - 2.dp.toPx()),
+                    size = Size(size.width, 2.dp.toPx())
+                )
+            }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun StepButton(symbol: String, onStep: () -> Unit, onLongStep: () -> Unit) {
     Box(
         modifier = Modifier
             .width(52.dp)
             .fillMaxSize()
             .background(HL.Paper)
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onStep, onLongClick = onLongStep),
         contentAlignment = Alignment.Center
     ) {
         Text(symbol, fontSize = 22.sp, color = HL.Ink)

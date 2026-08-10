@@ -1,8 +1,6 @@
 package `in`.paperboxd.app.ui.screens.onboarding
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -75,6 +73,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import `in`.paperboxd.app.ui.components.ImageCropper
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -91,11 +90,8 @@ import coil.compose.AsyncImage
 import `in`.paperboxd.app.domain.model.Genre
 import `in`.paperboxd.app.domain.model.ReadingTempo
 import `in`.paperboxd.app.domain.model.User
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 /**
  * Multi-step onboarding — iOS `OnboardingContainerView` twin: light editorial
@@ -138,7 +134,9 @@ fun OnboardingScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pickedUri by remember { mutableStateOf<Uri?>(null) }
+    // Cropped JPEG bytes, which Coil renders directly — previews the crop the
+    // user chose, not the original photo.
+    var pickedAvatar by remember { mutableStateOf<Any?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.initialUser = user
@@ -150,21 +148,30 @@ fun OnboardingScreen(
         }
     }
 
+    // Picked image goes to the square cropper first — iOS gets the same crop step
+    // free from UIImagePickerController's allowsEditing.
+    var cropUri by remember { mutableStateOf<Uri?>(null) }
+
     val pickAvatar = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            pickedUri = uri  // instant local preview, like iOS
-            scope.launch {
-                val bytes = readAndDownscale(context, uri)
-                if (bytes != null) viewModel.uploadAvatar(bytes)
+    ) { uri: Uri? -> cropUri = uri }
+
+    cropUri?.let { uri ->
+        ImageCropper(
+            uri = uri,
+            ratio = 1f,
+            onCancel = { cropUri = null },
+            onCrop = { bytes ->
+                pickedAvatar = bytes  // instant local preview, like iOS
+                viewModel.uploadAvatar(bytes)
+                cropUri = null
             }
-        }
+        )
     }
 
     OnboardingContent(
         state = state,
-        avatarModel = pickedUri ?: state.avatarUrl,
+        avatarModel = pickedAvatar ?: state.avatarUrl,
         onPickAvatar = {
             pickAvatar.launch(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -959,19 +966,6 @@ private fun AhaRevealStep(
     }
 }
 
-/** Reads + downscales the picked image off the main thread (max 1024px, JPEG 85). */
-internal suspend fun readAndDownscale(context: Context, uri: Uri): ByteArray? =
-    withContext(Dispatchers.IO) {
-        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-            ?: return@withContext null
-        val source = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@withContext bytes
-        val scale = maxOf(source.width, source.height) / 1024f
-        val bitmap = if (scale > 1f) {
-            Bitmap.createScaledBitmap(
-                source, (source.width / scale).toInt(), (source.height / scale).toInt(), true
-            )
-        } else source
-        val out = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
-        out.toByteArray()
-    }
+// readAndDownscale lived here until ImageCropper took over decoding, downscaling
+// and encoding for both avatar call sites. It used BitmapFactory, which ignores
+// EXIF — portrait photos uploaded sideways. Coil (inside the cropper) applies it.

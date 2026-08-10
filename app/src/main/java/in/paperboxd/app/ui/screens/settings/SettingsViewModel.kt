@@ -2,6 +2,7 @@ package `in`.paperboxd.app.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import `in`.paperboxd.app.config.Config
 import `in`.paperboxd.app.data.remote.ApiService
 import javax.inject.Inject
 
@@ -15,9 +16,15 @@ class SettingsViewModel @Inject constructor(
     private val api: ApiService
 ) : ViewModel() {
 
-    /** Triggers the same forgot-password email flow used on the auth screen. */
+    /**
+     * Triggers the same forgot-password email flow used on the auth screen —
+     * the web proxy, not the backend, since only the proxy sends the email.
+     */
     suspend fun sendPasswordReset(email: String): Result<Unit> = runCatching {
-        api.forgotPassword(mapOf("email" to email))
+        api.forgotPassword(
+            Config.FORGOT_PASSWORD_URL,
+            mapOf("email" to email.trim().lowercase())
+        )
         Unit
     }
 

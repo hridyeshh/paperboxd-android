@@ -66,7 +66,7 @@ import `in`.paperboxd.app.data.remote.ApiService
 import `in`.paperboxd.app.data.repository.AuthRepository
 import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.ui.components.HL
-import `in`.paperboxd.app.ui.screens.onboarding.readAndDownscale
+import `in`.paperboxd.app.ui.components.ImageCropper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,7 +94,7 @@ data class EditProfileState(
     val link: String = "",
     val birthday: String? = null, // yyyy-MM-dd
     val avatarUrl: String? = null,
-    val pickedAvatar: Uri? = null,
+    val pickedAvatar: Any? = null,
     val usernameAvailable: Boolean? = null,
     val checkingUsername: Boolean = false,
     val isSaving: Boolean = false,
@@ -174,7 +174,9 @@ class EditProfileViewModel @Inject constructor(
         }
     }
 
-    fun uploadAvatar(bytes: ByteArray, preview: Uri) {
+    /** [preview] is anything Coil can render — the cropped bytes, so the header
+     *  shows the crop the user chose rather than the original photo. */
+    fun uploadAvatar(bytes: ByteArray, preview: Any) {
         _state.update { it.copy(pickedAvatar = preview) }
         viewModelScope.launch {
             authRepository.uploadAvatar(bytes).onSuccess { resp ->
@@ -231,13 +233,24 @@ fun EditProfileScreen(
 
     LaunchedEffect(username) { viewModel.load(username) }
 
+    // Picked image goes to the square cropper first — iOS gets the same crop step
+    // free from UIImagePickerController's allowsEditing.
+    var cropUri by remember { mutableStateOf<Uri?>(null) }
+
     val pickAvatar = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        if (uri != null) scope.launch {
-            val bytes = readAndDownscale(context, uri)
-            if (bytes != null) viewModel.uploadAvatar(bytes, uri)
-        }
+    ) { uri: Uri? -> cropUri = uri }
+
+    cropUri?.let { uri ->
+        ImageCropper(
+            uri = uri,
+            ratio = 1f,
+            onCancel = { cropUri = null },
+            onCrop = { bytes ->
+                viewModel.uploadAvatar(bytes, bytes)
+                cropUri = null
+            }
+        )
     }
 
     Column(

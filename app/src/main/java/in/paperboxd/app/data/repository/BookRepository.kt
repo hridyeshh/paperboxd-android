@@ -26,6 +26,8 @@ class BookRepository @Inject constructor(
 ) {
     suspend fun book(id: String): Result<Book> = safeApiCall { api.book(id) }
 
+    suspend fun bookBySlug(slug: String): Result<Book> = safeApiCall { api.bookBySlug(slug) }
+
     suspend fun searchBooks(query: String, page: Int? = null, pageSize: Int? = 20): Result<BookListResponse> =
         safeApiCall { api.searchBooks(query, page, pageSize) }
 

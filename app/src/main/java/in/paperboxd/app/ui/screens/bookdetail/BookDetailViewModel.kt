@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class BookUserState(
@@ -60,7 +61,13 @@ class BookDetailViewModel @Inject constructor(
     private val celebrationCenter: CelebrationCenter
 ) : ViewModel() {
 
-    val bookId: String = savedStateHandle.get<String>("bookId").orEmpty()
+    /**
+     * Book UUID. In-app navigation always passes one, but a `paperboxd.in/b/{slug}`
+     * deep link passes a web slug instead — [fetchAll] resolves that to the real ID
+     * before any other call runs, since every other endpoint requires the UUID.
+     */
+    var bookId: String = savedStateHandle.get<String>("bookId").orEmpty()
+        private set
 
     private val _state = MutableStateFlow(BookDetailUiState())
     val state: StateFlow<BookDetailUiState> = _state.asStateFlow()
@@ -98,6 +105,10 @@ class BookDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
 
+            // Deep link handed us a slug — swap in the UUID before fanning out, or the
+            // seven calls below all hit /books/{slug} and 400.
+            if (!isUuid(bookId) && !resolveSlug()) return@launch
+
             val bookTask = async { bookRepository.book(bookId) }
             val similarTask = async { recommendationRepository.similar(bookId) }
             val statusTask = async { username?.let { bookRepository.bookStatus(it, bookId).getOrNull() } }
@@ -128,6 +139,19 @@ class BookDetailViewModel @Inject constructor(
             }
         }
     }
+
+    private fun isUuid(value: String): Boolean =
+        runCatching { UUID.fromString(value) }.isSuccess
+
+    /** Swaps [bookId] from a web slug to the real UUID. `false` if the slug is unknown. */
+    private suspend fun resolveSlug(): Boolean =
+        bookRepository.bookBySlug(bookId).fold(
+            onSuccess = { bookId = it.id; true },
+            onFailure = { e ->
+                _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+                false
+            }
+        )
 
     // MARK: - Optimistic toggles
 
