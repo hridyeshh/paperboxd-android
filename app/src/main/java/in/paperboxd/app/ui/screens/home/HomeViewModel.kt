@@ -9,6 +9,7 @@ import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.RecommendationRepository
 import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.ActivityItem
+import `in`.paperboxd.app.domain.model.FollowRequestUser
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.RecommendationItem
@@ -30,7 +31,8 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
-    val hasNewActivities: Boolean = false
+    val hasNewActivities: Boolean = false,
+    val followRequests: List<FollowRequestUser> = emptyList()
 ) {
     val pickedForYou: List<RecommendationItem> get() = recommendations.take(6)
     val freshShelves: List<Book> get() = latestBooks.take(8)
@@ -59,10 +61,30 @@ class HomeViewModel @Inject constructor(
 
     private fun lastViewedKey() = "activity_last_viewed_${user?.username ?: user?.id}"
 
+    fun respondToFollowRequest(username: String, accept: Boolean) {
+        viewModelScope.launch {
+            val result = if (accept) {
+                userRepository.acceptFollowRequest(username).map { }
+            } else {
+                userRepository.rejectFollowRequest(username)
+            }
+            result.onSuccess {
+                _state.update { state ->
+                    state.copy(followRequests = state.followRequests.filterNot { it.username == username })
+                }
+            }
+        }
+    }
+
     fun load(refreshing: Boolean = false) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = !refreshing, isRefreshing = refreshing, errorMessage = null) }
 
+            // Pending follow requests ride the same load: they belong in the bell
+            // beside the feed, and they are the only item there that needs an answer.
+            val followRequestsTask = async {
+                userRepository.followRequests().getOrNull()?.requests.orEmpty()
+            }
             val recsTask = async { recommendationRepository.home() }
             val lastBookTask = async {
                 user?.username?.let { userRepository.lastLoggedBook(it).getOrNull()?.lastBook }
@@ -84,7 +106,8 @@ class HomeViewModel @Inject constructor(
                     lastLoggedBook = lastBookTask.await(),
                     latestBooks = latestTask.await(),
                     friendsActivities = activities,
-                    hasNewActivities = computeUnread(activities),
+                    followRequests = followRequestsTask.await(),
+                    hasNewActivities = computeUnread(activities) || followRequestsTask.await().isNotEmpty(),
                     isLoading = false,
                     isRefreshing = false
                 )
@@ -100,7 +123,7 @@ class HomeViewModel @Inject constructor(
 
     fun markActivitiesViewed() {
         prefs.edit().putLong(lastViewedKey(), System.currentTimeMillis()).apply()
-        _state.update { it.copy(hasNewActivities = false) }
+        _state.update { it.copy(hasNewActivities = it.followRequests.isNotEmpty()) }
     }
 
     fun trackImpression(bookId: String) {

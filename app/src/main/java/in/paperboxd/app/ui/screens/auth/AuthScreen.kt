@@ -77,14 +77,14 @@ private val SuccessGreen = Color(red = 0.3f, green = 0.85f, blue = 0.5f)
 
 @Composable
 fun AuthScreen(
-    onSignedIn: (token: String, user: User) -> Unit,
+    onSignedIn: (token: String, user: User, refreshToken: String?) -> Unit,
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.authSuccess.collect { onSignedIn(it.token, it.user) }
+        viewModel.authSuccess.collect { onSignedIn(it.token, it.user, it.refreshToken) }
     }
 
     AuthContent(

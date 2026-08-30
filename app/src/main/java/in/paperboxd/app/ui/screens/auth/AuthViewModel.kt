@@ -39,7 +39,7 @@ data class AuthUiState(
 )
 
 /** Emitted once when auth succeeds; the container forwards to AppState.signedIn. */
-data class AuthSuccess(val token: String, val user: User)
+data class AuthSuccess(val token: String, val user: User, val refreshToken: String? = null)
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -87,7 +87,7 @@ class AuthViewModel @Inject constructor(
         }
         withLoading {
             authRepository.login(email, s.password).fold(
-                onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user)) },
+                onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user, resp.refreshToken)) },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
         }
@@ -112,7 +112,7 @@ class AuthViewModel @Inject constructor(
         }
         withLoading {
             authRepository.register(email, s.password).fold(
-                onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user)) },
+                onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user, resp.refreshToken)) },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
         }
@@ -154,7 +154,7 @@ class AuthViewModel @Inject constructor(
             authRepository.verifyOtp(s.otpEmail, code).fold(
                 onSuccess = { resp ->
                     stopCountdown()
-                    _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user))
+                    _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user, resp.refreshToken))
                 },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
@@ -191,7 +191,7 @@ class AuthViewModel @Inject constructor(
                     _state.update { it.copy(errorMessage = result.message) }
                 is GoogleSignInResult.Success ->
                     authRepository.googleAuth(result.idToken).fold(
-                        onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user)) },
+                        onSuccess = { resp -> _authSuccess.tryEmit(AuthSuccess(resp.token, resp.user, resp.refreshToken)) },
                         onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
                     )
             }

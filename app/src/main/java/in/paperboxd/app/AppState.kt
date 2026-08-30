@@ -1,6 +1,7 @@
 package `in`.paperboxd.app
 
 import `in`.paperboxd.app.data.remote.SessionEvents
+import `in`.paperboxd.app.data.remote.ApiError
 import `in`.paperboxd.app.data.repository.AuthRepository
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.CoroutineScope
@@ -77,7 +78,7 @@ class AppState @Inject constructor(
 
         authRepository.refresh().fold(
             onSuccess = { resp ->
-                authRepository.persistToken(resp.token)
+                authRepository.persistToken(resp.token, resp.refreshToken)
                 val user = authRepository.cachedUser()
                 holdSplash(start)
                 if (user != null) {
@@ -89,10 +90,22 @@ class AppState @Inject constructor(
                     _destination.value = AppDestination.Auth
                 }
             },
-            onFailure = {
+            onFailure = { error ->
                 holdSplash(start)
-                authRepository.clearSession()
-                _destination.value = AppDestination.Auth
+                // Only a genuine auth failure ends the session. A transport
+                // error or a 5xx — the window while a deploy swaps containers,
+                // a flaky network — must not, or every backend restart looks
+                // like a forced logout. The health probe above narrows that
+                // window but cannot close it: the refresh can still land
+                // mid-swap.
+                val cached = authRepository.cachedUser()
+                if (error is ApiError.Unauthorized || cached == null) {
+                    authRepository.clearSession()
+                    _destination.value = AppDestination.Auth
+                } else {
+                    _currentUser.value = cached
+                    _destination.value = route(cached)
+                }
             }
         )
     }
@@ -109,8 +122,8 @@ class AppState @Inject constructor(
     private fun needsOnboarding(user: User): Boolean =
         user.onboardingCompleted?.let { !it } ?: user.username.isNullOrEmpty()
 
-    fun signedIn(token: String, user: User) {
-        authRepository.persistSession(token, user)
+    fun signedIn(token: String, user: User, refreshToken: String? = null) {
+        authRepository.persistSession(token, refreshToken, user)
         _currentUser.value = user
         _destination.value = route(user)
     }

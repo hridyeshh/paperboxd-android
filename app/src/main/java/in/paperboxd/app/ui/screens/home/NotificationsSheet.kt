@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.ActivityItem
+import `in`.paperboxd.app.domain.model.FollowRequestUser
 import `in`.paperboxd.app.ui.components.AvatarImage
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.brutalPlate
@@ -49,6 +51,8 @@ import java.time.Instant
 @Composable
 fun NotificationsSheet(
     activities: List<ActivityItem>,
+    followRequests: List<FollowRequestUser> = emptyList(),
+    onRespondToRequest: (username: String, accept: Boolean) -> Unit = { _, _ -> },
     onOpenBook: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -63,19 +67,75 @@ fun NotificationsSheet(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
             )
-            if (activities.isEmpty()) {
+            if (activities.isEmpty() && followRequests.isEmpty()) {
                 EmptyUpdates()
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 24.dp)
                 ) {
+                    // Requests sit above the feed: they need an answer, the rest
+                    // is only news.
+                    if (followRequests.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Follow requests",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = HL.Muted,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
+                        items(followRequests, key = { it.requestId }) { request ->
+                            FollowRequestRow(request = request, onRespond = onRespondToRequest)
+                        }
+                    }
+
                     items(activities, key = { it.id }) { activity ->
                         ActivityRow(
                             activity = activity,
                             onClick = activity.bookId?.let { id -> { onDismiss(); onOpenBook(id) } }
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FollowRequestRow(
+    request: FollowRequestUser,
+    onRespond: (username: String, accept: Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().brutalPlate(offset = 3.dp).padding(13.dp),
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AvatarImage(
+            url = request.avatarUrl,
+            name = request.name.ifEmpty { request.username },
+            size = 38.dp
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = HL.Ink)) {
+                        append("@${request.username} ")
+                    }
+                    withStyle(SpanStyle(color = HL.Muted)) {
+                        append("wants to follow you")
+                    }
+                },
+                fontSize = 13.sp
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { onRespond(request.username, true) }) {
+                    Text("Confirm", fontSize = 13.sp, color = HL.Ink)
+                }
+                TextButton(onClick = { onRespond(request.username, false) }) {
+                    Text("Decline", fontSize = 13.sp, color = HL.Muted)
                 }
             }
         }

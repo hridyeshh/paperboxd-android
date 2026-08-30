@@ -5,6 +5,7 @@ import `in`.paperboxd.app.data.remote.safeApiCall
 import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.BookshelfResponse
 import `in`.paperboxd.app.domain.model.FavoriteBook
+import `in`.paperboxd.app.domain.model.FollowRequestsResponse
 import `in`.paperboxd.app.domain.model.FollowResponse
 import `in`.paperboxd.app.domain.model.LastLoggedBookResponse
 import `in`.paperboxd.app.domain.model.LeaderboardEntry
@@ -34,6 +35,20 @@ class UserRepository @Inject constructor(
         safeApiCall { api.updateProfile(username, fields) }
 
     suspend fun follow(username: String): Result<FollowResponse> = safeApiCall { api.follow(username) }
+
+    // ── Private profiles ──────────────────────────────────────────────────────
+
+    suspend fun updateVisibility(isPublic: Boolean): Result<UserProfile> =
+        safeApiCall { api.updateVisibility(mapOf("is_public" to isPublic)) }
+
+    suspend fun followRequests(): Result<FollowRequestsResponse> =
+        safeApiCall { api.followRequests() }
+
+    suspend fun acceptFollowRequest(username: String): Result<FollowResponse> =
+        safeApiCall { api.acceptFollowRequest(username) }
+
+    suspend fun rejectFollowRequest(username: String): Result<Unit> =
+        safeApiCall { api.rejectFollowRequest(username); Unit }
     suspend fun unfollow(username: String): Result<FollowResponse> = safeApiCall { api.unfollow(username) }
 
     suspend fun block(username: String): Result<Unit> =

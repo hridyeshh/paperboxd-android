@@ -21,11 +21,13 @@ data class User(
 /** Login / OTP verify success. */
 data class AuthResponse(
     val token: String,
+    @SerializedName("refresh_token") val refreshToken: String? = null,
     val user: User
 )
 
 data class GoogleAuthResponse(
     val token: String,
+    @SerializedName("refresh_token") val refreshToken: String? = null,
     val user: User,
     @SerializedName("is_new_user") val isNewUser: Boolean
 )
@@ -38,7 +40,8 @@ data class OtpSendResponse(
 
 /** POST /api/mobile/auth/refresh */
 data class RefreshResponse(
-    val token: String
+    val token: String,
+    @SerializedName("refresh_token") val refreshToken: String? = null
 )
 
 /** GET /api/health */

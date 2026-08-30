@@ -40,6 +40,12 @@ class SecurePrefs @Inject constructor(
 
     fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
 
+    fun saveRefreshToken(token: String) {
+        prefs.edit().putString(KEY_REFRESH_TOKEN, token).apply()
+    }
+
+    fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
+
     fun saveUser(user: User) {
         prefs.edit().putString(KEY_USER, gson.toJson(user)).apply()
     }
@@ -50,11 +56,12 @@ class SecurePrefs @Inject constructor(
     }
 
     fun clearAll() {
-        prefs.edit().remove(KEY_TOKEN).remove(KEY_USER).apply()
+        prefs.edit().remove(KEY_TOKEN).remove(KEY_REFRESH_TOKEN).remove(KEY_USER).apply()
     }
 
     private companion object {
         const val KEY_TOKEN = "auth.token"
+        const val KEY_REFRESH_TOKEN = "auth.refreshToken"
         const val KEY_USER = "auth.user"
     }
 }

@@ -71,12 +71,17 @@ class AuthRepository @Inject constructor(
 
     // Session persistence
     fun cachedToken(): String? = securePrefs.getToken()
+    fun cachedRefreshToken(): String? = securePrefs.getRefreshToken()
     fun cachedUser(): User? = securePrefs.getUser()
-    fun persistSession(token: String, user: User) {
+    fun persistSession(token: String, refreshToken: String?, user: User) {
         securePrefs.saveToken(token)
+        refreshToken?.let { securePrefs.saveRefreshToken(it) }
         securePrefs.saveUser(user)
     }
-    fun persistToken(token: String) = securePrefs.saveToken(token)
+    fun persistToken(token: String, refreshToken: String? = null) {
+        securePrefs.saveToken(token)
+        refreshToken?.let { securePrefs.saveRefreshToken(it) }
+    }
     fun persistUser(user: User) = securePrefs.saveUser(user)
     fun clearSession() = securePrefs.clearAll()
 }

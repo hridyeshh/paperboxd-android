@@ -105,7 +105,8 @@ fun HomeScreen(
         onOpenBook = onOpenBook,
         onWrite = onWrite,
         trackImpression = viewModel::trackImpression,
-        markActivitiesViewed = viewModel::markActivitiesViewed
+        markActivitiesViewed = viewModel::markActivitiesViewed,
+        onRespondToRequest = viewModel::respondToFollowRequest
     )
 }
 
@@ -118,7 +119,8 @@ fun HomeContent(
     onOpenBook: (String) -> Unit,
     onWrite: () -> Unit,
     trackImpression: (String) -> Unit = {},
-    markActivitiesViewed: () -> Unit = {}
+    markActivitiesViewed: () -> Unit = {},
+    onRespondToRequest: (username: String, accept: Boolean) -> Unit = { _, _ -> }
 ) {
     var showNotifications by remember { mutableStateOf(false) }
 
@@ -156,6 +158,8 @@ fun HomeContent(
         if (showNotifications) {
             NotificationsSheet(
                 activities = state.friendsActivities,
+                followRequests = state.followRequests,
+                onRespondToRequest = onRespondToRequest,
                 onOpenBook = onOpenBook,
                 onDismiss = { showNotifications = false }
             )

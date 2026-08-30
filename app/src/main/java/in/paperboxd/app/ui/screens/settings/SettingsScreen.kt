@@ -35,10 +35,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -181,6 +183,61 @@ private fun SettingsBody(
                 verticalAlignment = Alignment.CenterVertically,
                 content = header
             )
+
+            Section("Privacy") {
+                val isPublic by viewModel.isPublic.collectAsState()
+                val requests by viewModel.followRequests.collectAsState()
+
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.Lock, null,
+                        tint = HL.Ink.copy(alpha = 0.55f), modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.size(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Private account", fontSize = 15.sp, color = HL.Ink)
+                        Text(
+                            if (isPublic) {
+                                "Anyone can see your shelves, diary and lists."
+                            } else {
+                                "Only followers you approve can see your shelves."
+                            },
+                            fontSize = 12.sp,
+                            color = HL.Muted
+                        )
+                    }
+                    Switch(
+                        checked = !isPublic,
+                        onCheckedChange = { viewModel.setPublic(!it) }
+                    )
+                }
+
+                // Only meaningful while the account is private; the backend
+                // auto-accepts everyone waiting the moment it goes public.
+                requests.forEach { request ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                request.name.ifEmpty { request.username },
+                                fontSize = 14.sp, color = HL.Ink
+                            )
+                            Text("@${request.username}", fontSize = 12.sp, color = HL.Muted)
+                        }
+                        TextButton(onClick = { viewModel.respondToRequest(request.username, true) }) {
+                            Text("Confirm", fontSize = 13.sp)
+                        }
+                        TextButton(onClick = { viewModel.respondToRequest(request.username, false) }) {
+                            Text("Decline", fontSize = 13.sp, color = HL.Muted)
+                        }
+                    }
+                }
+            }
 
             Section("Account") {
                 SettingsRow(Icons.Outlined.Lock, "Change Password") {

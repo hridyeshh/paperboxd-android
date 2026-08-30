@@ -27,6 +27,7 @@ import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.screens.auth.AuthScreen
 import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailScreen
 import `in`.paperboxd.app.ui.screens.diary.DiaryEntryDetailScreen
+import `in`.paperboxd.app.ui.screens.wrapped.WrappedRoute
 import `in`.paperboxd.app.ui.screens.write.WriteScreen
 import `in`.paperboxd.app.ui.screens.home.HomeScreen
 import `in`.paperboxd.app.ui.screens.leaderboard.LeaderboardScreen
@@ -47,7 +48,7 @@ fun AppRoot(appState: AppState) {
     when (val dest = destination) {
         is AppDestination.Splash -> SplashScreen(onBootstrap = { appState.bootstrap() })
         is AppDestination.Auth -> AuthScreen(
-            onSignedIn = { token, user -> appState.signedIn(token, user) }
+            onSignedIn = { token, user, refreshToken -> appState.signedIn(token, user, refreshToken) }
         )
         is AppDestination.Onboarding -> OnboardingScreen(
             user = dest.user,
@@ -117,6 +118,7 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
                     onSignOut = { appState.signOut() },
                     onOpenEditProfile = { navController.navigate("edit-profile") },
+                    onOpenWrapped = { navController.navigate("wrapped") },
                     onOpenDiaryEntry = {
                         navController.navigate("diary-entry/${sessionUser.username.orEmpty()}/$it")
                     },
@@ -150,9 +152,13 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
                     onSignOut = {},
                     onOpenEditProfile = { navController.navigate("edit-profile") },
+                    onOpenWrapped = { navController.navigate("wrapped") },
                     onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") },
                     reloadKey = reloadKey
                 )
+            }
+            composable("wrapped") {
+                WrappedRoute(onClose = { navController.popBackStack() })
             }
             composable("edit-profile") {
                 EditProfileScreen(

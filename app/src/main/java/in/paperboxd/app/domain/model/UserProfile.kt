@@ -24,7 +24,11 @@ data class UserProfile(
     @SerializedName("following_count") val followingCount: Int = 0,
     @SerializedName("favorite_genres") val favoriteGenres: List<String> = emptyList(),
     @SerializedName("created_at") val createdAt: String = "",
-    @SerializedName("is_following") val isFollowing: Boolean? = null
+    @SerializedName("is_following") val isFollowing: Boolean? = null,
+    // Private accounts: the backend redacts the payload and sets can_view=false
+    // for anyone who is neither the owner nor an approved follower.
+    @SerializedName("can_view") val canView: Boolean = true,
+    @SerializedName("has_requested") val hasRequested: Boolean = false
 ) {
     val displayName: String get() = name.ifEmpty { username }
 }
@@ -48,8 +52,26 @@ data class StreakResponse(val streak: Int)
 data class FollowResponse(
     val message: String,
     val isFollowing: Boolean,
+    /** True when the target is private and the follow was queued as a request. */
+    val hasRequested: Boolean = false,
     val followersCount: Int,
     val followingCount: Int
+)
+
+/** One pending follow request in the owner's inbox. */
+data class FollowRequestUser(
+    @SerializedName("request_id") val requestId: String,
+    @SerializedName("requested_at") val requestedAt: String = "",
+    val id: String,
+    val username: String,
+    val name: String = "",
+    @SerializedName("avatar_url") val avatarUrl: String? = null,
+    val bio: String? = null
+)
+
+data class FollowRequestsResponse(
+    val requests: List<FollowRequestUser> = emptyList(),
+    @SerializedName("total_count") val totalCount: Int = 0
 )
 
 data class UserListResponse(

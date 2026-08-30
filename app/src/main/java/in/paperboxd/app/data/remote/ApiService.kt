@@ -6,6 +6,7 @@ import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
 import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
+import `in`.paperboxd.app.domain.model.Wrapped
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
@@ -48,6 +49,7 @@ import `in`.paperboxd.app.domain.model.CreateListRequest
 import `in`.paperboxd.app.domain.model.ListWithBooksResponse
 import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.UserProfile
+import `in`.paperboxd.app.domain.model.FollowRequestsResponse
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -133,6 +135,16 @@ interface ApiService {
 
     @GET("api/v1/users/me/leaderboard-stats")
     suspend fun myLeaderboardStats(): LeaderboardEntry
+
+    /**
+     * Monthly Wrapped. [month] is YYYY-MM (omit for the current month) and [tz]
+     * is an IANA zone so day/hour buckets match the reader's own clock.
+     */
+    @GET("api/v1/users/me/wrapped")
+    suspend fun wrapped(
+        @Query("tz") tz: String,
+        @Query("month") month: String? = null
+    ): Wrapped
 
     // Books
     @GET("api/v1/books/{id}")
@@ -236,6 +248,20 @@ interface ApiService {
 
     @POST("api/v1/users/{username}/follow")
     suspend fun follow(@Path("username") username: String): FollowResponse
+
+    // ── Private profiles ──────────────────────────────────────────────────────
+
+    @PATCH("api/v1/users/me/visibility")
+    suspend fun updateVisibility(@Body body: Map<String, Boolean>): UserProfile
+
+    @GET("api/v1/users/me/follow-requests")
+    suspend fun followRequests(): FollowRequestsResponse
+
+    @POST("api/v1/users/me/follow-requests/{username}")
+    suspend fun acceptFollowRequest(@Path("username") username: String): FollowResponse
+
+    @DELETE("api/v1/users/me/follow-requests/{username}")
+    suspend fun rejectFollowRequest(@Path("username") username: String)
 
     @DELETE("api/v1/users/{username}/follow")
     suspend fun unfollow(@Path("username") username: String): FollowResponse

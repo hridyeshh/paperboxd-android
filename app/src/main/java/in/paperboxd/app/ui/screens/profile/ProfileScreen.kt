@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.domain.model.AuthorSummary
+import `in`.paperboxd.app.ui.screens.wrapped.WrappedEntryCard
 import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.LastLoggedBook
@@ -109,6 +110,7 @@ fun ProfileScreen(
     onOpenProfile: (String) -> Unit,
     onSignOut: () -> Unit,
     onOpenEditProfile: () -> Unit,
+    onOpenWrapped: () -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
     reloadKey: Any = Unit,
     viewModel: ProfileViewModel = hiltViewModel()
@@ -140,6 +142,7 @@ fun ProfileScreen(
         onOpenBook = onOpenBook,
         onOpenProfile = onOpenProfile,
         onOpenEditProfile = onOpenEditProfile,
+        onOpenWrapped = onOpenWrapped,
         onOpenDiaryEntry = onOpenDiaryEntry,
         onTabSelected = viewModel::onTabSelected,
         onToggleFollow = viewModel::toggleFollow,
@@ -167,6 +170,7 @@ fun ProfileContent(
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit,
     onOpenEditProfile: () -> Unit,
+    onOpenWrapped: () -> Unit,
     onOpenDiaryEntry: (String) -> Unit,
     onTabSelected: (ProfileTab) -> Unit,
     onToggleFollow: () -> Unit,
@@ -232,6 +236,36 @@ fun ProfileContent(
                         )
                     }
 
+                    if (!profile.canView && !isOwnProfile) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp)
+                                    .padding(top = 48.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "This account is private",
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = HL.Ink
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    if (profile.hasRequested) {
+                                        "${profile.displayName} has to approve your request before you can see their shelves, diary and lists."
+                                    } else {
+                                        "Follow ${profile.displayName} to see their shelves, diary and lists."
+                                    },
+                                    fontSize = 14.sp,
+                                    color = HL.Muted,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
                     state.activity?.let { activity ->
                         item {
                             ReadingHeatmap(
@@ -266,6 +300,15 @@ fun ProfileContent(
                             } else if (isOwnProfile) {
                                 EmptyReadingCard(Modifier.padding(horizontal = 20.dp))
                             }
+                        }
+                    }
+
+                    if (isOwnProfile) {
+                        item {
+                            WrappedEntryCard(
+                                onClick = onOpenWrapped,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
+                            )
                         }
                     }
 
@@ -586,8 +629,12 @@ private fun ProfileHeader(
             } else {
                 val following = profile.isFollowing ?: false
                 BrutalPill(
-                    if (following) "Following" else "Follow",
-                    filled = !following,
+                    when {
+                        following -> "Following"
+                        profile.hasRequested -> "Requested"
+                        else -> "Follow"
+                    },
+                    filled = !following && !profile.hasRequested,
                     loading = isFollowLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onFollow

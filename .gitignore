@@ -10,3 +10,10 @@ build/
 .externalNativeBuild/
 .cxx/
 gradle-*.zip
+
+# Push credentials — see backend .gitignore. google-services.json carries the
+# FCM sender config; keep it out of the repo and inject it in CI.
+*adminsdk*.json
+*serviceaccount*.json
+*.p8
+google-services.json
