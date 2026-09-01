@@ -50,11 +50,8 @@ import `in`.paperboxd.app.R
 import `in`.paperboxd.app.ui.theme.PBSans
 import `in`.paperboxd.app.ui.theme.PBScript
 
-// Brutalist auth palette (mirrors iOS DarkFields / LoginView literals).
-private val OffWhite = Color(red = 0.96f, green = 0.95f, blue = 0.93f)
-private val PanelFill = Color(red = 0.07f, green = 0.07f, blue = 0.078f)
-private val PanelBorder = Color(red = 0.93f, green = 0.92f, blue = 0.90f)
-private fun w(a: Float) = Color.White.copy(alpha = a)
+// Auth surfaces use the shared light kit (HL) — same tokens as home and the
+// book page, so the paper ground runs unbroken across the app.
 
 /**
  * Layered dark wash — radial vignette + top-to-bottom linear darkening — that
@@ -66,12 +63,12 @@ fun DarkWash(modifier: Modifier = Modifier) {
         modifier
             .background(
                 Brush.radialGradient(
-                    colors = listOf(Color.Black.copy(0.32f), Color.Black.copy(0.58f), Color.Black.copy(0.82f)),
+                    colors = listOf(HL.Muted.copy(0.7f), HL.Muted, HL.Ink),
                 )
             )
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color.Black.copy(0.28f), Color.Black.copy(0.48f)),
+                    colors = listOf(HL.Muted.copy(0.7f), HL.Muted),
                 )
             )
     )
@@ -79,7 +76,7 @@ fun DarkWash(modifier: Modifier = Modifier) {
 
 /** The PaperBoxd script wordmark. */
 @Composable
-fun Wordmark(fontSize: Int, modifier: Modifier = Modifier, color: Color = Color.White) {
+fun Wordmark(fontSize: Int, modifier: Modifier = Modifier, color: Color = HL.Ink) {
     Text(
         text = "PaperBoxd",
         fontFamily = PBScript,
@@ -92,7 +89,7 @@ fun Wordmark(fontSize: Int, modifier: Modifier = Modifier, color: Color = Color.
 
 /** Mono uppercase eyebrow / field label. */
 @Composable
-fun MonoLabel(text: String, modifier: Modifier = Modifier, color: Color = w(0.48f)) {
+fun MonoLabel(text: String, modifier: Modifier = Modifier, color: Color = HL.Muted) {
     Text(
         text = text.uppercase(),
         fontFamily = FontFamily.Monospace,
@@ -105,7 +102,7 @@ fun MonoLabel(text: String, modifier: Modifier = Modifier, color: Color = w(0.48
 }
 
 /**
- * Brutalist card backing: opaque near-black panel, heavy off-white 2px border,
+ * Brutalist card backing: opaque card-face panel, heavy ink 2px border,
  * hard 90° corners, and an offset "echo" frame standing in for a drop shadow.
  * Mirrors the iOS `BrutalCard`. [content] is laid out over the panel; give it
  * its own inner padding.
@@ -121,21 +118,21 @@ fun BrutalCard(
             Modifier
                 .matchParentSize()
                 .padding(start = 6.dp, top = 6.dp)
-                .border(2.dp, w(0.16f), RectangleShape)
+                .border(2.dp, HL.Ink.copy(0.25f), RectangleShape)
         )
         // Opaque panel + structural border.
         Box(
             Modifier
                 .matchParentSize()
                 .padding(end = 6.dp, bottom = 6.dp)
-                .background(PanelFill, RectangleShape)
-                .border(2.dp, PanelBorder, RectangleShape)
+                .background(HL.Card, RectangleShape)
+                .border(2.dp, HL.Ink, RectangleShape)
         )
         Box(Modifier.padding(end = 6.dp, bottom = 6.dp)) { content() }
     }
 }
 
-/** Flat brutalist text field: white-wash fill, hard border, no rounded corners. */
+/** Flat brutalist text field: paper2 fill, hard ink border, no rounded corners. */
 @Composable
 fun BrutalTextField(
     value: String,
@@ -153,16 +150,16 @@ fun BrutalTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        textStyle = TextStyle(color = Color.White, fontFamily = PBSans, fontSize = 16.sp),
-        cursorBrush = SolidColor(OffWhite),
+        textStyle = TextStyle(color = HL.Ink, fontFamily = PBSans, fontSize = 16.sp),
+        cursorBrush = SolidColor(HL.Ink),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .background(w(if (focused) 0.09f else 0.055f), RectangleShape)
-            .border(1.dp, w(if (focused) 0.48f else 0.11f), RectangleShape)
+            .background(if (focused) HL.Paper2 else HL.Paper2.copy(alpha = 0.55f), RectangleShape)
+            .border(1.dp, if (focused) HL.Ink else HL.Ink.copy(alpha = 0.28f), RectangleShape)
             .onFocusChanged { focused = it.isFocused },
         decorationBox = { inner ->
             Row(
@@ -171,7 +168,7 @@ fun BrutalTextField(
             ) {
                 Box(Modifier.weight(1f)) {
                     if (value.isEmpty()) {
-                        Text(placeholder, color = w(0.32f), fontFamily = PBSans, fontSize = 16.sp)
+                        Text(placeholder, color = HL.Muted.copy(0.7f), fontFamily = PBSans, fontSize = 16.sp)
                     }
                     inner()
                 }
@@ -204,7 +201,7 @@ fun BrutalSecureField(
         trailing = {
             Text(
                 text = if (visible) "hide" else "show",
-                color = w(0.45f),
+                color = HL.Muted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 modifier = Modifier
@@ -216,9 +213,10 @@ fun BrutalSecureField(
 }
 
 /**
- * Brutalist primary CTA: off-white fill, black 2px border, hard white offset
- * "shadow" behind, black label + arrow. Presses scale down slightly. Mirrors
- * the iOS sign-in button.
+ * Brutalist primary CTA: ink fill, ink 2px border, hard offset "shadow" behind,
+ * paper label + arrow. Presses scale down slightly. Mirrors the iOS sign-in
+ * button — inverted against the paper ground so it still reads as the one solid
+ * mass on the card.
  */
 @Composable
 fun BrutalPrimaryButton(
@@ -236,7 +234,7 @@ fun BrutalPrimaryButton(
             Modifier
                 .matchParentSize()
                 .padding(start = 4.dp, top = 4.dp)
-                .background(w(0.22f), RectangleShape)
+                .background(HL.Ink.copy(0.25f), RectangleShape)
         )
         Box(
             Modifier
@@ -244,17 +242,17 @@ fun BrutalPrimaryButton(
                 .padding(end = 4.dp, bottom = 4.dp)
                 .scale(if (pressed) 0.98f else 1f)
                 .alpha(if (enabled) 1f else 0.45f)
-                .background(OffWhite, RectangleShape)
-                .border(2.dp, Color.Black.copy(0.9f), RectangleShape)
+                .background(HL.Ink, RectangleShape)
+                .border(2.dp, HL.Ink, RectangleShape)
                 .clickableNoRipple(enabled = enabled && !loading, interactionSource = interaction, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
             if (loading) {
-                CircularProgressIndicator(color = Color.Black, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = HL.Paper, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text, color = Color.Black, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Text("→", color = Color.Black, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(text, color = HL.Paper, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text("→", color = HL.Paper, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 }
             }
         }
@@ -273,8 +271,8 @@ fun GoogleButton(
         modifier = modifier
             .fillMaxWidth()
             .height(50.dp)
-            .background(w(0.05f), RectangleShape)
-            .border(1.5.dp, w(0.85f), RectangleShape)
+            .background(HL.Paper2, RectangleShape)
+            .border(1.5.dp, HL.Ink, RectangleShape)
             .clickableNoRipple(enabled = enabled, onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -285,7 +283,7 @@ fun GoogleButton(
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(10.dp))
-        Text(text, color = Color.White, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 14.5f.sp)
+        Text(text, color = HL.Ink, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 14.5f.sp)
     }
 }
 
@@ -293,17 +291,17 @@ fun GoogleButton(
 @Composable
 fun OrDivider(modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f).height(1.dp).background(w(0.12f)))
+        Box(Modifier.weight(1f).height(1.dp).background(HL.Ink.copy(0.18f)))
         Text(
             "OR",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
             letterSpacing = 2.2.sp,
-            color = w(0.3f),
+            color = HL.Muted.copy(0.7f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 10.dp),
         )
-        Box(Modifier.weight(1f).height(1.dp).background(w(0.12f)))
+        Box(Modifier.weight(1f).height(1.dp).background(HL.Ink.copy(0.18f)))
     }
 }
 

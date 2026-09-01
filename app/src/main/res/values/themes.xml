@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Pre-Compose window theme: dark background so no white flash on launch. -->
+    <!-- Pre-Compose window theme: paper beige (HL.Paper), matching the splash
+         clip's tinted ground and the home background, so launch → splash → home
+         is one continuous colour with no pop at either hand-off. -->
     <style name="Theme.PaperBoxd" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#0A0A0A</item>
-        <item name="android:statusBarColor">#0A0A0A</item>
-        <item name="android:navigationBarColor">#0A0A0A</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#F2EDE1</item>
+        <item name="android:statusBarColor">#F2EDE1</item>
+        <item name="android:navigationBarColor">#F2EDE1</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

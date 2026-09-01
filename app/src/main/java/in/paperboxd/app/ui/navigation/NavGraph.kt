@@ -1,5 +1,10 @@
 package `in`.paperboxd.app.ui.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,21 +46,35 @@ import `in`.paperboxd.app.ui.screens.jazy.JazyScreen
 import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.TextSecondary
 
-/** Root switch on the AppState destination — splash / auth / onboarding / main. */
+/**
+ * Root switch on the AppState destination — splash / auth / onboarding / main.
+ *
+ * Cross-faded rather than swapped, so the splash hands off to the next screen
+ * as one movement instead of a cut (matches the iOS root transition).
+ */
 @Composable
 fun AppRoot(appState: AppState) {
     val destination by appState.destination.collectAsState()
-    when (val dest = destination) {
-        is AppDestination.Splash -> SplashScreen(onBootstrap = { appState.bootstrap() })
-        is AppDestination.Auth -> AuthScreen(
-            onSignedIn = { token, user, refreshToken -> appState.signedIn(token, user, refreshToken) }
-        )
-        is AppDestination.Onboarding -> OnboardingScreen(
-            user = dest.user,
-            onUsernameSet = { appState.setOnboardingUsername(it) },
-            onFinished = { appState.finishOnboarding() }
-        )
-        is AppDestination.Main -> MainScaffold(user = dest.user, appState = appState)
+    AnimatedContent(
+        targetState = destination,
+        transitionSpec = { fadeIn(tween(450)) togetherWith fadeOut(tween(450)) },
+        // Key on the destination kind: a same-kind update (a refreshed user on
+        // Main) must not tear the nav host down and lose its back stacks.
+        contentKey = { it::class },
+        label = "root",
+    ) { dest ->
+        when (dest) {
+            is AppDestination.Splash -> SplashScreen(onBootstrap = { appState.bootstrap() })
+            is AppDestination.Auth -> AuthScreen(
+                onSignedIn = { token, user, refreshToken -> appState.signedIn(token, user, refreshToken) }
+            )
+            is AppDestination.Onboarding -> OnboardingScreen(
+                user = dest.user,
+                onUsernameSet = { appState.setOnboardingUsername(it) },
+                onFinished = { appState.finishOnboarding() }
+            )
+            is AppDestination.Main -> MainScaffold(user = dest.user, appState = appState)
+        }
     }
 }
 

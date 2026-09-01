@@ -2,6 +2,8 @@ package `in`.paperboxd.app.ui.screens.auth
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +25,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,27 +57,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.R
+import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.domain.model.User
-import `in`.paperboxd.app.ui.components.BookCoverColumns
 import `in`.paperboxd.app.ui.components.BrutalCard
 import `in`.paperboxd.app.ui.components.LegalBottomSheet
 import `in`.paperboxd.app.ui.components.LegalDoc
 import `in`.paperboxd.app.ui.components.BrutalPrimaryButton
 import `in`.paperboxd.app.ui.components.BrutalSecureField
 import `in`.paperboxd.app.ui.components.BrutalTextField
-import `in`.paperboxd.app.ui.components.DarkWash
 import `in`.paperboxd.app.ui.components.GoogleButton
 import `in`.paperboxd.app.ui.components.MonoLabel
 import `in`.paperboxd.app.ui.components.OrDivider
 import `in`.paperboxd.app.ui.components.Wordmark
 import `in`.paperboxd.app.ui.theme.Accent
-import `in`.paperboxd.app.ui.theme.Background
 import `in`.paperboxd.app.ui.theme.Error as ErrorColor
 import `in`.paperboxd.app.ui.theme.PBSans
 import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 
 private val CardHorizontal = 20.dp
-private fun w(a: Float) = Color.White.copy(alpha = a)
 private val SuccessGreen = Color(red = 0.3f, green = 0.85f, blue = 0.5f)
 
 @Composable
@@ -116,9 +118,24 @@ fun AuthContent(
     onLoginWithGoogle: () -> Unit,
     onSwitchMode: (AuthMode) -> Unit,
 ) {
-    Box(Modifier.fillMaxSize().background(Background)) {
-        BookCoverColumns(Modifier.fillMaxSize())
-        DarkWash(Modifier.fillMaxSize())
+    // Paper ground, continuous with the splash before it and home after it —
+    // the cover wall and its dark wash belonged to the old dark auth design and
+    // would break that run of colour.
+
+    // Light page → dark status-bar icons while this screen is visible. Same
+    // pattern Home uses; enableEdgeToEdge() picks icons from the dark Compose
+    // theme, which would leave them white-on-paper.
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val activity = view.context as? android.app.Activity ?: return@DisposableEffect onDispose {}
+        val controller = WindowCompat.getInsetsController(activity.window, view)
+        val wasLight = controller.isAppearanceLightStatusBars
+        controller.isAppearanceLightStatusBars = true
+        onDispose { controller.isAppearanceLightStatusBars = wasLight }
+    }
+
+    Box(Modifier.fillMaxSize().background(HL.Paper)) {
+        AuthDotGrid(Modifier.fillMaxSize())
 
         Crossfade(targetState = state.mode, animationSpec = tween(250), label = "authMode") { mode ->
             when (mode) {
@@ -164,8 +181,8 @@ private fun TopBar(eyebrow: String?, modifier: Modifier = Modifier) {
         Wordmark(fontSize = 30)
         Spacer(Modifier.weight(1f))
         if (eyebrow != null) {
-            Box(Modifier.border(1.dp, w(0.30f), RectangleShape).padding(horizontal = 10.dp, vertical = 5.dp)) {
-                MonoLabel(eyebrow, color = w(0.55f))
+            Box(Modifier.border(1.dp, HL.Muted.copy(0.7f), RectangleShape).padding(horizontal = 10.dp, vertical = 5.dp)) {
+                MonoLabel(eyebrow, color = HL.Muted)
             }
         }
     }
@@ -181,7 +198,7 @@ private fun CardHeader(title: String, subtitle: String) {
             fontSize = 30.sp,
             lineHeight = 34.sp,
             letterSpacing = (-0.8).sp,
-            color = Color.White,
+            color = HL.Ink,
         )
         Spacer(Modifier.height(8.dp))
         Text(
@@ -190,7 +207,7 @@ private fun CardHeader(title: String, subtitle: String) {
             fontStyle = FontStyle.Italic,
             fontSize = 14.sp,
             lineHeight = 18.sp,
-            color = w(0.62f),
+            color = HL.Muted,
         )
     }
 }
@@ -212,10 +229,10 @@ private fun FeedbackRow(state: AuthUiState) {
 @Composable
 private fun LinkText(prefix: String, action: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(prefix, color = w(0.48f), fontSize = 13.sp)
+        Text(prefix, color = HL.Muted, fontSize = 13.sp)
         Text(
             action,
-            color = w(0.90f),
+            color = HL.Ink,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             textDecoration = TextDecoration.Underline,
@@ -270,7 +287,7 @@ private fun LoginForm(
                     Spacer(Modifier.weight(1f))
                     Text(
                         stringResource(R.string.auth_forgot_password),
-                        color = w(0.65f),
+                        color = HL.Muted,
                         fontSize = 11.5f.sp,
                         modifier = Modifier.clickable(onClick = onForgotPassword),
                     )
@@ -436,9 +453,9 @@ private fun TermsConsent(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = Color.White,
-                uncheckedColor = w(0.5f),
-                checkmarkColor = Color.Black,
+                checkedColor = HL.Ink,
+                uncheckedColor = HL.Muted,
+                checkmarkColor = HL.Paper,
             ),
         )
         Spacer(Modifier.width(4.dp))
@@ -460,7 +477,7 @@ private fun TermsConsent(
                 ) { append("Privacy Policy") }
                 append(".")
             },
-            color = w(0.6f),
+            color = HL.Muted,
             fontSize = 12.5.sp,
         )
     }
@@ -479,11 +496,11 @@ private fun StrengthBar(strength: PasswordStrength) {
                 Modifier
                     .height(3.dp)
                     .width(28.dp)
-                    .background(if (i < filled) strength.color else w(0.16f)),
+                    .background(if (i < filled) strength.color else HL.Ink.copy(0.25f)),
             )
         }
         Spacer(Modifier.width(2.dp))
-        Text(strength.label, color = w(0.55f), fontSize = 11.sp)
+        Text(strength.label, color = HL.Muted, fontSize = 11.sp)
     }
 }
 
@@ -514,7 +531,7 @@ private fun OtpForm(
                     fontWeight = FontWeight.Bold,
                     fontSize = 30.sp,
                     letterSpacing = (-0.8).sp,
-                    color = Color.White,
+                    color = HL.Ink,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -522,7 +539,7 @@ private fun OtpForm(
                     fontFamily = FontFamily.Serif,
                     fontStyle = FontStyle.Italic,
                     fontSize = 14.sp,
-                    color = w(0.7f),
+                    color = HL.Muted,
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -535,11 +552,11 @@ private fun OtpForm(
                     if (state.otpCountdown > 0) {
                         Text(
                             stringResource(R.string.auth_otp_expires_in, formatCountdown(state.otpCountdown)),
-                            color = w(0.5f),
+                            color = HL.Muted,
                             fontSize = 13.sp,
                         )
                         Spacer(Modifier.weight(1f))
-                        Text(stringResource(R.string.auth_resend_code), color = w(0.25f), fontSize = 13.sp)
+                        Text(stringResource(R.string.auth_resend_code), color = HL.Muted.copy(0.7f), fontSize = 13.sp)
                     } else {
                         Text(stringResource(R.string.auth_otp_expired), color = ErrorColor, fontSize = 13.sp)
                         Spacer(Modifier.weight(1f))
@@ -556,7 +573,7 @@ private fun OtpForm(
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.auth_login_with_password),
-                    color = w(0.55f),
+                    color = HL.Muted,
                     fontSize = 13.sp,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.fillMaxWidth().clickable(onClick = onSwitchToLogin),
@@ -589,5 +606,26 @@ private fun AuthPreview() {
             onLoginWithGoogle = {},
             onSwitchMode = {},
         )
+    }
+}
+
+/**
+ * The same faint ink dot grid the home screen lays over its paper, so auth and
+ * home read as one surface.
+ */
+@Composable
+private fun AuthDotGrid(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val spacing = 26.dp.toPx()
+        val radius = 0.75.dp.toPx()
+        var y = 0f
+        while (y < size.height) {
+            var x = 0f
+            while (x < size.width) {
+                drawCircle(color = HL.Ink.copy(alpha = 0.05f), radius = radius, center = Offset(x, y))
+                x += spacing
+            }
+            y += spacing
+        }
     }
 }

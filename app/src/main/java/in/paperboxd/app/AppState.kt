@@ -50,7 +50,7 @@ class AppState @Inject constructor(
         }
     }
 
-    /** Boots the app: prefs → health → refresh. Minimum splash hold 2.5s. */
+    /** Boots the app: prefs → health → refresh. Hold covers the clip at 1.25x + its outro fade. */
     suspend fun bootstrap() {
         val start = System.currentTimeMillis()
 
@@ -110,7 +110,7 @@ class AppState @Inject constructor(
         )
     }
 
-    private suspend fun holdSplash(startMillis: Long, minimumMillis: Long = 2_500) {
+    private suspend fun holdSplash(startMillis: Long, minimumMillis: Long = 4_600) {
         val elapsed = System.currentTimeMillis() - startMillis
         if (elapsed < minimumMillis) delay(minimumMillis - elapsed)
     }

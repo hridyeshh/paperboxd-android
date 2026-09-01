@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Inset keeps the box sketch inside the adaptive-icon safe zone (66/108dp circle). -->
+<!-- Inset keeps the mark inside the adaptive-icon safe zone (66/108dp circle).
+     app_icon.png is sized so that after this inset the mark's diagonal still
+     fits that circle, whatever mask the launcher applies. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/app_icon"
     android:inset="12%" />
