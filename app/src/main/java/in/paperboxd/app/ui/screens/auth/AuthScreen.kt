@@ -59,6 +59,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.R
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.domain.model.User
+import `in`.paperboxd.app.ui.components.BookShelfHero
 import `in`.paperboxd.app.ui.components.BrutalCard
 import `in`.paperboxd.app.ui.components.LegalBottomSheet
 import `in`.paperboxd.app.ui.components.LegalDoc
@@ -68,6 +69,7 @@ import `in`.paperboxd.app.ui.components.BrutalTextField
 import `in`.paperboxd.app.ui.components.GoogleButton
 import `in`.paperboxd.app.ui.components.MonoLabel
 import `in`.paperboxd.app.ui.components.OrDivider
+import `in`.paperboxd.app.ui.components.registerShelf
 import `in`.paperboxd.app.ui.components.Wordmark
 import `in`.paperboxd.app.ui.theme.Accent
 import `in`.paperboxd.app.ui.theme.Error as ErrorColor
@@ -175,14 +177,19 @@ fun AuthContent(
 @Composable
 private fun TopBar(eyebrow: String?, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(horizontal = 26.dp, vertical = 20.dp),
+        modifier = modifier.padding(horizontal = 24.dp).padding(top = 18.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Wordmark(fontSize = 30)
         Spacer(Modifier.weight(1f))
         if (eyebrow != null) {
-            Box(Modifier.border(1.dp, HL.Muted.copy(0.7f), RectangleShape).padding(horizontal = 10.dp, vertical = 5.dp)) {
-                MonoLabel(eyebrow, color = HL.Muted)
+            Box(
+                Modifier
+                    .background(HL.Ochre, RectangleShape)
+                    .border(2.dp, HL.Ink, RectangleShape)
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            ) {
+                MonoLabel(eyebrow, color = HL.Ink)
             }
         }
     }
@@ -207,7 +214,7 @@ private fun CardHeader(title: String, subtitle: String) {
             fontStyle = FontStyle.Italic,
             fontSize = 14.sp,
             lineHeight = 18.sp,
-            color = HL.Muted,
+            color = HL.Sepia,
         )
     }
 }
@@ -227,15 +234,21 @@ private fun FeedbackRow(state: AuthUiState) {
 }
 
 @Composable
-private fun LinkText(prefix: String, action: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun LinkText(
+    prefix: String,
+    action: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    accent: Boolean = false,
+) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(prefix, color = HL.Muted, fontSize = 13.sp)
         Text(
             action,
-            color = HL.Ink,
+            color = if (accent) HL.Crimson else HL.Ink,
             fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            textDecoration = TextDecoration.Underline,
+            fontWeight = if (accent) FontWeight.Bold else FontWeight.SemiBold,
+            textDecoration = if (accent) TextDecoration.None else TextDecoration.Underline,
             modifier = Modifier.clickable(onClick = onClick),
         )
     }
@@ -254,10 +267,13 @@ private fun LoginForm(
     onSwitchToRegister: () -> Unit,
 ) {
     Box(Modifier.fillMaxSize().systemBarsPadding()) {
-        TopBar(
-            eyebrow = stringResource(R.string.auth_eyebrow_signin),
-            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
-        )
+        Column(Modifier.align(Alignment.TopStart).fillMaxWidth()) {
+            TopBar(
+                eyebrow = stringResource(R.string.auth_eyebrow_signin),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            BookShelfHero()
+        }
 
         BrutalCard(
             modifier = Modifier
@@ -287,7 +303,8 @@ private fun LoginForm(
                     Spacer(Modifier.weight(1f))
                     Text(
                         stringResource(R.string.auth_forgot_password),
-                        color = HL.Muted,
+                        color = HL.Crimson,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 11.5f.sp,
                         modifier = Modifier.clickable(onClick = onForgotPassword),
                     )
@@ -322,6 +339,7 @@ private fun LoginForm(
                     action = stringResource(R.string.auth_create_account_link),
                     onClick = onSwitchToRegister,
                     modifier = Modifier.fillMaxWidth(),
+                    accent = true,
                 )
             }
         }
@@ -356,13 +374,24 @@ private fun RegisterForm(
             .verticalScroll(rememberScrollState()),
     ) {
         TopBar(eyebrow = stringResource(R.string.auth_eyebrow_register), modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(12.dp))
+        BookShelfHero(
+            spines = registerShelf,
+            height = 196.dp,
+            rowHeight = 158.dp,
+            leadingPad = 26.dp,
+            durationMillis = 96_000,
+            titleSize = 10.sp,
+            maxTitleRun = 92.dp,
+            spinePadding = 8.dp,
+        )
+        Spacer(Modifier.height(20.dp))
 
         BrutalCard(
+            echo = HL.Forest,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp)
-                .padding(bottom = 32.dp),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
         ) {
             Column(Modifier.padding(24.dp)) {
                 CardHeader(stringResource(R.string.auth_register_title), stringResource(R.string.auth_register_subtitle))
@@ -453,9 +482,9 @@ private fun TermsConsent(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = HL.Ink,
-                uncheckedColor = HL.Muted,
-                checkmarkColor = HL.Paper,
+                checkedColor = HL.Crimson,
+                uncheckedColor = HL.Ink,
+                checkmarkColor = HL.Cream,
             ),
         )
         Spacer(Modifier.width(4.dp))
@@ -465,14 +494,14 @@ private fun TermsConsent(
                 withLink(
                     LinkAnnotation.Clickable(
                         "terms",
-                        TextLinkStyles(SpanStyle(color = Accent, textDecoration = TextDecoration.Underline)),
+                        TextLinkStyles(SpanStyle(color = HL.Crimson, fontWeight = FontWeight.SemiBold)),
                     ) { _ -> onOpenTerms() },
                 ) { append("Terms of Service") }
                 append(" and ")
                 withLink(
                     LinkAnnotation.Clickable(
                         "privacy",
-                        TextLinkStyles(SpanStyle(color = Accent, textDecoration = TextDecoration.Underline)),
+                        TextLinkStyles(SpanStyle(color = HL.Crimson, fontWeight = FontWeight.SemiBold)),
                     ) { _ -> onOpenPrivacy() },
                 ) { append("Privacy Policy") }
                 append(".")

@@ -2,7 +2,6 @@ package `in`.paperboxd.app.data.repository
 
 import `in`.paperboxd.app.data.remote.ApiService
 import `in`.paperboxd.app.data.remote.safeApiCall
-import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.BookshelfResponse
 import `in`.paperboxd.app.domain.model.FavoriteBook
 import `in`.paperboxd.app.domain.model.FollowRequestsResponse
@@ -79,9 +78,6 @@ class UserRepository @Inject constructor(
         safeApiCall { api.userLikes(username, page, pageSize) }
 
     suspend fun tbr(username: String): Result<List<TbrItem>> = safeApiCall { api.userTbr(username) }
-
-    suspend fun authors(username: String): Result<List<AuthorSummary>> =
-        safeApiCall { api.userAuthors(username) }
 
     suspend fun favorites(username: String): Result<List<FavoriteBook>> =
         safeApiCall { api.userFavorites(username).sortedBy { it.displayOrder } }

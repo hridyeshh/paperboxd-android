@@ -2,8 +2,11 @@ package `in`.paperboxd.app.ui.screens.settings
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -12,16 +15,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
@@ -35,24 +38,23 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.Switch
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import `in`.paperboxd.app.ui.screens.scan.ScanPrefs
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,49 +62,30 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
-import `in`.paperboxd.app.ui.theme.PBScript
-import kotlinx.coroutines.delay
+import `in`.paperboxd.app.ui.components.brutalButton
+import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.components.hatchBrush
+import `in`.paperboxd.app.ui.screens.scan.ScanPrefs
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.icons.outlined.LockReset
+import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
+import `in`.paperboxd.app.ui.theme.AvatarGradient
+import java.util.Locale
 
-/** iOS SettingsView twin — same sections/rows, restyled to the light brutalist
- *  paper aesthetic used across the ported app. Opened from the profile hamburger. */
-@Composable
-fun SettingsScreen(
-    email: String,
-    onBack: () -> Unit,
-    onSignOut: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
-) {
-    SettingsBody(
-        email = email,
-        onSignOut = onSignOut,
-        viewModel = viewModel,
-        modifier = Modifier.fillMaxSize(),
-        header = {
-            CircleChip(onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack, "Back",
-                    tint = HL.Ink, modifier = Modifier.size(16.dp)
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            Text("Settings", fontFamily = PBScript, fontSize = 24.sp, color = HL.Ink)
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.size(36.dp))
-        }
-    )
-}
-
-/** Slide-up sheet twin of iOS `.sheet(isPresented: $showSettings)` — same body,
- *  presented as a ModalBottomSheet over the profile instead of a full screen. */
+/**
+ * iOS SettingsView twin — same sections/rows, restyled to the light brutalist
+ * paper aesthetic used across the ported app. Opened from the profile hamburger
+ * as a slide-up sheet, matching iOS `.sheet(isPresented: $showSettings)`.
+ *
+ * Rows that iOS pushes onto its NavigationStack (change password, the legal
+ * pages, Goodreads import) swap in place here behind a back chip — see
+ * [SettingsPage] — because a bottom sheet has no nav host of its own.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(
@@ -115,7 +98,12 @@ fun SettingsSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = HL.Paper,
-        dragHandle = null
+        shape = RectangleShape,
+        dragHandle = {
+            Box(Modifier.fillMaxWidth().padding(top = 9.dp, bottom = 7.dp), Alignment.Center) {
+                Box(Modifier.size(width = 44.dp, height = 4.dp).background(HL.Ink))
+            }
+        }
     ) {
         SettingsBody(
             email = email,
@@ -123,31 +111,39 @@ fun SettingsSheet(
             viewModel = viewModel,
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f),
             header = {
-                Spacer(Modifier.width(72.dp)) // balances the Done pill so title centres
+                Spacer(Modifier.width(62.dp))
                 Spacer(Modifier.weight(1f))
-                Text(
-                    "Settings",
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 19.sp,
-                    color = HL.Ink
-                )
+                SettingsTitle()
                 Spacer(Modifier.weight(1f))
-                Text(
-                    "Done",
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    color = HL.Accent,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(HL.Card)
-                        .clickable(onClick = onDismiss)
-                        .padding(horizontal = 16.dp, vertical = 9.dp)
-                )
+                Box(Modifier.width(62.dp), contentAlignment = Alignment.CenterEnd) {
+                    Box(
+                        Modifier.brutalButton(onDismiss, fill = HL.Ink, borderWidth = 2.dp, offset = 3.dp)
+                            .padding(horizontal = 11.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            "DONE",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            letterSpacing = 0.5.sp,
+                            color = HL.Paper
+                        )
+                    }
+                }
             }
         )
     }
+}
+
+@Composable
+private fun SettingsTitle() {
+    Text(
+        "Settings",
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 19.sp,
+        color = HL.Ink
+    )
 }
 
 @Composable
@@ -159,11 +155,14 @@ private fun SettingsBody(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
-    var toast by remember { mutableStateOf<String?>(null) }
-    var showGoodreads by remember { mutableStateOf(false) }
+
+    // iOS pushes these onto the settings NavigationStack; the sheet has no nav
+    // host, so the page swaps in place behind the same back chip.
+    var page by remember { mutableStateOf<SettingsPage?>(null) }
+    val openPage = page
+    BackHandler(enabled = openPage != null) { page = null }
 
     val version = remember {
         runCatching {
@@ -172,161 +171,217 @@ private fun SettingsBody(
     }
 
     Box(modifier.background(HL.Paper)) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 40.dp)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                content = header
-            )
-
-            Section("Privacy") {
-                val isPublic by viewModel.isPublic.collectAsState()
-                val requests by viewModel.followRequests.collectAsState()
-
+        Column(Modifier.fillMaxSize()) {
+            // Nav bar: serif title between the chips, closed by a hard ink rule.
+            Column {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 15.dp),
+                    Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Outlined.Lock, null,
-                        tint = HL.Ink.copy(alpha = 0.55f), modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.size(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Private account", fontSize = 15.sp, color = HL.Ink)
-                        Text(
-                            if (isPublic) {
-                                "Anyone can see your shelves, diary and lists."
-                            } else {
-                                "Only followers you approve can see your shelves."
-                            },
-                            fontSize = 12.sp,
-                            color = HL.Muted
-                        )
-                    }
-                    Switch(
-                        checked = !isPublic,
-                        onCheckedChange = { viewModel.setPublic(!it) }
-                    )
+                    if (openPage == null) header() else SubPageHeader(openPage.title) { page = null }
                 }
+                Box(Modifier.fillMaxWidth().height(2.dp).background(HL.Ink))
+            }
 
-                // Only meaningful while the account is private; the backend
-                // auto-accepts everyone waiting the moment it goes public.
-                requests.forEach { request ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                request.name.ifEmpty { request.username },
-                                fontSize = 14.sp, color = HL.Ink
+            if (openPage == null) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp)
+                        .padding(top = 24.dp, bottom = 44.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    Section("Privacy") {
+                        val isPublic by viewModel.isPublic.collectAsState()
+                        val requests by viewModel.followRequests.collectAsState()
+
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Lock, null,
+                                tint = HL.Ink, modifier = Modifier.size(20.dp)
                             )
-                            Text("@${request.username}", fontSize = 12.sp, color = HL.Muted)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Private account",
+                                    fontSize = 15.sp, fontWeight = FontWeight.Medium, color = HL.Ink
+                                )
+                                Text(
+                                    if (isPublic) {
+                                        "Anyone can see your shelves, diary and lists."
+                                    } else {
+                                        "Only followers you approve can see your shelves."
+                                    },
+                                    fontSize = 12.sp,
+                                    color = HL.Muted
+                                )
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            BrutalSwitch(checked = !isPublic) { viewModel.setPublic(!it) }
                         }
-                        TextButton(onClick = { viewModel.respondToRequest(request.username, true) }) {
-                            Text("Confirm", fontSize = 13.sp)
-                        }
-                        TextButton(onClick = { viewModel.respondToRequest(request.username, false) }) {
-                            Text("Decline", fontSize = 13.sp, color = HL.Muted)
+
+                        // Only meaningful while the account is private; the backend
+                        // auto-accepts everyone waiting the moment it goes public.
+                        if (!isPublic && requests.isNotEmpty()) {
+                            Box(Modifier.fillMaxWidth().height(2.dp).background(HL.Ink))
+                            Text(
+                                if (requests.size == 1) "1 FOLLOW REQUEST" else "${requests.size} FOLLOW REQUESTS",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 9.5.sp,
+                                letterSpacing = 1.8.sp,
+                                color = HL.Paper,
+                                modifier = Modifier.fillMaxWidth().background(HL.Ink)
+                                    .padding(horizontal = 16.dp, vertical = 7.dp)
+                            )
+                            requests.forEach { request ->
+                                RowDivider()
+                                Row(
+                                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(32.dp)
+                                            .background(AvatarGradient)
+                                            .border(2.dp, HL.Ink)
+                                    )
+                                    Spacer(Modifier.width(11.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            request.name.ifEmpty { request.username },
+                                            fontSize = 14.sp, color = HL.Ink
+                                        )
+                                        Text(
+                                            "@${request.username}",
+                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 11.sp, color = HL.Muted
+                                        )
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    MiniButton("Confirm", fill = HL.Ink, label = HL.Paper) {
+                                        viewModel.respondToRequest(request.username, true)
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    MiniButton("Decline", fill = HL.Paper, label = HL.Ink) {
+                                        viewModel.respondToRequest(request.username, false)
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            Section("Account") {
-                SettingsRow(Icons.Outlined.Lock, "Change Password") {
-                    scope.launch {
-                        toast = "Sending reset link…"
-                        toast = viewModel.sendPasswordReset(email).fold(
-                            onSuccess = { "Reset link sent — check your inbox" },
-                            onFailure = { "Couldn’t send the reset link" }
+                    Section("Account") {
+                        SettingsRow(Icons.Outlined.Lock, "Change Password") {
+                            page = SettingsPage.ChangePassword
+                        }
+                    }
+
+                    Section("Scan & Know") {
+                        // Re-read whenever the sheet reopens; the scan flow writes
+                        // this back to prefs. iOS gets that free from @AppStorage.
+                        val remaining = remember(page) { ScanPrefs.scansRemaining(context) }
+                        InfoRow(Icons.Outlined.QrCodeScanner, "Free Scans Remaining") {
+                            Text(
+                                if (remaining == 0) "NONE LEFT" else "$remaining LEFT",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = HL.Ink,
+                                modifier = Modifier
+                                    .background(HL.Paper2)
+                                    .border(2.dp, HL.Ink)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Section("Your Data") {
+                        SettingsRow(Icons.Outlined.Download, "Import from Goodreads") {
+                            page = SettingsPage.Goodreads
+                        }
+                    }
+
+                    Section("Discover") {
+                        SettingsRow(Icons.Outlined.PersonAddAlt, "Invite Friends") {
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, "https://paperboxd.in")
+                            }
+                            context.startActivity(Intent.createChooser(send, "Invite Friends"))
+                        }
+                        RowDivider()
+                        SettingsRow(Icons.Outlined.StarBorder, "Rate PaperBoxd") {
+                            dialog = SettingsDialog.Rate
+                        }
+                    }
+
+                    Section("About") {
+                        SettingsRow(Icons.Outlined.Policy, "Privacy Policy") { page = SettingsPage.Privacy }
+                        RowDivider()
+                        SettingsRow(Icons.Outlined.Description, "Terms of Service") { page = SettingsPage.Terms }
+                        RowDivider()
+                        InfoRow(Icons.Outlined.Info, "Version") {
+                            Text(
+                                version,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                                color = HL.Muted
+                            )
+                        }
+                    }
+
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .brutalButton(onSignOut, fill = HL.Ink, borderWidth = 2.dp, offset = 5.dp)
+                            .height(50.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "SIGN OUT",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            letterSpacing = 1.4.sp,
+                            color = HL.Paper
                         )
                     }
-                }
-            }
 
-            Section("Scan & Know") {
-                InfoRow(
-                    Icons.Outlined.QrCodeScanner,
-                    "Free Scans Remaining",
-                    "${ScanPrefs.scansRemaining(LocalContext.current)} remaining"
-                )
-            }
-
-            Section("Your Data") {
-                SettingsRow(Icons.Outlined.Download, "Import from Goodreads") {
-                    showGoodreads = true
-                }
-            }
-
-            Section("Discover") {
-                SettingsRow(Icons.Outlined.PersonAddAlt, "Invite Friends") {
-                    val send = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, "Track your reading with me on PaperBoxd — https://paperboxd.in")
+                    // Hatched, not red — the hazard reads from the stripe pattern so
+                    // the palette stays monochrome.
+                    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .brutalButton(
+                                    { dialog = SettingsDialog.Delete },
+                                    fill = HL.Paper, borderWidth = 2.dp, offset = 5.dp
+                                )
+                                .height(46.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Hatch(base = HL.Paper, stripe = HL.Paper2)
+                            Text(
+                                "DELETE ACCOUNT",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.2.sp,
+                                color = HL.Ink
+                            )
+                        }
                     }
-                    context.startActivity(Intent.createChooser(send, "Invite Friends"))
                 }
-                SettingsRow(Icons.Outlined.StarBorder, "Rate PaperBoxd") {
-                    dialog = SettingsDialog.Rate
-                }
-            }
-
-            Section("About") {
-                SettingsRow(Icons.Outlined.Policy, "Privacy Policy") { dialog = SettingsDialog.Privacy }
-                SettingsRow(Icons.Outlined.Description, "Terms of Service") { dialog = SettingsDialog.Terms }
-                InfoRow(Icons.Outlined.Info, "Version", version)
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(HL.Card)
-                    .clickable { onSignOut() }
-                    .padding(vertical = 15.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "SIGN OUT",
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    letterSpacing = 1.5.sp,
-                    color = HL.Accent
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .clickable { dialog = SettingsDialog.Delete }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "DELETE ACCOUNT",
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp,
-                    letterSpacing = 0.8.sp,
-                    color = HL.Accent.copy(alpha = 0.65f)
-                )
+            } else {
+                SettingsSubPage(page = openPage, email = email)
             }
         }
-
-        toast?.let { ToastChip(it) { toast = null } }
     }
 
     when (dialog) {
@@ -334,8 +389,6 @@ private fun SettingsBody(
             "Rate PaperBoxd",
             "We'll enable ratings once we're live on the Play Store. Thank you for your support!"
         ) { dialog = null }
-        SettingsDialog.Privacy -> InfoDialog("Privacy Policy", PRIVACY_TEXT, "https://paperboxd.in/privacy") { dialog = null }
-        SettingsDialog.Terms -> InfoDialog("Terms of Service", TERMS_TEXT, "https://paperboxd.in/terms") { dialog = null }
         SettingsDialog.Delete -> DeleteAccountDialog(
             onDismiss = { dialog = null },
             onDeleted = { dialog = null; onSignOut() },
@@ -344,9 +397,6 @@ private fun SettingsBody(
         null -> {}
     }
 
-    if (showGoodreads) {
-        GoodreadsImportSheet(onDismiss = { showGoodreads = false })
-    }
 }
 
 /**
@@ -382,116 +432,128 @@ private fun DeleteAccountDialog(
         !(selected.contains("Other") && other.isBlank())
 
     when (step) {
-        0 -> AlertDialog(
+        0 -> BrutalDialog(
             onDismissRequest = onDismiss,
-            containerColor = HL.Card,
-            title = { Text("Delete Account", color = HL.Ink, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text(
-                        "We're sorry to see you go. Please let us know why you're deleting your account.",
-                        color = HL.Muted, fontSize = 13.sp
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Column(
-                        Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        allReasons.forEach { r ->
-                            val on = selected.contains(r)
-                            Row(
-                                Modifier.fillMaxWidth().clickable {
-                                    if (on) { selected.remove(r); if (r == "Other") other = "" }
-                                    else selected.add(r)
-                                },
-                                verticalAlignment = Alignment.Top
+            title = "Delete Account",
+            eyebrow = "Danger Zone",
+            body = {
+                Text(
+                    "We're sorry to see you go. Please let us know why you're deleting your account.",
+                    color = HL.Muted, fontSize = 13.sp
+                )
+                Spacer(Modifier.height(14.dp))
+                Column(
+                    Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    allReasons.forEach { r ->
+                        val on = selected.contains(r)
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .brutalButton(
+                                    {
+                                        if (on) { selected.remove(r); if (r == "Other") other = "" }
+                                        else selected.add(r)
+                                    },
+                                    fill = if (on) HL.Paper2 else HL.Paper,
+                                    borderWidth = 2.dp,
+                                    offset = 4.dp
+                                )
+                                .padding(horizontal = 13.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                Modifier.size(20.dp)
+                                    .background(if (on) HL.Ink else HL.Paper)
+                                    .border(2.dp, HL.Ink),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    Modifier.size(20.dp)
-                                        .clip(RoundedCornerShape(5.dp))
-                                        .background(if (on) HL.Accent else Color.Transparent)
-                                        .border(
-                                            1.5.dp,
-                                            if (on) HL.Accent else HL.Muted,
-                                            RoundedCornerShape(5.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (on) Icon(
-                                        Icons.Outlined.Check, null,
-                                        tint = Color.White, modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                Text(r, color = HL.Ink, fontSize = 14.sp)
-                            }
-                            if (r == "Other" && on) {
-                                BasicTextField(
-                                    value = other,
-                                    onValueChange = { other = it },
-                                    singleLine = true,
-                                    textStyle = TextStyle(fontSize = 14.sp, color = HL.Ink),
-                                    modifier = Modifier.fillMaxWidth().padding(start = 32.dp)
-                                        .clip(RoundedCornerShape(8.dp)).background(HL.Paper2)
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    decorationBox = { inner ->
-                                        Box(contentAlignment = Alignment.CenterStart) {
-                                            if (other.isEmpty()) Text(
-                                                "Please specify…", color = HL.Muted, fontSize = 14.sp
-                                            )
-                                            inner()
-                                        }
-                                    }
+                                if (on) Icon(
+                                    Icons.Outlined.Check, null,
+                                    tint = HL.Paper, modifier = Modifier.size(14.dp)
                                 )
                             }
+                            Spacer(Modifier.width(12.dp))
+                            Text(r, color = HL.Ink, fontSize = 14.5.sp)
+                        }
+                        if (r == "Other" && on) {
+                            BasicTextField(
+                                value = other,
+                                onValueChange = { other = it },
+                                singleLine = true,
+                                textStyle = TextStyle(fontSize = 14.sp, color = HL.Ink),
+                                modifier = Modifier.fillMaxWidth().padding(start = 14.dp)
+                                    .background(HL.Paper2).border(2.dp, HL.Ink)
+                                    .padding(horizontal = 13.dp, vertical = 11.dp),
+                                decorationBox = { inner ->
+                                    Box(contentAlignment = Alignment.CenterStart) {
+                                        if (other.isEmpty()) Text(
+                                            "Please specify…", color = HL.Muted, fontSize = 14.sp
+                                        )
+                                        inner()
+                                    }
+                                }
+                            )
                         }
                     }
                 }
             },
-            confirmButton = {
-                TextButton(enabled = formValid, onClick = { step = 1 }) {
-                    Text(
-                        "Continue",
-                        color = if (formValid) HL.Accent else HL.Muted,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = HL.Muted) } }
+            actions = {
+                DialogButton("CANCEL", Modifier.weight(1f), fill = HL.Paper, label = HL.Ink, onClick = onDismiss)
+                Spacer(Modifier.width(12.dp))
+                DialogButton(
+                    "CONTINUE", Modifier.weight(1f), fill = HL.Ink, label = HL.Paper,
+                    enabled = formValid, hatched = true
+                ) { step = 1 }
+            }
         )
 
-        1 -> AlertDialog(
+        1 -> BrutalDialog(
             onDismissRequest = { if (!deleting) onDismiss() },
-            containerColor = HL.Card,
-            title = { Text("Are you sure?", color = HL.Ink, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text("This action cannot be undone.", color = HL.Muted, fontSize = 13.sp)
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "Deleting your account will permanently remove:",
-                        color = HL.Ink, fontSize = 14.sp
-                    )
-                    Spacer(Modifier.height(6.dp))
+            title = "Are you sure?",
+            eyebrow = "This cannot be undone",
+            body = {
+                Text(
+                    "Deleting your account permanently removes:",
+                    color = HL.Paper, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth()
+                        .background(hatchBrush())
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                )
+                Column(
+                    Modifier.fillMaxWidth().border(2.dp, HL.Ink).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
                     listOf(
                         "Your profile and all personal information",
                         "All your books, lists, and reading data",
                         "Your followers and following relationships",
                         "All your activities and reviews",
                     ).forEach {
-                        Row(Modifier.padding(top = 4.dp)) {
-                            Text("•  ", color = HL.Muted, fontSize = 13.sp)
-                            Text(it, color = HL.Muted, fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.Top) {
+                            Box(Modifier.padding(top = 5.dp).size(6.dp).background(HL.Ink))
+                            Spacer(Modifier.width(10.dp))
+                            Text(it, color = HL.Ink, fontSize = 13.5.sp)
                         }
                     }
-                    error?.let {
-                        Spacer(Modifier.height(8.dp))
-                        Text(it, color = HL.Accent, fontSize = 12.sp)
-                    }
+                }
+                error?.let {
+                    Spacer(Modifier.height(10.dp))
+                    Text(it, color = HL.Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             },
-            confirmButton = {
-                TextButton(enabled = !deleting, onClick = {
+            actions = {
+                DialogButton(
+                    "GO BACK", Modifier.weight(1f), fill = HL.Paper, label = HL.Ink,
+                    enabled = !deleting
+                ) { step = 0 }
+                Spacer(Modifier.width(12.dp))
+                DialogButton(
+                    if (deleting) "DELETING…" else "DELETE MY ACCOUNT",
+                    Modifier.weight(1f), fill = HL.Ink, label = HL.Paper,
+                    enabled = !deleting, hatched = true
+                ) {
                     deleting = true; error = null
                     scope.launch {
                         onSubmit(buildDeleteReasons(allReasons, selected, other)).fold(
@@ -502,34 +564,22 @@ private fun DeleteAccountDialog(
                             }
                         )
                     }
-                }) {
-                    Text(
-                        if (deleting) "Deleting…" else "Delete my account",
-                        color = HL.Accent, fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(enabled = !deleting, onClick = { step = 0 }) {
-                    Text("Go back", color = HL.Muted)
                 }
             }
         )
 
-        else -> AlertDialog(
+        else -> BrutalDialog(
             onDismissRequest = {}, // must acknowledge — account already gone
-            containerColor = HL.Card,
-            title = { Text("We're sorry to see you go", color = HL.Ink, fontWeight = FontWeight.Bold) },
-            text = {
+            title = "We're sorry to see you go",
+            eyebrow = null,
+            body = {
                 Text(
-                    "Your account has been successfully deleted. Thank you for being part of our community.",
+                    "Your account has been deleted. Thank you for being part of our community.",
                     color = HL.Muted, fontSize = 14.sp
                 )
             },
-            confirmButton = {
-                TextButton(onClick = onDeleted) {
-                    Text("Okay", color = HL.Accent, fontWeight = FontWeight.Bold)
-                }
+            actions = {
+                DialogButton("OKAY", Modifier.weight(1f), fill = HL.Ink, label = HL.Paper, onClick = onDeleted)
             }
         )
     }
@@ -542,94 +592,414 @@ private fun buildDeleteReasons(
     if (it == "Other") "Other: ${other.trim()}" else it
 }
 
-private enum class SettingsDialog { Rate, Privacy, Terms, Delete }
+private enum class SettingsDialog { Rate, Delete }
+
+/** Pages pushed from a settings row — twins of the iOS NavigationLink destinations. */
+private enum class SettingsPage(val title: String) {
+    ChangePassword("Change Password"),
+    Privacy("Privacy Policy"),
+    Terms("Terms of Service"),
+    Goodreads("Import from Goodreads")
+}
+
+/** Nav bar for a pushed page: back chip, title, and a matching right-hand gap. */
+@Composable
+private fun RowScope.SubPageHeader(title: String, onBack: () -> Unit) {
+    Box(
+        Modifier
+            .size(width = 37.dp, height = 33.dp)
+            .brutalButton(onBack, fill = HL.Paper, borderWidth = 2.dp, offset = 3.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.AutoMirrored.Outlined.ArrowBack, "Back",
+            tint = HL.Ink, modifier = Modifier.size(16.dp)
+        )
+    }
+    Spacer(Modifier.weight(1f))
+    Text(
+        title,
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        color = HL.Ink
+    )
+    Spacer(Modifier.weight(1f))
+    Spacer(Modifier.width(41.dp))
+}
 
 @Composable
-private fun Section(title: String, content: @Composable () -> Unit) {
-    Column(Modifier.padding(top = 22.dp)) {
-        EyebrowText(title, modifier = Modifier.padding(start = 24.dp, bottom = 10.dp))
+private fun ColumnScope.SettingsSubPage(page: SettingsPage, email: String) {
+    when (page) {
+        SettingsPage.ChangePassword -> ChangePasswordPage(email)
+        SettingsPage.Privacy -> LegalPage(page.title, PRIVACY_TEXT, "https://paperboxd.in/privacy")
+        SettingsPage.Terms -> LegalPage(page.title, TERMS_TEXT, "https://paperboxd.in/terms")
+        SettingsPage.Goodreads -> GoodreadsImportBody(Modifier.weight(1f))
+    }
+}
+
+/**
+ * Legal text on a plate with a link out to the canonical copy — iOS `LegalView`
+ * twin. Replaces the dialog these used to open, which truncated the text.
+ */
+@Composable
+private fun LegalPage(title: String, body: String, url: String) {
+    val uriHandler = LocalUriHandler.current
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+            .padding(vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Text(
+            body,
+            fontSize = 15.sp,
+            lineHeight = 25.sp,
+            color = HL.Ink,
+            modifier = Modifier
+                .fillMaxWidth()
+                .brutalPlate(fill = HL.Paper, borderWidth = 2.dp, offset = 5.dp)
+                .padding(20.dp)
+        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .brutalButton({ uriHandler.openUri(url) }, fill = HL.Ink, borderWidth = 2.dp, offset = 5.dp)
+                .height(50.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "READ THE FULL ${title.uppercase(Locale.US)} \u2192",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                letterSpacing = 1.2.sp,
+                color = HL.Paper
+            )
+        }
+    }
+}
+
+/**
+ * The backend exposes password *reset* (email link) but not an in-app change, so
+ * this triggers the same forgot-password flow the auth screen uses. iOS
+ * `ChangePasswordView` twin — Android used to fire the mail off from the row
+ * itself, with no screen explaining what was about to happen.
+ */
+@Composable
+private fun ChangePasswordPage(email: String) {
+    val scope = rememberCoroutineScope()
+    val viewModel: SettingsViewModel = hiltViewModel()
+    var isSending by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var isError by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+            .padding(top = 32.dp, bottom = 30.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
+    ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(HL.Card)
+                .brutalPlate(fill = HL.Paper, borderWidth = 2.dp, offset = 5.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                Modifier.size(52.dp).background(HL.Ink).border(2.dp, HL.Ink),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Outlined.LockReset, null,
+                    tint = HL.Paper, modifier = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                "Reset your password",
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 24.sp,
+                color = HL.Ink
+            )
+            Text(
+                "We'll email a reset link to the address on your account. It works once and expires in 30 minutes.",
+                fontSize = 14.sp,
+                lineHeight = 21.sp,
+                color = HL.Muted
+            )
+            if (email.isNotEmpty()) {
+                Text(
+                    email,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    color = HL.Ink,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(HL.Paper2)
+                        .border(2.dp, HL.Ink)
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                )
+            }
+        }
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .brutalButton(
+                    {
+                        if (isSending || email.isEmpty()) return@brutalButton
+                        isSending = true
+                        message = null
+                        scope.launch {
+                            viewModel.sendPasswordReset(email).fold(
+                                onSuccess = { message = "Reset link sent — check your inbox"; isError = false },
+                                onFailure = { message = "Couldn't send the reset link"; isError = true }
+                            )
+                            isSending = false
+                        }
+                    },
+                    fill = HL.Ink, borderWidth = 2.dp, offset = 5.dp,
+                    enabled = !isSending && email.isNotEmpty()
+                )
+                .height(52.dp)
+                .alpha(if (email.isEmpty()) 0.5f else 1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                if (isSending) {
+                    CircularProgressIndicator(
+                        color = HL.Paper,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Text(
+                    if (isSending) "SENDING…" else "SEND RESET LINK",
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    letterSpacing = 1.4.sp,
+                    color = HL.Paper
+                )
+            }
+        }
+
+        message?.let {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(HL.Ink)
+                    .border(2.dp, HL.Ink)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    if (isError) Icons.Outlined.WarningAmber else Icons.Outlined.Check,
+                    null, tint = HL.Paper, modifier = Modifier.size(14.dp)
+                )
+                Text(it, fontSize = 13.5.sp, fontWeight = FontWeight.Medium, color = HL.Paper)
+            }
+        }
+
+        Text(
+            "NO IN-APP CHANGE · RESET BY EMAIL",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            letterSpacing = 2.sp,
+            color = HL.Muted
+        )
+    }
+}
+
+// MARK: - Brutalist building blocks
+
+/** Eyebrow + a hard ink plate holding the section's rows. */
+@Composable
+private fun Section(title: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        SectionEyebrow(title)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .brutalPlate(fill = HL.Paper, borderWidth = 2.dp, offset = 5.dp)
         ) { content() }
     }
 }
 
 @Composable
+private fun SectionEyebrow(title: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(7.dp).background(HL.Ink))
+        Spacer(Modifier.width(8.dp))
+        EyebrowText(title, color = HL.Ink)
+    }
+}
+
+@Composable
+private fun RowDivider() {
+    Box(Modifier.fillMaxWidth().height(1.dp).background(HL.Ink.copy(alpha = 0.16f)))
+}
+
+@Composable
 private fun SettingsRow(icon: ImageVector, label: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 15.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).height(54.dp).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = HL.Ink.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
-        Spacer(Modifier.size(14.dp))
+        Icon(icon, null, tint = HL.Ink, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
         Text(label, fontSize = 15.sp, color = HL.Ink)
         Spacer(Modifier.weight(1f))
-        Icon(
-            Icons.Outlined.ChevronRight, null,
-            tint = HL.Muted.copy(alpha = 0.6f), modifier = Modifier.size(18.dp)
+        // Mono arrow instead of a chevron — hard, in the type system, no glyph tint.
+        Text("→", fontFamily = FontFamily.Monospace, fontSize = 15.sp, color = HL.Ink)
+    }
+}
+
+@Composable
+private fun InfoRow(icon: ImageVector, label: String, value: @Composable () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = HL.Ink, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(label, fontSize = 15.sp, color = HL.Ink)
+        Spacer(Modifier.weight(1f))
+        value()
+    }
+}
+
+/** Hard-edged twin of [androidx.compose.material3.Switch] — 52×30, knob steps across. */
+@Composable
+private fun BrutalSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Box(
+        Modifier
+            .size(width = 52.dp, height = 30.dp)
+            .background(if (checked) HL.Ink else HL.Paper)
+            .border(2.dp, HL.Ink)
+            .clickable { onCheckedChange(!checked) }
+            .padding(2.dp),
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
+        Box(Modifier.size(22.dp).background(if (checked) HL.Paper else HL.Ink))
+    }
+}
+
+@Composable
+private fun MiniButton(
+    text: String,
+    fill: Color,
+    label: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        Modifier.brutalButton(onClick, fill = fill, borderWidth = 2.dp, offset = 2.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = label)
+    }
+}
+
+/** Fills the parent with 45° hazard stripes, inset so the ink border still reads. */
+@Composable
+private fun BoxScope.Hatch(base: Color, stripe: Color) {
+    Box(Modifier.matchParentSize().padding(2.dp).background(hatchBrush(base, stripe)))
+}
+
+@Composable
+private fun RowScope.DialogButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    fill: Color,
+    label: Color,
+    enabled: Boolean = true,
+    hatched: Boolean = false,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier
+            .brutalButton(onClick, fill = fill, borderWidth = 2.dp, offset = 4.dp, enabled = enabled)
+            .height(48.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (hatched) Hatch(base = fill, stripe = Color(0xFF33332E))
+        Text(
+            text,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            letterSpacing = 1.2.sp,
+            color = if (enabled) label else label.copy(alpha = 0.45f)
         )
     }
 }
 
+/** AlertDialog stripped to a hard ink frame on paper. */
 @Composable
-private fun InfoRow(icon: ImageVector, label: String, value: String) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 15.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, null, tint = HL.Ink.copy(alpha = 0.55f), modifier = Modifier.size(20.dp))
-        Spacer(Modifier.size(14.dp))
-        Text(label, fontSize = 15.sp, color = HL.Ink)
-        Spacer(Modifier.weight(1f))
-        Text(value, fontSize = 13.sp, color = HL.Muted, fontFamily = FontFamily.Monospace)
-    }
-}
-
-@Composable
-private fun CircleChip(onClick: () -> Unit, content: @Composable () -> Unit) {
-    Box(
-        Modifier.size(36.dp).clip(CircleShape).background(HL.Ink.copy(alpha = 0.06f)).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) { content() }
+private fun BrutalDialog(
+    onDismissRequest: () -> Unit,
+    title: String,
+    eyebrow: String?,
+    body: @Composable () -> Unit,
+    actions: @Composable RowScope.() -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        shape = RectangleShape,
+        containerColor = HL.Paper,
+        modifier = Modifier.border(2.dp, HL.Ink),
+        title = {
+            Column {
+                if (eyebrow != null) {
+                    SectionEyebrow(eyebrow)
+                    Spacer(Modifier.height(6.dp))
+                }
+                Text(
+                    title,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 24.sp,
+                    color = HL.Ink
+                )
+            }
+        },
+        text = { Column { body() } },
+        confirmButton = {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { actions() }
+        }
+    )
 }
 
 @Composable
 private fun InfoDialog(title: String, body: String, url: String? = null, onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    AlertDialog(
+    BrutalDialog(
         onDismissRequest = onDismiss,
-        containerColor = HL.Card,
-        title = { Text(title, color = HL.Ink, fontWeight = FontWeight.Bold) },
-        text = { Text(body, color = HL.Muted, fontSize = 14.sp) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("OK", color = HL.Ink) } },
-        dismissButton = if (url != null) {
-            { TextButton(onClick = { uriHandler.openUri(url) }) { Text("Read full policy", color = HL.Ink) } }
-        } else null
+        title = title,
+        eyebrow = null,
+        body = { Text(body, color = HL.Ink, fontSize = 14.sp, lineHeight = 22.sp) },
+        actions = {
+            if (url != null) {
+                DialogButton("READ FULL TEXT", Modifier.weight(1f), fill = HL.Paper, label = HL.Ink) {
+                    uriHandler.openUri(url)
+                }
+                Spacer(Modifier.width(12.dp))
+            }
+            DialogButton("OK", Modifier.weight(1f), fill = HL.Ink, label = HL.Paper, onClick = onDismiss)
+        }
     )
-}
-
-@Composable
-private fun ToastChip(msg: String, onDone: () -> Unit) {
-    LaunchedEffect(msg) {
-        delay(2000)
-        onDone()
-    }
-    Box(Modifier.fillMaxSize().padding(bottom = 48.dp), contentAlignment = Alignment.BottomCenter) {
-        Text(
-            msg,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            color = HL.Card,
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(HL.Ink.copy(alpha = 0.92f))
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-        )
-    }
 }
 
 private const val PRIVACY_TEXT =

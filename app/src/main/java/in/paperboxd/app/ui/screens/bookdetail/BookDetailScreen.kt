@@ -59,8 +59,10 @@ import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +75,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -90,6 +93,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -122,6 +126,7 @@ fun BookDetailScreen(
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit,
+    onOpenAuthor: (String) -> Unit,
     viewModel: BookDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -142,8 +147,10 @@ fun BookDetailScreen(
         handle = user.username,
         myReview = viewModel.myReview,
         currentShelf = viewModel.currentShelf,
+        canRate = viewModel.canRate,
         onBack = onBack,
         onOpenBook = onOpenBook,
+        onOpenAuthor = onOpenAuthor,
         onToggleLike = viewModel::toggleLike,
         onSelectShelf = viewModel::selectShelf,
         onSubmitReview = { rating, review, done -> viewModel.submitReview(rating, review, done) },
@@ -160,8 +167,10 @@ private fun BookDetailContent(
     handle: String?,
     myReview: BookReview?,
     currentShelf: LibraryShelf?,
+    canRate: Boolean,
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
+    onOpenAuthor: (String) -> Unit = {},
     onToggleLike: () -> Unit,
     onSelectShelf: (LibraryShelf?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
@@ -172,6 +181,7 @@ private fun BookDetailContent(
     var showLibrarySheet by remember { mutableStateOf(false) }
     var showShare by remember { mutableStateOf(false) }
     var activePanel by remember { mutableStateOf<InlinePanel?>(null) }
+    var showRateGate by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
         Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
@@ -197,8 +207,9 @@ private fun BookDetailContent(
                     myReview = myReview,
                     activePanel = activePanel,
                     onOpenBook = onOpenBook,
+                    onOpenAuthor = onOpenAuthor,
                     onShare = { showShare = true },
-                    onSetPanel = { activePanel = it },
+                    onSetPanel = { if (it != null && !canRate) showRateGate = true else activePanel = it },
                     onSubmitReview = onSubmitReview,
                     onDeleteReview = onDeleteReview,
                     onReportReview = onReportReview,
@@ -219,6 +230,26 @@ private fun BookDetailContent(
         }
 
         toast?.let { ToastBar(it, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)) }
+    }
+
+    if (showRateGate) {
+        AlertDialog(
+            onDismissRequest = { showRateGate = false },
+            containerColor = HL.Card,
+            title = { Text("Log a few pages first", color = HL.Ink) },
+            text = {
+                Text(
+                    "Rating and reviewing open up once you're $MIN_PAGES_TO_RATE pages in — " +
+                        "or once you've marked the book as finished.",
+                    color = HL.Muted
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showRateGate = false }) {
+                    Text("Got it", color = HL.Ink)
+                }
+            }
+        )
     }
 
     if (showLibrarySheet) {
@@ -307,6 +338,7 @@ private fun DetailBody(
     myReview: BookReview?,
     activePanel: InlinePanel?,
     onOpenBook: (String) -> Unit,
+    onOpenAuthor: (String) -> Unit,
     onShare: () -> Unit,
     onSetPanel: (InlinePanel?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
@@ -321,7 +353,7 @@ private fun DetailBody(
         contentPadding = PaddingValues(bottom = 140.dp)
     ) {
         item { CoverBlock(book, state.friendsOnBook, state.friendsReadingCount) }
-        item { TitleBlock(book) }
+        item { TitleBlock(book, onOpenAuthor) }
         item { StatStrip(book) }
 
         item {
@@ -427,7 +459,7 @@ private fun CoverBlock(book: Book, friends: List<FriendOnBook>, readingCount: In
 // ---- Title ----
 
 @Composable
-private fun TitleBlock(book: Book) {
+private fun TitleBlock(book: Book, onOpenAuthor: (String) -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -455,15 +487,29 @@ private fun TitleBlock(book: Book) {
                 modifier = Modifier.padding(horizontal = 30.dp)
             )
         }
-        if (book.authorLine.isNotEmpty()) {
-            Text(
-                book.authorLine.uppercase(),
-                fontFamily = FontFamily.Monospace,
-                fontSize = 10.sp,
-                letterSpacing = 1.5.sp,
-                color = HL.Muted,
-                textAlign = TextAlign.Center
-            )
+        if (book.authors.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                book.authors.forEachIndexed { idx, author ->
+                    if (idx > 0) {
+                        Text(
+                            "·",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 10.sp,
+                            color = HL.Muted
+                        )
+                    }
+                    Text(
+                        author.uppercase(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.5.sp,
+                        color = HL.Ink,
+                        textDecoration = TextDecoration.Underline,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.clickable { onOpenAuthor(author) }
+                    )
+                }
+            }
         }
     }
 }

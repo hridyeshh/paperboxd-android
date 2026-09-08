@@ -29,9 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -52,27 +50,6 @@ import `in`.paperboxd.app.ui.theme.PBScript
 
 // Auth surfaces use the shared light kit (HL) — same tokens as home and the
 // book page, so the paper ground runs unbroken across the app.
-
-/**
- * Layered dark wash — radial vignette + top-to-bottom linear darkening — that
- * sits over [BookCoverColumns] to keep foreground text legible. Non-interactive.
- */
-@Composable
-fun DarkWash(modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(HL.Muted.copy(0.7f), HL.Muted, HL.Ink),
-                )
-            )
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(HL.Muted.copy(0.7f), HL.Muted),
-                )
-            )
-    )
-}
 
 /** The PaperBoxd script wordmark. */
 @Composable
@@ -110,15 +87,17 @@ fun MonoLabel(text: String, modifier: Modifier = Modifier, color: Color = HL.Mut
 @Composable
 fun BrutalCard(
     modifier: Modifier = Modifier,
+    echo: Color = HL.Ochre,
     content: @Composable () -> Unit,
 ) {
     Box(modifier) {
-        // Offset echo — hard, blur-free brutalist shadow, sits down-right.
+        // Offset plate — hard, blur-free brutalist shadow, sits down-right.
         Box(
             Modifier
                 .matchParentSize()
                 .padding(start = 6.dp, top = 6.dp)
-                .border(2.dp, HL.Ink.copy(0.25f), RectangleShape)
+                .background(echo, RectangleShape)
+                .border(2.dp, HL.Ink, RectangleShape)
         )
         // Opaque panel + structural border.
         Box(
@@ -158,8 +137,8 @@ fun BrutalTextField(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .background(if (focused) HL.Paper2 else HL.Paper2.copy(alpha = 0.55f), RectangleShape)
-            .border(1.dp, if (focused) HL.Ink else HL.Ink.copy(alpha = 0.28f), RectangleShape)
+            .background(HL.Field, RectangleShape)
+            .border(1.5.dp, if (focused) HL.Ink else HL.Ink.copy(alpha = 0.32f), RectangleShape)
             .onFocusChanged { focused = it.isFocused },
         decorationBox = { inner ->
             Row(
@@ -213,10 +192,9 @@ fun BrutalSecureField(
 }
 
 /**
- * Brutalist primary CTA: ink fill, ink 2px border, hard offset "shadow" behind,
- * paper label + arrow. Presses scale down slightly. Mirrors the iOS sign-in
- * button — inverted against the paper ground so it still reads as the one solid
- * mass on the card.
+ * Brutalist primary CTA: crimson fill, ink 2px border, hard ink offset shadow,
+ * cream label + arrow. On press the face pushes into its own shadow. Mirrors the
+ * iOS sign-in button — the one saturated mass on the card.
  */
 @Composable
 fun BrutalPrimaryButton(
@@ -228,31 +206,32 @@ fun BrutalPrimaryButton(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val shift = if (pressed) 4.dp else 0.dp
     Box(modifier.fillMaxWidth().height(56.dp)) {
-        // Hard white offset shadow.
+        // Hard ink offset shadow; collapses to 0 on press.
         Box(
             Modifier
                 .matchParentSize()
-                .padding(start = 4.dp, top = 4.dp)
-                .background(HL.Ink.copy(0.25f), RectangleShape)
-        )
-        Box(
-            Modifier
-                .matchParentSize()
-                .padding(end = 4.dp, bottom = 4.dp)
-                .scale(if (pressed) 0.98f else 1f)
-                .alpha(if (enabled) 1f else 0.45f)
+                .padding(start = if (pressed) 0.dp else 4.dp, top = if (pressed) 0.dp else 4.dp)
                 .background(HL.Ink, RectangleShape)
+        )
+        // Face pushes into its own shadow.
+        Box(
+            Modifier
+                .matchParentSize()
+                .padding(start = shift, top = shift, end = 4.dp - shift, bottom = 4.dp - shift)
+                .alpha(if (enabled) 1f else 0.45f)
+                .background(HL.Crimson, RectangleShape)
                 .border(2.dp, HL.Ink, RectangleShape)
                 .clickableNoRipple(enabled = enabled && !loading, interactionSource = interaction, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
             if (loading) {
-                CircularProgressIndicator(color = HL.Paper, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = HL.Cream, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text, color = HL.Paper, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Text("→", color = HL.Paper, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(text, color = HL.Cream, fontFamily = PBSans, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("→", color = HL.Cream, fontFamily = PBSans, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }
@@ -271,8 +250,8 @@ fun GoogleButton(
         modifier = modifier
             .fillMaxWidth()
             .height(50.dp)
-            .background(HL.Paper2, RectangleShape)
-            .border(1.5.dp, HL.Ink, RectangleShape)
+            .background(HL.Card, RectangleShape)
+            .border(2.dp, HL.Ink, RectangleShape)
             .clickableNoRipple(enabled = enabled, onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,

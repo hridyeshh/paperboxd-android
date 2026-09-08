@@ -100,15 +100,6 @@ data class LikesResponse(
     val pagination: PaginationMeta? = null
 )
 
-/** One author the user has read, from GET /users/{username}/authors. */
-data class AuthorSummary(
-    val name: String,
-    @SerializedName("book_count") val bookCount: Int = 0,
-    val cover: String? = null
-) {
-    val coverUrl: String? get() = cover?.takeIf { it.isNotEmpty() }
-}
-
 /** Maps types.TBRResponse. */
 data class TbrItem(
     val id: String,

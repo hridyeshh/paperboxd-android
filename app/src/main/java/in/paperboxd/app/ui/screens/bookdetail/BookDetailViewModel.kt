@@ -37,6 +37,9 @@ data class BookUserState(
     val isMutating: Boolean = false
 )
 
+/** Pages a reader must log before rating or reviewing. Mirrors MinPagesToRate in the Go backend. */
+const val MIN_PAGES_TO_RATE = 20
+
 data class BookDetailUiState(
     val book: Book? = null,
     val isLoading: Boolean = true,
@@ -98,6 +101,22 @@ class BookDetailViewModel @Inject constructor(
         get() {
             val uname = user?.username?.lowercase() ?: return null
             return _state.value.reviews.firstOrNull { it.username.lowercase() == uname }
+        }
+
+    /**
+     * Whether the viewer has read far enough to rate or review. Finishing counts
+     * on its own, since a book with no known page count never accumulates logged
+     * pages. An existing rating keeps its owner unlocked so the gate can't strand
+     * a review. The Go backend enforces the same rule — see canRateEntry.
+     */
+    val canRate: Boolean
+        get() {
+            val mine = myReview
+            if ((mine?.rating ?: 0) > 0 || !mine?.review.isNullOrEmpty()) return true
+            val progress = _state.value.progress ?: return false
+            if (!progress.onShelf) return false
+            if (progress.status == "read") return true
+            return (progress.currentPage ?: 0) >= MIN_PAGES_TO_RATE
         }
 
     fun fetchAll() {
@@ -223,17 +242,15 @@ class BookDetailViewModel @Inject constructor(
 
     // MARK: - Review + progress
 
-    /** Shelves the book first if needed (backend stores reviews on the shelf entry). */
+    /**
+     * Posts the viewer's rating + optional review. Reviews live on the bookshelf
+     * entry, which only exists once the reader has logged progress — rating no
+     * longer silently shelves the book, so [canRate] gates the call site.
+     */
     fun submitReview(rating: Int, review: String?, onDone: (Boolean) -> Unit) {
         val username = user?.username ?: return onDone(false)
         viewModelScope.launch {
             _state.update { it.copy(isSubmittingReview = true) }
-            if (!_state.value.bookState.isOnShelf) {
-                val added = bookRepository.addToBookshelf(username, bookId, "reading")
-                if (added.isSuccess) {
-                    _state.update { it.copy(bookState = it.bookState.copy(isOnShelf = true)) }
-                }
-            }
             val result = bookRepository.updateRating(username, bookId, rating, review)
             result.fold(
                 onSuccess = {

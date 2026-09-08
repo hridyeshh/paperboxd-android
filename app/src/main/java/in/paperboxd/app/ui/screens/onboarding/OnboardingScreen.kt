@@ -21,14 +21,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -73,7 +72,10 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.ImageCropper
+import `in`.paperboxd.app.ui.components.SpineTitle
+import `in`.paperboxd.app.ui.components.brutalButton
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -83,6 +85,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -101,26 +104,21 @@ import kotlinx.coroutines.launch
  * reveal. Steps: username → genres → tempo → ahaLoading → ahaReveal.
  */
 
-// iOS light-onboarding palette (white-scale grays + green/red accents).
+// Onboarding runs on the same paper ground as auth and home — these are named
+// roles over the shared HL tokens, so the two flows can't drift apart.
 private object OB {
-    val ink = Color(0xFF121212)      // white 0.07
-    val sub53 = Color(0xFF878787)
-    val sub60 = Color(0xFF999999)
-    val sub65 = Color(0xFFA6A6A6)
-    val sub50 = Color(0xFF808080)
-    val sub45 = Color(0xFF737373)
-    val sub40 = Color(0xFF666666)
-    val sub25 = Color(0xFF404040)
-    val border88 = Color(0xFFE0E0E0)
-    val border90 = Color(0xFFE5E5E5)
-    val line85 = Color(0xFFD9D9D9)
-    val fill92 = Color(0xFFEBEBEB)
-    val fill96 = Color(0xFFF5F5F5)
-    val fill97 = Color(0xFFF7F7F7)
-    val ring = Color(0xFFC7C7C7)     // white 0.78
-    val green = Color(0xFF2EAD4D)
-    val red = Color(0xFFD13838)
-    val darkBg = Color(0xFF0F0F0F)   // white 0.06
+    val ink = HL.Ink
+    val muted = HL.Muted
+    val faint = Color(0xFFA6A092)    // "you can change this later" register
+    val hairline = HL.Ink.copy(alpha = 0.30f)
+    val rule = HL.Ink.copy(alpha = 0.14f)
+    val line = HL.Ink.copy(alpha = 0.20f)
+    val well = HL.Card
+    val recessed = HL.Paper2
+    val ring = HL.Ink.copy(alpha = 0.28f)
+    val green = HL.Sage
+    val red = HL.Crimson
+    val darkBg = Color(0xFF0F0F0F)   // aha-loading only; stays dark
     val avatarGradient = Brush.linearGradient(listOf(Color(0xFFF2D19E), Color(0xFF7A52B8)))
 }
 
@@ -206,7 +204,7 @@ private fun OnboardingContent(
 ) {
     val isDark = state.step == OnboardingStep.AhaLoading
     val bg by animateColorAsState(
-        if (isDark) OB.darkBg else Color.White,
+        if (isDark) OB.darkBg else HL.Paper,
         animationSpec = tween(400),
         label = "onboarding-bg"
     )
@@ -280,10 +278,10 @@ private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
                 if (idx < stages.size - 1) {
                     Box(
                         Modifier
-                            .padding(horizontal = 8.dp)
-                            .width(14.dp)
-                            .height(1.dp)
-                            .background(OB.line85)
+                            .padding(horizontal = 6.dp)
+                            .width(12.dp)
+                            .height(2.dp)
+                            .background(if (idx < activeStage) OB.ink else OB.line)
                     )
                 }
             }
@@ -295,7 +293,7 @@ private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.Medium,
                 fontSize = 11.sp,
                 letterSpacing = 1.4.sp,
-                color = OB.sub60
+                color = OB.muted
             )
         }
     }
@@ -305,26 +303,26 @@ private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
 private fun StagePill(label: String, done: Boolean, current: Boolean) {
     val fill = when {
         current -> OB.ink
-        done -> OB.fill92
-        else -> OB.fill96
+        done -> HL.Ochre
+        else -> OB.well
     }
     val textColor = when {
-        current -> Color.White
-        done -> OB.sub45
-        else -> OB.sub65
+        current -> HL.Cream
+        done -> OB.ink
+        else -> OB.faint
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .clip(CircleShape)
             .background(fill)
-            .padding(horizontal = 11.dp, vertical = 5.dp)
+            .border(2.dp, if (done || current) OB.ink else OB.hairline)
+            .padding(horizontal = 9.dp, vertical = 4.dp)
     ) {
         if (done) {
             Icon(Icons.Filled.Check, null, tint = textColor, modifier = Modifier.size(9.dp))
         }
-        Text(label, fontSize = 11.5.sp, fontWeight = FontWeight.Medium, color = textColor)
+        Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = textColor)
     }
 }
 
@@ -344,7 +342,7 @@ private fun OnbTitle(text: String) {
 
 @Composable
 private fun OnbSubtitle(text: String) {
-    Text(text, fontSize = 13.5.sp, lineHeight = 18.sp, color = OB.sub53)
+    Text(text, fontSize = 13.5.sp, lineHeight = 18.sp, color = OB.muted)
 }
 
 @Composable
@@ -355,11 +353,11 @@ private fun FieldLabel(text: String) {
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         letterSpacing = 1.2.sp,
-        color = OB.sub60
+        color = OB.muted
     )
 }
 
-/** Dark pill CTA on the light onboarding background — iOS `OnboardingPrimaryButton`. */
+/** Crimson CTA plate on the paper ground — iOS `OnboardingPrimaryButton`. */
 @Composable
 private fun OnbPrimaryButton(
     title: String,
@@ -368,59 +366,29 @@ private fun OnbPrimaryButton(
     loading: Boolean = false,
     enabled: Boolean = true
 ) {
-    val alpha by animateFloatAsState(if (enabled) 1f else 0.38f, tween(180), label = "cta-alpha")
+    val alpha by animateFloatAsState(if (enabled) 1f else 0.45f, tween(180), label = "cta-alpha")
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
             .alpha(alpha)
-            .clip(CircleShape)
-            .background(OB.ink)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                enabled = enabled && !loading,
-                onClick = onClick
-            )
+            .brutalButton(onClick = onClick, fill = HL.Crimson, enabled = enabled && !loading)
     ) {
         if (loading) {
-            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+            CircularProgressIndicator(color = HL.Cream, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
         } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(title, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                Text(title, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = HL.Cream)
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowForward, null,
-                    tint = Color.White, modifier = Modifier.size(15.dp)
+                    tint = HL.Cream, modifier = Modifier.size(15.dp)
                 )
             }
         }
-    }
-}
-
-/** Selectable genre chip — iOS `OnboardingChip`. */
-@Composable
-private fun OnbChip(label: String, isOn: Boolean, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(if (isOn) OB.ink else OB.fill96)
-            .border(1.dp, if (isOn) OB.ink else OB.border88, CircleShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 9.dp)
-    ) {
-        if (isOn) {
-            Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(11.dp))
-        }
-        Text(
-            label, fontSize = 13.5.sp, fontWeight = FontWeight.Medium,
-            color = if (isOn) Color.White else OB.sub25
-        )
     }
 }
 
@@ -477,7 +445,7 @@ private fun UsernameStep(
         Spacer(Modifier.height(12.dp))
         Text(
             "You can change this any time.",
-            fontSize = 13.sp, color = OB.sub65,
+            fontSize = 13.sp, color = OB.faint,
             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
     }
@@ -493,7 +461,7 @@ private fun AvatarRow(avatarModel: Any?, uploading: Boolean, onPick: () -> Unit)
         Box(contentAlignment = Alignment.BottomEnd) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(64.dp).clip(CircleShape).background(OB.avatarGradient)
+                modifier = Modifier.size(76.dp).clip(CircleShape).background(OB.avatarGradient)
             ) {
                 if (avatarModel != null) {
                     AsyncImage(
@@ -537,7 +505,7 @@ private fun AvatarRow(avatarModel: Any?, uploading: Boolean, onPick: () -> Unit)
             }
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(22.dp).clip(CircleShape).background(OB.ink)
+                modifier = Modifier.size(24.dp).clip(CircleShape).background(HL.Crimson)
             ) {
                 Icon(Icons.Filled.Add, null, tint = Color.White, modifier = Modifier.size(12.dp))
             }
@@ -547,7 +515,7 @@ private fun AvatarRow(avatarModel: Any?, uploading: Boolean, onPick: () -> Unit)
                 if (avatarModel == null) "Add a picture" else "Change picture",
                 fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = OB.ink
             )
-            Text("Optional · square, 400px+", fontSize = 12.sp, color = OB.sub60)
+            Text("Optional · square, 400px+", fontSize = 12.sp, color = OB.muted)
         }
     }
 }
@@ -557,18 +525,19 @@ private fun UsernameField(state: OnboardingUiState, onChange: (String) -> Unit) 
     val borderColor = when (state.availability) {
         is UsernameAvailability.Available -> OB.green
         is UsernameAvailability.Taken, is UsernameAvailability.CheckFailed -> OB.red
-        is UsernameAvailability.Checking -> OB.sub60
-        UsernameAvailability.Idle -> OB.border88
+        is UsernameAvailability.Checking -> HL.Ink.copy(alpha = 0.45f)
+        UsernameAvailability.Idle -> OB.hairline
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+            .height(48.dp)
+            .background(OB.well)
+            .border(2.dp, borderColor)
     ) {
         Text(
-            "@", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = OB.sub40,
+            "@", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = OB.muted,
             modifier = Modifier.padding(start = 14.dp, end = 2.dp)
         )
         // TextFieldValue overload so the caret survives mid-string edits — the String
@@ -600,7 +569,7 @@ private fun UsernameField(state: OnboardingUiState, onChange: (String) -> Unit) 
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (tfv.text.isEmpty()) {
-                        Text("yourname", fontSize = 14.sp, color = OB.sub60)
+                        Text("yourname", fontSize = 14.sp, color = OB.muted)
                     }
                     inner()
                 }
@@ -610,7 +579,7 @@ private fun UsernameField(state: OnboardingUiState, onChange: (String) -> Unit) 
         Box(Modifier.padding(horizontal = 14.dp).size(18.dp), contentAlignment = Alignment.Center) {
             when (state.availability) {
                 UsernameAvailability.Checking -> CircularProgressIndicator(
-                    color = OB.sub60, strokeWidth = 1.5.dp, modifier = Modifier.size(14.dp)
+                    color = OB.muted, strokeWidth = 1.5.dp, modifier = Modifier.size(14.dp)
                 )
                 UsernameAvailability.Available -> Icon(
                     Icons.Filled.Check, null, tint = OB.green, modifier = Modifier.size(18.dp)
@@ -628,9 +597,9 @@ private fun UsernameField(state: OnboardingUiState, onChange: (String) -> Unit) 
 private fun AvailabilityHint(state: OnboardingUiState) {
     when (val a = state.availability) {
         UsernameAvailability.Idle, UsernameAvailability.Checking ->
-            Text("Letters, numbers, _ or -", fontSize = 12.sp, color = OB.sub65)
+            Text("Letters, numbers, _ or -", fontSize = 12.sp, color = OB.faint)
         UsernameAvailability.Available ->
-            Text("@${state.username} is available ✓", fontSize = 12.sp, color = OB.green)
+            Text("@${state.username} is available", fontSize = 12.5.sp, color = OB.green)
         is UsernameAvailability.Taken ->
             Text(a.reason ?: "@${state.username} is taken", fontSize = 12.sp, color = OB.red)
         is UsernameAvailability.CheckFailed ->
@@ -645,8 +614,8 @@ private fun DisplayNameField(value: String, onChange: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, OB.border88, RoundedCornerShape(10.dp))
+            .background(OB.well)
+            .border(2.dp, OB.hairline)
             .padding(horizontal = 14.dp)
     ) {
         BasicTextField(
@@ -660,7 +629,7 @@ private fun DisplayNameField(value: String, onChange: (String) -> Unit) {
             ),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
-                    if (value.isEmpty()) Text("Your name", fontSize = 14.sp, color = OB.sub60)
+                    if (value.isEmpty()) Text("Your name", fontSize = 14.sp, color = OB.muted)
                     inner()
                 }
             },
@@ -669,9 +638,31 @@ private fun DisplayNameField(value: String, onChange: (String) -> Unit) {
     }
 }
 
-// ── Step 2: Genres ───────────────────────────────────────────────────────────
+// ── Step 2: Genres — pull them off the shelf ─────────────────────────────────
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * Cloth and foil for each genre, plus how tall its board stands. Same shelf
+ * language as the sign-in hero, so the metaphor carries from the first screen
+ * into the first task. Keyed by `Genre.id`.
+ */
+private val genreBoards = mapOf(
+    "fiction" to Triple(0xFF6A2350, 0xFFEDD9A8, 112),
+    "mystery" to Triple(0xFF23304F, 0xFFD8B45C, 122),
+    "thriller" to Triple(0xFFC0271C, 0xFFFFF0CC, 106),
+    "romance" to Triple(0xFFB5456B, 0xFFFFF0CC, 118),
+    "science-fiction" to Triple(0xFF14595E, 0xFFE7C77A, 110),
+    "fantasy" to Triple(0xFF33306B, 0xFFD8B45C, 124),
+    "horror" to Triple(0xFF23211E, 0xFFD8B45C, 104),
+    "historical" to Triple(0xFFC9962B, 0xFF3A2C1C, 120),
+    "biography" to Triple(0xFF7A2E1B, 0xFFE7C77A, 114),
+    "self-help" to Triple(0xFF4F7A1E, 0xFFF2EDE1, 108),
+    "business" to Triple(0xFF2A3A5A, 0xFFC9962B, 116),
+    "non-fiction" to Triple(0xFF1B4B3C, 0xFFEDD9A8, 122),
+    "young-adult" to Triple(0xFFB5642A, 0xFF2A1C0E, 110),
+    "classics" to Triple(0xFF8C2B22, 0xFFE7C77A, 126),
+    "poetry" to Triple(0xFF2F7D5A, 0xFFFFF0CC, 106)
+)
+
 @Composable
 private fun GenresStep(
     state: OnboardingUiState,
@@ -679,51 +670,139 @@ private fun GenresStep(
     onContinueFromGenres: () -> Unit
 ) {
     val remaining = (3 - state.selectedGenres.size).coerceAtLeast(0)
+    // Fifteen boards across three shelves.
+    val shelves = remember { Genre.all.chunked(5) }
+
     Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .padding(horizontal = 26.dp)
+                .padding(top = 22.dp, bottom = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            OnbTitle("Pull the ones\nyou'd reread.")
+            OnbSubtitle("Tap a spine to pull it off the shelf. Three or more and we can start.")
+        }
+
         Column(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 26.dp)
-                .padding(top = 28.dp, bottom = 24.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            OnbTitle("What lives on\nyour shelves?")
-            Spacer(Modifier.height(8.dp))
-            OnbSubtitle("Pick at least three. Your recs are built on these — you can tune later.")
-            Spacer(Modifier.height(22.dp))
+            shelves.forEach { books -> GenreShelf(books, state.selectedGenres, onToggleGenre) }
+        }
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Genre.all.forEach { genre ->
-                    OnbChip(
-                        label = genre.label,
-                        isOn = genre.id in state.selectedGenres,
-                        onClick = { onToggleGenre(genre.id) }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(18.dp))
-            Text(
-                (if (remaining == 0) "${state.selectedGenres.size} SELECTED · READY"
-                else "${state.selectedGenres.size} SELECTED · PICK $remaining MORE"),
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp,
-                letterSpacing = 0.8.sp,
-                color = OB.sub50
+        Column(
+            Modifier
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 10.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PulledTally(state.selectedGenres.size)
+            OnbPrimaryButton(
+                title = if (remaining == 0) "Continue" else "Pull $remaining more",
+                onClick = onContinueFromGenres,
+                enabled = remaining == 0
             )
         }
-        OnbPrimaryButton(
-            title = "Continue",
-            onClick = onContinueFromGenres,
-            enabled = state.selectedGenres.size >= 3,
-            modifier = Modifier
-                .navigationBarsPadding()
-                .padding(horizontal = 26.dp)
-                .padding(bottom = 16.dp)
+    }
+}
+
+@Composable
+private fun GenreShelf(books: List<Genre>, picked: Set<String>, onToggle: (String) -> Unit) {
+    Column(Modifier.padding(top = 14.dp)) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth().height(128.dp)
+        ) {
+            books.forEach { genre ->
+                GenreBoard(genre, genre.id in picked) { onToggle(genre.id) }
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(5.dp).background(HL.Plank))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(14.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(HL.Plank.copy(alpha = 0.26f), HL.Plank.copy(alpha = 0f))
+                    )
+                )
+        )
+    }
+}
+
+@Composable
+private fun GenreBoard(genre: Genre, pulled: Boolean, onToggle: () -> Unit) {
+    val spec = genreBoards[genre.id] ?: Triple(0xFF23211E, 0xFFD8B45C, 114)
+    val foil = Color(spec.second)
+    val lift by animateFloatAsState(if (pulled) -14f else 0f, tween(220), label = "genre-lift")
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .offset { IntOffset(0, lift.dp.roundToPx()) }
+            .width(61.dp)
+            .height(spec.third.dp)
+            .background(Color(spec.first))
+            // Untouched boards sit back under a shadow veil; a pulled one is
+            // lifted out of the row and into the light.
+            .background(if (pulled) Color.Transparent else Color(0xFF1A140C).copy(alpha = 0.30f))
+            .border(2.dp, HL.Ink)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onToggle
+            )
+            .padding(vertical = 8.dp)
+    ) {
+        Box(Modifier.size(width = 40.dp, height = 2.dp).background(foil))
+        SpineTitle(
+            text = genre.label,
+            fontSize = 12.sp,
+            color = foil,
+            run = (spec.third - 36).dp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.3.sp
+        )
+        Box(Modifier.size(width = 40.dp, height = 2.dp).background(foil))
+    }
+}
+
+@Composable
+private fun PulledTally(count: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "PULLED",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            letterSpacing = 1.6.sp,
+            color = OB.muted
+        )
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(3) { i ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(8.dp)
+                        .background(if (i < count) HL.Crimson else OB.well)
+                        .border(1.5.dp, HL.Ink)
+                )
+            }
+        }
+        Text(
+            "$count/${Genre.all.size}",
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp,
+            color = OB.ink
         )
     }
 }
@@ -751,7 +830,7 @@ private fun TempoStep(
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 ReadingTempo.all.forEach { option ->
-                    TempoRow(option.label, option.sub, state.tempo == option.id) {
+                    TempoRow(option.id, option.label, option.sub, state.tempo == option.id) {
                         onSelectTempo(option.id)
                     }
                 }
@@ -768,26 +847,42 @@ private fun TempoStep(
     }
 }
 
+/**
+ * Each tempo carries a step of the reading-heatmap ramp, so the choice previews
+ * the colour the user will live with on their profile.
+ */
+private val tempoRamp = mapOf(
+    "casual" to Color(0xFFE7A87D),
+    "regular" to Color(0xFFD97A4A),
+    "voracious" to Color(0xFFC0271C)
+)
+
 @Composable
-private fun TempoRow(label: String, sub: String, active: Boolean, onClick: () -> Unit) {
+private fun TempoRow(id: String, label: String, sub: String, active: Boolean, onClick: () -> Unit) {
+    val ramp = tempoRamp[id] ?: Color(0xFFD97A4A)
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (active) OB.ink else OB.fill97)
-            .border(1.dp, if (active) OB.ink else OB.border90, RoundedCornerShape(14.dp))
+            .background(if (active) ramp else OB.well)
+            .border(2.dp, if (active) ramp else OB.rule)
             .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 15.dp)
+            .padding(horizontal = 16.dp, vertical = 15.dp)
     ) {
+        Box(
+            Modifier
+                .size(width = 6.dp, height = 34.dp)
+                .background(if (active) Color.White.copy(alpha = 0.75f) else ramp)
+        )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 label, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold,
-                color = if (active) Color.White else Color(0xFF1F1F1F)
+                color = if (active) Color.White else OB.ink
             )
             Text(
                 sub, fontSize = 12.5.sp,
-                color = if (active) Color.White.copy(alpha = 0.7f) else OB.sub50
+                color = if (active) Color.White.copy(alpha = 0.78f) else OB.muted
             )
         }
         if (active) {
@@ -895,7 +990,7 @@ private fun AhaRevealStep(
             Text(
                 "YOUR FIRST MATCH",
                 fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
-                fontSize = 10.5.sp, letterSpacing = 2.sp, color = OB.sub60
+                fontSize = 10.5.sp, letterSpacing = 2.sp, color = OB.muted
             )
             Spacer(Modifier.height(16.dp))
             Text(
@@ -914,7 +1009,7 @@ private fun AhaRevealStep(
                     .width(150.dp)
                     .aspectRatio(2f / 3f)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(OB.fill92)
+                    .background(OB.recessed)
             )
             Spacer(Modifier.height(18.dp))
             Text(
@@ -923,13 +1018,13 @@ private fun AhaRevealStep(
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "by ${book.authorLine}", fontSize = 13.sp, color = OB.sub50,
+                "by ${book.authorLine}", fontSize = 13.sp, color = OB.muted,
                 textAlign = TextAlign.Center
             )
             book.reason?.takeIf { it.isNotEmpty() }?.let {
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    it, fontSize = 13.5.sp, lineHeight = 19.sp, color = OB.sub40,
+                    it, fontSize = 13.5.sp, lineHeight = 19.sp, color = OB.muted,
                     textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
@@ -960,7 +1055,7 @@ private fun AhaRevealStep(
                         onClick = onShowAnother
                     )
             ) {
-                Text("Show me another", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = OB.sub25)
+                Text("Show me another", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = OB.ink)
             }
         }
     }

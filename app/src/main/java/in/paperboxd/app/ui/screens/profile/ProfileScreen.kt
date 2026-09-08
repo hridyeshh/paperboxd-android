@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedEntryCard
 import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
@@ -880,7 +879,6 @@ private fun TabDock(
             ProfileTab.Diary -> p.diaryEntriesCount
             ProfileTab.Lists -> p.listsCount
             ProfileTab.Tbr -> state.tbrItems.size.takeIf { it > 0 }
-            ProfileTab.Authors -> state.authors.size.takeIf { it > 0 }
         }
     }
 
@@ -904,7 +902,7 @@ private fun TabDock(
                         modifier = Modifier.padding(top = 4.dp, bottom = 11.dp)
                     ) {
                         Text(
-                            if (tab == ProfileTab.Tbr) "TBR" else tab.name,
+                            tab.label,
                             fontSize = 13.5.sp,
                             fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium,
                             color = if (on) HL.Ink else HL.Muted
@@ -932,6 +930,14 @@ private fun TabDock(
 }
 
 // ---- Tab content (items inside the outer LazyColumn) ----
+
+/** Dock label. The enum name is the API-facing identity; this is display only. */
+private val ProfileTab.label: String
+    get() = when (this) {
+        ProfileTab.Tbr -> "TBR"
+        ProfileTab.Diary -> "Thoughts"
+        else -> name
+    }
 
 private fun LazyListScope.tabContent(
     state: ProfileUiState,
@@ -1000,19 +1006,6 @@ private fun LazyListScope.tabContent(
                 }
             }
         }
-        ProfileTab.Authors -> {
-            if (state.authors.isEmpty()) {
-                item { EmptyTab("No authors yet") }
-            } else {
-                val capped = if (expanded) state.authors else state.authors.take(9)
-                items(capped.chunked(3), key = { row -> "author-" + row.first().name }) { row ->
-                    AuthorRow(row)
-                }
-                if (!expanded && state.authors.size > 9) {
-                    item { ShowMore(onExpand) }
-                }
-            }
-        }
     }
 }
 
@@ -1037,48 +1030,6 @@ private fun CoverRow(cells: List<Pair<String?, String>>, onOpen: (String) -> Uni
             )
         }
         repeat(3 - cells.size) { Spacer(Modifier.weight(1f)) }
-    }
-}
-
-@Composable
-private fun AuthorRow(row: List<AuthorSummary>) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        row.forEach { author ->
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                BookCoverImage(
-                    url = author.coverUrl,
-                    title = author.name,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
-                    cornerRadius = 6.dp
-                )
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        author.name,
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.5.sp,
-                        color = HL.Ink,
-                        maxLines = 1
-                    )
-                    Text(
-                        "${author.bookCount} book" + if (author.bookCount == 1) "" else "s",
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 8.5.sp,
-                        color = HL.Muted
-                    )
-                }
-            }
-        }
-        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
     }
 }
 

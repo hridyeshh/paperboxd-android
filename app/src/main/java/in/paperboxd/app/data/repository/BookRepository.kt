@@ -3,6 +3,7 @@ package `in`.paperboxd.app.data.repository
 import `in`.paperboxd.app.data.remote.ApiService
 import `in`.paperboxd.app.data.remote.safeApiCall
 import `in`.paperboxd.app.domain.model.AddToBookshelfBody
+import `in`.paperboxd.app.domain.model.AuthorInfo
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
@@ -36,6 +37,11 @@ class BookRepository @Inject constructor(
 
     suspend fun randomBooks(pageSize: Int? = null): Result<BookListResponse> =
         safeApiCall { api.randomBooks(pageSize) }
+
+    suspend fun booksByAuthor(author: String, pageSize: Int? = 30): Result<BookListResponse> =
+        safeApiCall { api.booksByAuthor(author, pageSize) }
+
+    suspend fun authorInfo(name: String): Result<AuthorInfo> = safeApiCall { api.authorInfo(name) }
 
     suspend fun vibeSearch(query: String, limit: Int = 10): Result<VibeSearchResponse> =
         safeApiCall { api.vibeSearch(mapOf("query" to query, "limit" to limit)) }

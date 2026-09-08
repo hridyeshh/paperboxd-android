@@ -105,3 +105,13 @@ data class ReviewUpdateResponse(
     val review: String? = null,
     val edited: Boolean? = null
 )
+
+/** GET /api/v1/authors/info — Wikipedia-backed, cached 24h server-side. */
+data class AuthorInfo(
+    val found: Boolean = false,
+    val name: String = "",
+    val description: String? = null,
+    val extract: String = "",
+    @SerializedName("photo_url") val photoUrl: String = "",
+    @SerializedName("wikipedia_url") val wikipediaUrl: String = ""
+)

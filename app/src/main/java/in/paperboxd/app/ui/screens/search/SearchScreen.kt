@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,9 +96,15 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var focused by remember { mutableStateOf(false) }
+    var focused by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+
+    // Search mode is "there is an active search", not "the field has focus".
+    // Opening a book takes this screen out of composition and drops keyboard
+    // focus, so gating on `focused` alone dumped you back on the wall instead
+    // of your results. The query itself survives in the ViewModel.
+    val inSearchMode = focused || state.hasQuery
 
     LaunchedEffect(Unit) {
         viewModel.loadWallIfNeeded()
@@ -116,7 +123,7 @@ fun SearchScreen(
     Column(modifier = Modifier.fillMaxSize().background(HL.Paper).statusBarsPadding()) {
         SearchHeader(
             state = state,
-            focused = focused,
+            focused = inSearchMode,
             focusRequester = focusRequester,
             onFocusChanged = { focused = it },
             onQueryChanged = viewModel::onQueryChanged,
@@ -128,7 +135,7 @@ fun SearchScreen(
             onClear = { viewModel.onQueryChanged("") }
         )
 
-        if (focused) {
+        if (inSearchMode) {
             if (state.hasQuery) {
                 ResultsOverlay(state, onOpenBook, onOpenProfile)
             } else {

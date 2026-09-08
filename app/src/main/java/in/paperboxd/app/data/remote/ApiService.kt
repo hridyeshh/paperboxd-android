@@ -2,12 +2,12 @@ package `in`.paperboxd.app.data.remote
 
 import `in`.paperboxd.app.domain.model.AddToBookshelfBody
 import `in`.paperboxd.app.domain.model.AuthResponse
-import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
 import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import `in`.paperboxd.app.domain.model.Wrapped
 import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.AuthorInfo
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
 import `in`.paperboxd.app.domain.model.BookStatusResponse
@@ -170,6 +170,17 @@ interface ApiService {
     @GET("api/v1/books/random")
     suspend fun randomBooks(@Query("page_size") pageSize: Int? = null): BookListResponse
 
+    /** Books PaperBoxd holds by one author — the author page's catalogue. */
+    @GET("api/v1/books/by-author")
+    suspend fun booksByAuthor(
+        @Query("author") author: String,
+        @Query("page_size") pageSize: Int? = null
+    ): BookListResponse
+
+    /** Wikipedia-backed author blurb + portrait, cached 24h server-side. */
+    @GET("api/v1/authors/info")
+    suspend fun authorInfo(@Query("name") name: String): AuthorInfo
+
     @POST("api/v1/books/{id}/like")
     suspend fun likeBook(@Path("id") id: String): ResponseBody
 
@@ -305,9 +316,6 @@ interface ApiService {
 
     @GET("api/v1/users/{username}/tbr")
     suspend fun userTbr(@Path("username") username: String): List<TbrItem>
-
-    @GET("api/v1/users/{username}/authors")
-    suspend fun userAuthors(@Path("username") username: String): List<AuthorSummary>
 
     @GET("api/v1/users/{username}/favorites")
     suspend fun userFavorites(@Path("username") username: String): List<FavoriteBook>

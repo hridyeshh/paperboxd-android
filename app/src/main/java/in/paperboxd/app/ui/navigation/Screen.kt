@@ -1,5 +1,7 @@
 package `in`.paperboxd.app.ui.navigation
 
+import android.net.Uri
+
 /** All in-tab navigation routes. Root states (splash/auth/onboarding/main) live in AppState. */
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
@@ -16,6 +18,10 @@ sealed class Screen(val route: String) {
          * non-UUID `bookId` before loading, so both forms land here.
          */
         const val DEEP_LINK = "https://paperboxd.in/b/{bookId}"
+    }
+
+    data object Author : Screen("author/{name}") {
+        fun route(name: String) = "author/" + Uri.encode(name)
     }
 
     data object Profile : Screen("profile/{username}") {

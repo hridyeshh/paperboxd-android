@@ -58,17 +58,20 @@ import kotlin.random.Random
  * hairlines and serif. Monochrome by system — the book cover is the only color.
  */
 object SK {
-    val bg = Color(0xFFF4F3F0)
-    val bgSoft = Color(0xFFF8F7F5)
+    // One kit for the whole Ask Jazy feature — vibe search AND Scan & Know.
+    // These are the app's own light tokens (the BrutalKit / asset-catalog set
+    // iOS uses), not a third palette: paper #F2EDE1, card #FDFBF6, ink #151513,
+    // accent #D23B26. The old #F4F3F0/#141414/green set and the Jazy-only JZ
+    // set are both gone. iOS `SK` twin.
+    val bg = Color(0xFFF2EDE1)
+    val bgSoft = Color(0xFFF8F6EF)
     val bgSofter = Color(0xFFFCFBFA)
-    val panel = Color.White
-    val ink = Color(0xFF141414)
-    val sub = Color(0xFF6A665E)
-    val faint = Color(0xFFA6A299)
-    val line = Color(0xFF141414)
-
-    /** Cover-green accent — pulled straight from the book cover. */
-    val accent = Color(0xFF5B8A4E)
+    val panel = Color(0xFFFDFBF6)
+    val ink = Color(0xFF151513)
+    val sub = Color(0xFF6A6456)
+    val faint = Color(0xFFB3AB99)
+    val line = Color(0xFF151513)
+    val accent = Color(0xFFD23B26)
 
     /** Game canvas paper. */
     val gameBg = Color(0xFFFCFBF7)

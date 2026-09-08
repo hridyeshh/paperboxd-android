@@ -8,19 +8,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,19 +31,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.paperboxd.app.ui.components.HL
-import `in`.paperboxd.app.ui.theme.PBScript
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Goodreads CSV import, presented as a bottom sheet over Settings.
- * Twin of iOS GoodreadsImportView (idle → importing → finished).
+ * Goodreads CSV import — the phase machine (idle → importing → finished) with no
+ * chrome of its own, so Settings can host it as a pushed page the way iOS hosts
+ * `GoodreadsImportView`.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoodreadsImportSheet(
-    onDismiss: () -> Unit,
+fun GoodreadsImportBody(
+    modifier: Modifier = Modifier,
     viewModel: GoodreadsImportViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -71,37 +65,11 @@ fun GoodreadsImportSheet(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = HL.Paper,
-        dragHandle = null
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(24.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.7f)
-                .padding(24.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Import from Goodreads", fontFamily = PBScript, fontSize = 22.sp, color = HL.Ink)
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "Done",
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    color = HL.Accent,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(HL.Card)
-                        .clickable(onClick = onDismiss)
-                        .padding(horizontal = 16.dp, vertical = 9.dp)
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
             when (val p = phase) {
                 is GoodreadsImportViewModel.Phase.Idle ->
                     IdleView(onChoose = {
@@ -117,7 +85,6 @@ fun GoodreadsImportSheet(
                 is GoodreadsImportViewModel.Phase.Error ->
                     ErrorView(message = p.message, onRetry = viewModel::reset)
             }
-        }
     }
 }
 

@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +42,17 @@ object HL {
     val Ink = Color(0xFF151513)     // text + borders + hard shadows
     val Muted = Color(0xFF6A6456)   // secondary text
     val Accent = Color(0xFFD23B26)  // red progress fill / retry
+
+    // Welcome / onboarding tokens — twin of iOS BK. The auth and onboarding run
+    // adds saturated cloth colours so the shelf reads as bound books.
+    val Crimson = Color(0xFFC0271C) // primary CTA
+    val Ochre = Color(0xFFC9962B)
+    val Forest = Color(0xFF1B4B3C)
+    val Cream = Color(0xFFFFF6E9)   // type on crimson / ink
+    val Field = Color(0xFFF6EFDF)   // input wells
+    val Sepia = Color(0xFF7A4A2E)   // serif italic sub-heads
+    val Sage = Color(0xFF2F7D5A)    // "available" affirmation
+    val Plank = Color(0xFF3A2C1C)   // shelf board and its shadow
 }
 
 /**
@@ -159,3 +172,22 @@ fun EyebrowText(
         modifier = modifier
     )
 }
+
+/**
+ * 45° hazard stripes — iOS `HatchFill` twin. Marks destructive controls without
+ * spending a colour on them, so the settings palette stays monochrome.
+ * [period] is the stripe pair's width in px.
+ */
+fun hatchBrush(
+    base: Color = HL.Ink,
+    stripe: Color = Color(0xFF33332E),
+    period: Float = 28f
+): Brush = Brush.linearGradient(
+    0.0f to base,
+    0.5f to base,
+    0.5f to stripe,
+    1.0f to stripe,
+    start = Offset(0f, 0f),
+    end = Offset(period, period),
+    tileMode = TileMode.Repeated
+)

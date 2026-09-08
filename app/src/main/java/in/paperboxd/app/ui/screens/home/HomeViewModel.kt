@@ -15,6 +15,7 @@ import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +52,21 @@ class HomeViewModel @Inject constructor(
 
     // Mirrors the web/iOS "activity_last_viewed" unread-dot marker.
     private val prefs = context.getSharedPreferences("pb_home", Context.MODE_PRIVATE)
+
+    // Backs the "Between covers." card popup. The activity payload has only the
+    // book's id and title, so cover/author/rating are fetched when one is opened.
+    private val _previewBook = MutableStateFlow<Book?>(null)
+    val previewBook: StateFlow<Book?> = _previewBook.asStateFlow()
+    private var previewJob: Job? = null
+
+    fun loadPreview(bookId: String?) {
+        previewJob?.cancel()
+        _previewBook.value = null
+        if (bookId == null) return
+        previewJob = viewModelScope.launch {
+            _previewBook.value = bookRepository.book(bookId).getOrNull()
+        }
+    }
 
     var user: User? = null
         set(value) {

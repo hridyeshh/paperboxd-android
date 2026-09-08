@@ -30,6 +30,7 @@ import `in`.paperboxd.app.AppDestination
 import `in`.paperboxd.app.AppState
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.screens.auth.AuthScreen
+import `in`.paperboxd.app.ui.screens.author.AuthorDetailScreen
 import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailScreen
 import `in`.paperboxd.app.ui.screens.diary.DiaryEntryDetailScreen
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedRoute
@@ -152,7 +153,8 @@ fun MainScaffold(user: User, appState: AppState) {
                     user = sessionUser,
                     onBack = { navController.popBackStack() },
                     onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
-                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) }
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
+                    onOpenAuthor = { navController.navigate(Screen.Author.route(it)) }
                 )
             }
             composable(
@@ -174,6 +176,12 @@ fun MainScaffold(user: User, appState: AppState) {
                     onOpenWrapped = { navController.navigate("wrapped") },
                     onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") },
                     reloadKey = reloadKey
+                )
+            }
+            composable(Screen.Author.route) {
+                AuthorDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) }
                 )
             }
             composable("wrapped") {

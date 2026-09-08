@@ -26,8 +26,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -57,8 +58,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.ActivityItem
+import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
@@ -67,10 +75,12 @@ import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.ShimmerBox
 import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.components.brutalButton
 import `in`.paperboxd.app.ui.theme.AvatarGradient
 import `in`.paperboxd.app.ui.theme.PBScript
 import `in`.paperboxd.app.ui.theme.PaperBoxdTheme
 import `in`.paperboxd.app.ui.theme.Terracotta
+import java.util.Locale
 
 /**
  * Home — light-mode-only brutalist paper screen, iOS HomeView twin.
@@ -86,6 +96,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val previewBook by viewModel.previewBook.collectAsState()
     LaunchedEffect(user.id) { viewModel.user = user }
 
     // Light page → dark status-bar icons while Home is visible.
@@ -106,7 +117,9 @@ fun HomeScreen(
         onWrite = onWrite,
         trackImpression = viewModel::trackImpression,
         markActivitiesViewed = viewModel::markActivitiesViewed,
-        onRespondToRequest = viewModel::respondToFollowRequest
+        onRespondToRequest = viewModel::respondToFollowRequest,
+        previewBook = previewBook,
+        onLoadPreview = viewModel::loadPreview
     )
 }
 
@@ -120,9 +133,14 @@ fun HomeContent(
     onWrite: () -> Unit,
     trackImpression: (String) -> Unit = {},
     markActivitiesViewed: () -> Unit = {},
-    onRespondToRequest: (username: String, accept: Boolean) -> Unit = { _, _ -> }
+    onRespondToRequest: (username: String, accept: Boolean) -> Unit = { _, _ -> },
+    previewBook: Book? = null,
+    onLoadPreview: (String?) -> Unit = {}
 ) {
     var showNotifications by remember { mutableStateOf(false) }
+    var preview by remember { mutableStateOf<ActivityItem?>(null) }
+
+    LaunchedEffect(preview?.id) { onLoadPreview(preview?.bookId) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
         DotGridBackground()
@@ -149,10 +167,20 @@ fun HomeContent(
                         state = state,
                         username = username,
                         onOpenBook = onOpenBook,
-                        trackImpression = trackImpression
+                        trackImpression = trackImpression,
+                        onOpenPreview = { preview = it }
                     )
                 }
             }
+        }
+
+        preview?.let { activity ->
+            FriendActivityPopup(
+                activity = activity,
+                book = previewBook,
+                onOpenBook = { preview = null; onOpenBook(it) },
+                onDismiss = { preview = null }
+            )
         }
 
         if (showNotifications) {
@@ -189,7 +217,7 @@ private fun HomeHeader(hasUnread: Boolean, onWrite: () -> Unit, onBell: () -> Un
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HeaderCircleButton(onClick = onWrite) {
                 Icon(
-                    Icons.Outlined.Edit,
+                    painterResource(R.drawable.ic_compose),
                     contentDescription = stringResource(R.string.home_write),
                     tint = HL.Ink,
                     modifier = Modifier.size(19.dp)
@@ -262,7 +290,8 @@ private fun FeedList(
     state: HomeUiState,
     username: String,
     onOpenBook: (String) -> Unit,
-    trackImpression: (String) -> Unit
+    trackImpression: (String) -> Unit,
+    onOpenPreview: (ActivityItem) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -288,7 +317,7 @@ private fun FeedList(
         }
 
         if (state.friendsActivities.isNotEmpty()) {
-            item { FriendsRail(state.friendsActivities) }
+            item { FriendsRail(state.friendsActivities, onOpenPreview) }
         }
 
         if (state.pickedForYou.isNotEmpty()) {
@@ -447,7 +476,10 @@ fun BrutalReadingHero(book: LastLoggedBook, modifier: Modifier = Modifier) {
 // ---- Friends rail ("Between covers.") ----
 
 @Composable
-private fun FriendsRail(activities: List<ActivityItem>) {
+private fun FriendsRail(
+    activities: List<ActivityItem>,
+    onOpenPreview: (ActivityItem) -> Unit = {}
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(
             modifier = Modifier.padding(horizontal = 20.dp),
@@ -466,17 +498,29 @@ private fun FriendsRail(activities: List<ActivityItem>) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(horizontal = 20.dp)
         ) {
-            items(activities.take(6), key = { it.id }) { FriendCard(it) }
+            items(activities.take(6), key = { it.id }) {
+                FriendCard(it, onClick = { onOpenPreview(it) })
+            }
         }
     }
 }
 
+/**
+ * Fixed width *and* height: the activity line runs 1-2 lines depending on the
+ * title, and letting the height follow it left the rail ragged. Long text
+ * ellipsizes instead. Tapping opens the book preview popup.
+ */
 @Composable
-private fun FriendCard(a: ActivityItem) {
+private fun FriendCard(a: ActivityItem, onClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
+            // 166x124 outer, less brutalPlate's 4dp shadow reserve, gives the
+            // same 162x120 face as iOS — tall enough for a two-line title plus
+            // the timestamp without the text clipping.
             .width(166.dp)
+            .height(124.dp)
             .brutalPlate(offset = 4.dp)
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -502,24 +546,28 @@ private fun FriendCard(a: ActivityItem) {
                 modifier = Modifier.weight(1f)
             )
         }
-        Column {
-            Text(
-                text = a.verbPhrase,
-                fontSize = 11.5.sp,
-                lineHeight = 15.sp,
-                color = HL.Muted,
-                maxLines = 1
-            )
-            Text(
-                text = a.objectTitle.orEmpty(),
-                fontFamily = FontFamily.Serif,
-                fontStyle = FontStyle.Italic,
-                fontSize = 11.5.sp,
-                lineHeight = 15.sp,
-                color = HL.Ink,
-                maxLines = 2
-            )
-        }
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(color = HL.Muted)) { append(a.verbPhrase + " ") }
+                withStyle(
+                    SpanStyle(
+                        color = HL.Ink,
+                        fontFamily = FontFamily.Serif,
+                        fontStyle = FontStyle.Italic
+                    )
+                ) { append(a.objectTitle.orEmpty()) }
+            },
+            fontSize = 11.5.sp,
+            lineHeight = 15.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Holds the timestamp on the bottom edge whether the line above wrapped
+        // to one row or two.
+        Spacer(Modifier.weight(1f))
+
         Text(
             text = relativeTime(a.createdAt),
             fontFamily = FontFamily.Monospace,
@@ -527,6 +575,155 @@ private fun FriendCard(a: ActivityItem) {
             letterSpacing = 0.5.sp,
             color = HL.Muted
         )
+    }
+}
+
+/**
+ * Book preview shown when a "Between covers." card is tapped — iOS
+ * `FriendActivityPopup` twin.
+ *
+ * The activity payload carries only the book's id and title, so cover, author
+ * line and rating arrive from [book] once HomeViewModel has fetched them. The
+ * activity's own title fills the gap meanwhile, so the popup stays useful even
+ * if that request fails.
+ */
+@Composable
+private fun FriendActivityPopup(
+    activity: ActivityItem,
+    book: Book?,
+    onOpenBook: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 34.dp)
+                .brutalPlate(fill = HL.Card, borderWidth = 2.dp, offset = 5.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+                Box(
+                    Modifier
+                        .width(72.dp)
+                        .aspectRatio(2f / 3f)
+                        .background(HL.Paper2)
+                        .border(2.dp, HL.Ink)
+                ) {
+                    book?.coverUrl?.let {
+                        AsyncImage(
+                            model = it,
+                            contentDescription = book.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = book?.title ?: activity.objectTitle ?: "This book",
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 17.sp,
+                        lineHeight = 21.sp,
+                        color = HL.Ink,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    val authors = book?.authorLine.orEmpty()
+                    if (authors.isNotEmpty()) {
+                        Text(
+                            text = authors,
+                            fontSize = 12.5.sp,
+                            color = HL.Muted,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else if (activity.bookId != null) {
+                        Box(Modifier.width(92.dp).height(11.dp).background(HL.Paper2))
+                    }
+                    book?.averageRating?.let { rating ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(top = 1.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Star, null,
+                                tint = HL.Ink, modifier = Modifier.size(11.dp)
+                            )
+                            Text(
+                                text = String.format(Locale.US, "%.1f", rating),
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.sp,
+                                color = HL.Ink
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(Modifier.fillMaxWidth().height(1.dp).background(HL.Ink.copy(alpha = 0.16f)))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                Box(Modifier.size(22.dp).border(1.dp, HL.Ink)) {
+                    if (activity.avatarUrl != null) {
+                        AsyncImage(
+                            model = activity.avatarUrl,
+                            contentDescription = activity.displayName,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Box(Modifier.fillMaxSize().background(AvatarGradient))
+                    }
+                }
+                Text(
+                    text = "${activity.displayName} ${activity.verbPhrase}",
+                    fontSize = 12.5.sp,
+                    color = HL.Muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = relativeTime(activity.createdAt).uppercase(Locale.US),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 9.5.sp,
+                    letterSpacing = 0.8.sp,
+                    color = HL.Muted
+                )
+            }
+
+            activity.bookId?.let { id ->
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp)
+                        .brutalButton({ onOpenBook(id) }, fill = HL.Ink, borderWidth = 2.dp, offset = 4.dp)
+                        .height(44.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "OPEN BOOK  \u2192",
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.2.sp,
+                        color = HL.Paper
+                    )
+                }
+            }
+        }
     }
 }
 

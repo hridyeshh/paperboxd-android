@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.DiaryRepository
 import `in`.paperboxd.app.data.repository.UserRepository
-import `in`.paperboxd.app.domain.model.AuthorSummary
 import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.FavoriteBook
@@ -28,7 +27,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class ProfileTab { Bookshelf, Diary, Lists, Tbr, Authors }
+enum class ProfileTab { Bookshelf, Diary, Lists, Tbr }
 
 data class ProfileUiState(
     val profile: UserProfile? = null,
@@ -42,7 +41,6 @@ data class ProfileUiState(
     val ownLists: List<ReadingList> = emptyList(),
     val savedLists: List<ReadingList> = emptyList(),
     val tbrItems: List<TbrItem> = emptyList(),
-    val authors: List<AuthorSummary> = emptyList(),
     val favoriteBooks: List<FavoriteBook> = emptyList(),
     val lastLoggedBook: LastLoggedBook? = null,
     val streak: Int? = null,
@@ -138,7 +136,6 @@ class ProfileViewModel @Inject constructor(
                 ProfileTab.Diary -> if (_state.value.diaryEntries.isEmpty()) fetchDiary()
                 ProfileTab.Lists -> fetchLists()
                 ProfileTab.Tbr -> fetchTbr()
-                ProfileTab.Authors -> fetchAuthors()
             }
         }
     }
@@ -222,13 +219,6 @@ class ProfileViewModel @Inject constructor(
         if (_state.value.tbrItems.isNotEmpty()) return
         userRepository.tbr(profileUsername).onSuccess { items ->
             _state.update { it.copy(tbrItems = items) }
-        }
-    }
-
-    private suspend fun fetchAuthors() {
-        if (_state.value.authors.isNotEmpty()) return
-        userRepository.authors(profileUsername).onSuccess { items ->
-            _state.update { it.copy(authors = items) }
         }
     }
 
