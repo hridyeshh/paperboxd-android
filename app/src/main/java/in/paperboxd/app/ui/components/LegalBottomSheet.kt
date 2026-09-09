@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import `in`.paperboxd.app.ui.theme.Accent
 import `in`.paperboxd.app.ui.theme.Background
 
 /** A bundled legal document, read from assets/legal at runtime. */
@@ -59,6 +61,20 @@ fun LegalBottomSheet(doc: LegalDoc, onDismiss: () -> Unit) {
         ) {
             Text(doc.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
             Spacer(Modifier.height(12.dp))
+            // Mirrors the banner on paperboxd.in/privacy. No effective date is
+            // set yet, so the text must not read as binding.
+            Text(
+                "Draft — not yet in effect. This document is under review and is not " +
+                    "legally binding until an effective date is published.",
+                color = Accent,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Accent.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                    .padding(12.dp),
+            )
+            Spacer(Modifier.height(16.dp))
             body.split("\n").forEach { LegalLine(it) }
         }
     }

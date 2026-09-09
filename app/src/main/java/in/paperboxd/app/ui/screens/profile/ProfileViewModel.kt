@@ -9,6 +9,7 @@ import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.FavoriteBook
 import `in`.paperboxd.app.domain.model.LastLoggedBook
+import `in`.paperboxd.app.domain.model.ReaderProgress
 import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.CreateListRequest
@@ -44,6 +45,12 @@ data class ProfileUiState(
     val favoriteBooks: List<FavoriteBook> = emptyList(),
     val lastLoggedBook: LastLoggedBook? = null,
     val streak: Int? = null,
+    /**
+     * XP standing behind the avatar ring and the level sheet. Stays null on
+     * other people's profiles — the backend only exposes /users/me stats — and
+     * the ring then simply doesn't draw. See `XPRingAvatar`.
+     */
+    val progress: ReaderProgress? = null,
     val isFollowLoading: Boolean = false,
     val activity: ReadingActivity? = null,
     val activityYear: Int = java.time.Year.now().value
@@ -102,6 +109,13 @@ class ProfileViewModel @Inject constructor(
             val lastBookTask = async { userRepository.lastLoggedBook(profileUsername).getOrNull()?.lastBook }
             val favoritesTask = async { userRepository.favorites(profileUsername).getOrNull().orEmpty() }
             val streakTask = async { userRepository.streak(profileUsername).getOrNull()?.streak }
+            // The backend has no per-username stats route, so this only runs on
+            // your own profile; elsewhere the ring is absent rather than wrong.
+            val progressTask = async {
+                if (isOwnProfile) {
+                    userRepository.myLeaderboardStats().getOrNull()?.let(ReaderProgress::from)
+                } else null
+            }
             val activityTask = async {
                 userRepository.readingActivity(profileUsername, _state.value.activityYear).getOrNull()
             }
@@ -115,6 +129,7 @@ class ProfileViewModel @Inject constructor(
                     lastLoggedBook = lastBookTask.await(),
                     favoriteBooks = favoritesTask.await(),
                     streak = streakTask.await(),
+                    progress = progressTask.await(),
                     activity = activityTask.await(),
                     shelfBooks = emptyList(),
                     diaryEntries = emptyList(),

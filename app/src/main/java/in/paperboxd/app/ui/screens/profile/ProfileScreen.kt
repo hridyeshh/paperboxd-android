@@ -1,17 +1,27 @@
 package `in`.paperboxd.app.ui.screens.profile
 
+import android.provider.Settings
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,6 +49,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -54,16 +65,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -72,6 +102,7 @@ import `in`.paperboxd.app.ui.screens.wrapped.WrappedEntryCard
 import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
 import `in`.paperboxd.app.domain.model.LastLoggedBook
+import `in`.paperboxd.app.domain.model.ReaderProgress
 import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.ListWithBooksResponse
 import `in`.paperboxd.app.domain.model.User
@@ -190,6 +221,7 @@ fun ProfileContent(
     var expanded by remember { mutableStateOf(false) } // SHOW MORE lifts the 9-item cap
     var showReportUser by remember { mutableStateOf(false) }
     var showBlockConfirm by remember { mutableStateOf(false) }
+    var showLevelSheet by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
         when {
@@ -231,7 +263,9 @@ fun ProfileContent(
                             onShare = { showShare = true },
                             onFollowers = { followSheet = FollowListMode.Followers },
                             onReport = { showReportUser = true },
-                            onBlock = { showBlockConfirm = true }
+                            onBlock = { showBlockConfirm = true },
+                            progress = state.progress,
+                            onAvatarTap = { showLevelSheet = true }
                         )
                     }
 
@@ -407,6 +441,17 @@ fun ProfileContent(
         )
     }
 
+    state.progress?.let { progress ->
+        if (showLevelSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showLevelSheet = false },
+                containerColor = HL.Paper
+            ) {
+                LevelSheet(progress = progress, isOwnProfile = isOwnProfile)
+            }
+        }
+    }
+
     if (showShare) {
         ShareProfileSheet(
             username = state.profile?.username ?: "",
@@ -549,14 +594,22 @@ private fun ProfileHeader(
     onShare: () -> Unit,
     onFollowers: () -> Unit,
     onReport: () -> Unit = {},
-    onBlock: () -> Unit = {}
+    onBlock: () -> Unit = {},
+    /** Drives the avatar's XP ring. Null → plain avatar, no ring, no tap. */
+    progress: ReaderProgress? = null,
+    onAvatarTap: () -> Unit = {}
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            AvatarImage(url = profile.avatarUrl, name = profile.displayName, size = 88.dp)
+            XPRingAvatar(
+                avatarUrl = profile.avatarUrl,
+                displayName = profile.displayName,
+                progress = progress,
+                onTap = onAvatarTap
+            )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     profile.displayName,
@@ -882,45 +935,36 @@ private fun TabDock(
         }
     }
 
+    val gap = 10.dp
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+
     Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(18.dp)
+        // The four tabs span the full width: the open one takes what its word
+        // needs and the rest divide what's left, so the row never trails off
+        // into empty paper after the last icon. Widths are computed here rather
+        // than left to `Modifier.weight` — swapping a child between a weight and
+        // a fixed width mid-animation makes the row jump.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
         ) {
-            ProfileTab.entries.forEach { tab ->
-                val on = tab == selected
-                Column(
-                    modifier = Modifier.clickable { onSelect(tab) },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        modifier = Modifier.padding(top = 4.dp, bottom = 11.dp)
-                    ) {
-                        Text(
-                            tab.label,
-                            fontSize = 13.5.sp,
-                            fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (on) HL.Ink else HL.Muted
-                        )
-                        count(tab)?.let {
-                            Text(
-                                "$it",
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 10.sp,
-                                color = HL.Muted.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(if (on) HL.Ink else Color.Transparent)
+            val tabs = ProfileTab.entries
+            val openWidth = measureTabWidth(selected, count(selected), measurer, density)
+            val remainder = maxWidth - openWidth - gap * (tabs.size - 1)
+            val closedWidth = (remainder / (tabs.size - 1)).coerceAtLeast(44.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(gap)
+            ) {
+                tabs.forEach { tab ->
+                    val on = tab == selected
+                    MorphingTab(
+                        tab = tab,
+                        on = on,
+                        count = count(tab),
+                        targetWidth = if (on) openWidth else closedWidth,
+                        onSelect = { onSelect(tab) }
                     )
                 }
             }
@@ -928,6 +972,186 @@ private fun TabDock(
         Box(Modifier.fillMaxWidth().height(1.dp).background(Line))
     }
 }
+
+/**
+ * The width a tab needs with its word showing. Measured rather than left to the
+ * label: the tab is clipped, and an intrinsic width would fight the collapse.
+ * The 24dp is breathing room either side of the centred word.
+ */
+private fun measureTabWidth(
+    tab: ProfileTab,
+    count: Int?,
+    measurer: TextMeasurer,
+    density: Density
+): Dp {
+    val title = measurer.measure(
+        tab.label, TextStyle(fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+    ).size.width
+    val num = count?.let {
+        with(density) { 5.dp.roundToPx() } +
+            measurer.measure(
+                "$it", TextStyle(fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+            ).size.width
+    } ?: 0
+    return with(density) { (title + num).toDp() } + 24.dp
+}
+
+/**
+ * One dock tab. At rest it's an icon; selected, it's its NAME.
+ *
+ * The switch is an ink handoff, not a cross-fade: the icon's stroke retracts
+ * toward the tab's leading edge while the word grows out of that same point
+ * behind a leading clip. In both directions the outgoing mark erases *before*
+ * the incoming one draws, so the two never overlap. Hence no icon beside the
+ * active label — the icon became the word.
+ *
+ * Driven by explicit float targets rather than an AnimatedVectorDrawable
+ * because a fast double-tap has to reverse cleanly from a half-finished state,
+ * which `trimPathEnd` on an AVD does not do.
+ */
+@Composable
+private fun MorphingTab(
+    tab: ProfileTab,
+    on: Boolean,
+    count: Int?,
+    targetWidth: Dp,
+    onSelect: () -> Unit
+) {
+    val context = LocalContext.current
+    val reduceMotion = remember(context) {
+        Settings.Global.getFloat(
+            context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+        ) == 0f
+    }
+
+    // Entering: icon erases (0ms, 180) → word draws (120ms, 220). 340 total.
+    // Leaving:  word erases (0ms, 160) → icon redraws (120ms, 200). 320 total.
+    val iconDrawn by animateFloatAsState(
+        targetValue = if (on) 0f else 1f,
+        animationSpec = when {
+            reduceMotion -> tween(100)
+            on -> tween(180, easing = EaseIn)
+            else -> tween(200, delayMillis = 120, easing = EaseOut)
+        },
+        label = "icon"
+    )
+    val wordDrawn by animateFloatAsState(
+        targetValue = if (on) 1f else 0f,
+        animationSpec = when {
+            reduceMotion -> tween(100)
+            on -> tween(220, delayMillis = 120, easing = EaseOut)
+            else -> tween(160, easing = EaseIn)
+        },
+        label = "word"
+    )
+
+    val width by animateDpAsState(
+        targetValue = targetWidth,
+        animationSpec = if (reduceMotion) tween(140) else tween(300, easing = EaseInOutCubic),
+        label = "width"
+    )
+
+    val ink = if (on) HL.Ink else HL.Muted
+
+    Column(
+        modifier = Modifier
+            .width(width)
+            .clipToBounds()
+            .clickable(onClick = onSelect)
+            .semantics {
+                // Spoken whether the tab is showing an icon, a word, or half of
+                // each mid-transition.
+                contentDescription = tab.label
+                if (on) selected = true
+            }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(42.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Icon — stroke trimmed back toward its own start.
+            Canvas(Modifier.size(19.dp)) {
+                if (iconDrawn > 0f) {
+                    val markSize = size.minDimension
+                    val path = profileTabPath(tab.markKind, markSize)
+                    val stroke = Stroke(
+                        width = 1.6.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                    if (iconDrawn >= 1f) {
+                        drawPath(path, ink, style = stroke)
+                    } else {
+                        val measure = PathMeasure().apply { setPath(path, false) }
+                        val seg = Path()
+                        measure.getSegment(0f, measure.length * iconDrawn, seg, true)
+                        drawPath(seg, ink, style = stroke)
+                    }
+                    if (tab == ProfileTab.Lists) {
+                        val r = profileTabListDotRadius(markSize)
+                        profileTabListDots(markSize).forEach {
+                            drawCircle(ink, r, it, alpha = iconDrawn)
+                        }
+                    }
+                }
+            }
+
+            // Word — opens out of the centre, which is the point the stroke
+            // retracted into.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier
+                    .graphicsLayer {
+                        alpha = wordDrawn
+                        scaleX = 0.94f + 0.06f * wordDrawn
+                        scaleY = scaleX
+                    }
+                    .drawWithContent {
+                        val half = size.width * wordDrawn / 2f
+                        clipRect(
+                            left = size.width / 2f - half,
+                            right = size.width / 2f + half
+                        ) { this@drawWithContent.drawContent() }
+                    }
+            ) {
+                Text(
+                    tab.label,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HL.Ink,
+                    maxLines = 1,
+                    softWrap = false
+                )
+                count?.let {
+                    Text(
+                        "$it",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        color = HL.Muted.copy(alpha = 0.8f),
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+            }
+        }
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(if (on) HL.Ink else Color.Transparent)
+        )
+    }
+}
+
+private val ProfileTab.markKind: ProfileTabMarkKind
+    get() = when (this) {
+        ProfileTab.Bookshelf -> ProfileTabMarkKind.Bookshelf
+        ProfileTab.Diary -> ProfileTabMarkKind.Thoughts
+        ProfileTab.Lists -> ProfileTabMarkKind.Lists
+        ProfileTab.Tbr -> ProfileTabMarkKind.Tbr
+    }
 
 // ---- Tab content (items inside the outer LazyColumn) ----
 
