@@ -130,8 +130,9 @@ fun JazyScreen(
     Box(modifier = Modifier.fillMaxSize().background(SK.bg)) {
         when {
             state.showResults -> JazyResultsDeck(
-                query = state.query,
+                query = state.deckAsk.ifEmpty { state.query },
                 matches = state.matches,
+                intro = state.deckIntro,
                 onClose = viewModel::closeResults,
                 onOpenBook = onOpenBook
             )
@@ -143,6 +144,9 @@ fun JazyScreen(
                 hasText = hasText,
                 scansLeft = scansLeft,
                 errorMessage = state.errorMessage,
+                pendingQuestion = state.pendingQuestion,
+                questionOptions = state.questionOptions,
+                onAnswer = { keyboard?.hide(); viewModel.answer(it) },
                 focusRequester = focusRequester,
                 onQueryChanged = viewModel::onQueryChanged,
                 onTab = {
@@ -190,6 +194,9 @@ private fun JazyLabelLayer(
     hasText: Boolean,
     scansLeft: Int,
     errorMessage: String?,
+    pendingQuestion: String?,
+    questionOptions: List<String>,
+    onAnswer: (String) -> Unit,
     focusRequester: FocusRequester,
     onQueryChanged: (String) -> Unit,
     onTab: (String) -> Unit,
@@ -311,6 +318,42 @@ private fun JazyLabelLayer(
                     errorMessage, size = 10.5f, tracking = 1.2f, color = SK.accent,
                     modifier = Modifier.padding(horizontal = 24.dp).padding(top = 14.dp)
                 )
+            }
+
+            // Jazy's one question. Two taps, no form. Tapping an option re-sends
+            // the same ask with the answer attached; Jazy never asks twice.
+            if (pendingQuestion != null) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp).padding(top = 18.dp)
+                ) {
+                    Text(
+                        pendingQuestion,
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 17.sp,
+                        color = SK.ink
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        questionOptions.forEach { option ->
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 3.dp, bottom = 3.dp)
+                                    .drawBehind {
+                                        val off = 3.dp.toPx()
+                                        drawRect(SK.ink, topLeft = Offset(off, off), size = size)
+                                    }
+                                    .background(SK.panel)
+                                    .border(2.dp, SK.ink)
+                                    .clickable { onAnswer(option) }
+                                    .padding(horizontal = 12.dp, vertical = 9.dp)
+                            ) {
+                                MonoLabel(option, size = 9.5f, tracking = 1.2f, color = SK.ink)
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.weight(1f))

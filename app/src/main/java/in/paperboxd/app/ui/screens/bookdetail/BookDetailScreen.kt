@@ -101,6 +101,7 @@ import java.time.LocalDate
 import java.time.format.TextStyle as JavaTextStyle
 import java.util.Locale
 import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.BookReaderStats
 import `in`.paperboxd.app.domain.model.BookReview
 import `in`.paperboxd.app.domain.model.FriendBookReview
 import `in`.paperboxd.app.domain.model.FriendOnBook
@@ -354,7 +355,7 @@ private fun DetailBody(
     ) {
         item { CoverBlock(book, state.friendsOnBook, state.friendsReadingCount) }
         item { TitleBlock(book, onOpenAuthor) }
-        item { StatStrip(book) }
+        item { StatStrip(book, state.readerStats) }
 
         item {
             Column(
@@ -523,7 +524,7 @@ private fun bookTagline(book: Book): String? {
 // ---- Stat strip ----
 
 @Composable
-private fun StatStrip(book: Book) {
+private fun StatStrip(book: Book, readerStats: BookReaderStats?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -535,9 +536,21 @@ private fun StatStrip(book: Book) {
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        StatCell(book.averageRating?.let { "%.1f".format(it) } ?: "—", "Rating", Modifier.weight(1f))
+        // Paperboxd's own average once readers have rated it; the publisher's
+        // number, labelled as such, until then.
+        val pbRating = readerStats?.rating
+        if (pbRating != null) {
+            StatCell("%.1f".format(pbRating), "Paperboxd", Modifier.weight(1f))
+        } else {
+            StatCell(book.averageRating?.let { "%.1f".format(it) } ?: "—", "Publisher", Modifier.weight(1f))
+        }
         Box(Modifier.width(2.dp).height(62.dp).background(Line))
-        StatCell(readingTime(book), "Time to read", Modifier.weight(1f))
+        val reads = readerStats?.reads ?: 0
+        if (reads > 0) {
+            StatCell("$reads", "Finished", Modifier.weight(1f))
+        } else {
+            StatCell(readingTime(book), "Time to read", Modifier.weight(1f))
+        }
         Box(Modifier.width(2.dp).height(62.dp).background(Line))
         StatCell(book.pageCount?.toString() ?: "—", "Pages", Modifier.weight(1f))
     }

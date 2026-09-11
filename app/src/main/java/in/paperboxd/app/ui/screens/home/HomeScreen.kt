@@ -36,6 +36,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -116,6 +120,7 @@ fun HomeScreen(
         onOpenBook = onOpenBook,
         onWrite = onWrite,
         trackImpression = viewModel::trackImpression,
+        onVerdict = viewModel::giveVerdict,
         markActivitiesViewed = viewModel::markActivitiesViewed,
         onRespondToRequest = viewModel::respondToFollowRequest,
         previewBook = previewBook,
@@ -132,6 +137,7 @@ fun HomeContent(
     onOpenBook: (String) -> Unit,
     onWrite: () -> Unit,
     trackImpression: (String) -> Unit = {},
+    onVerdict: (RecommendationItem, String) -> Unit = { _, _ -> },
     markActivitiesViewed: () -> Unit = {},
     onRespondToRequest: (username: String, accept: Boolean) -> Unit = { _, _ -> },
     previewBook: Book? = null,
@@ -168,6 +174,7 @@ fun HomeContent(
                         username = username,
                         onOpenBook = onOpenBook,
                         trackImpression = trackImpression,
+                        onVerdict = onVerdict,
                         onOpenPreview = { preview = it }
                     )
                 }
@@ -291,6 +298,7 @@ private fun FeedList(
     username: String,
     onOpenBook: (String) -> Unit,
     trackImpression: (String) -> Unit,
+    onVerdict: (RecommendationItem, String) -> Unit = { _, _ -> },
     onOpenPreview: (ActivityItem) -> Unit = {}
 ) {
     LazyColumn(
@@ -301,6 +309,7 @@ private fun FeedList(
         item {
             GreetingBlock(
                 username = username,
+                greeting = state.greeting,
                 modifier = Modifier.padding(horizontal = 20.dp).padding(top = 12.dp)
             )
         }
@@ -317,7 +326,36 @@ private fun FeedList(
         }
 
         if (state.friendsActivities.isNotEmpty()) {
-            item { FriendsRail(state.friendsActivities, onOpenPreview) }
+            item {
+                ActivityRail(
+                    eyebrow = stringResource(R.string.home_friends_eyebrow),
+                    title = stringResource(R.string.home_friends_title),
+                    activities = state.friendsActivities,
+                    onOpenPreview = onOpenPreview
+                )
+            }
+        } else if (state.showsCommunityRail) {
+            item {
+                ActivityRail(
+                    eyebrow = stringResource(R.string.home_community_eyebrow),
+                    title = stringResource(R.string.home_community_title),
+                    activities = state.communityActivities,
+                    onOpenPreview = onOpenPreview
+                )
+            }
+        }
+
+        // Server-assembled modules first: each carries its own title and a
+        // reason on every book. The legacy rails below are deduped against them.
+        items(state.feedModules, key = { it.kind }) { module ->
+            CarouselSection(
+                eyebrow = feedEyebrow(module.kind),
+                title = module.title,
+                items = module.books,
+                onOpenBook = onOpenBook,
+                trackImpression = trackImpression,
+                onVerdict = onVerdict
+            )
         }
 
         if (state.pickedForYou.isNotEmpty()) {
@@ -327,7 +365,43 @@ private fun FeedList(
                     title = stringResource(R.string.home_picked_title),
                     items = state.pickedForYou,
                     onOpenBook = onOpenBook,
-                    trackImpression = trackImpression
+                    trackImpression = trackImpression,
+                    onVerdict = onVerdict
+                )
+            }
+        }
+
+        if (state.trending.isNotEmpty()) {
+            item {
+                CarouselSection(
+                    eyebrow = stringResource(R.string.home_trending_eyebrow),
+                    title = stringResource(R.string.home_trending_title),
+                    items = state.trending.map {
+                        RecommendationItem(id = it.id, title = it.title, authors = it.authors, coverUrl = it.coverUrl)
+                    },
+                    onOpenBook = onOpenBook
+                )
+            }
+        }
+
+        if (state.rising.isNotEmpty()) {
+            item {
+                CarouselSection(
+                    eyebrow = stringResource(R.string.home_rising_eyebrow),
+                    title = stringResource(R.string.home_rising_title),
+                    items = state.rising,
+                    onOpenBook = onOpenBook
+                )
+            }
+        }
+
+        if (state.mostTbr.isNotEmpty()) {
+            item {
+                CarouselSection(
+                    eyebrow = stringResource(R.string.home_most_saved_eyebrow),
+                    title = stringResource(R.string.home_most_saved_title),
+                    items = state.mostTbr,
+                    onOpenBook = onOpenBook
                 )
             }
         }
@@ -347,11 +421,28 @@ private fun FeedList(
     }
 }
 
+/** Short caps label per module kind; the title itself is the server's. */
+private fun feedEyebrow(kind: String): String = when (kind) {
+    "continue_reading" -> "Right now"
+    "next_read" -> "Next"
+    "picked_for_you", "ready_for" -> "For you"
+    "because_you_loved" -> "Because"
+    "your_people" -> "Your friends"
+    "people_like_you", "taste_twin", "trending_like_you" -> "Readers like you"
+    "from_your_tbr" -> "Your pile"
+    "hidden_gem" -> "Hidden gem"
+    "wild_card" -> "Wild card"
+    else -> "For you"
+}
+
 @Composable
-private fun GreetingBlock(username: String, modifier: Modifier = Modifier) {
+private fun GreetingBlock(username: String, greeting: String?, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
-            text = stringResource(R.string.home_hello, username),
+            // Server greeting is time-of-day in the reader's zone; drop its
+            // full stop so it reads "Good evening, maya".
+            text = greeting?.takeIf { it.isNotBlank() }?.let { "${it.trimEnd('.')}, $username" }
+                ?: stringResource(R.string.home_hello, username),
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.SemiBold,
             fontSize = 26.sp,
@@ -476,7 +567,9 @@ fun BrutalReadingHero(book: LastLoggedBook, modifier: Modifier = Modifier) {
 // ---- Friends rail ("Between covers.") ----
 
 @Composable
-private fun FriendsRail(
+private fun ActivityRail(
+    eyebrow: String,
+    title: String,
     activities: List<ActivityItem>,
     onOpenPreview: (ActivityItem) -> Unit = {}
 ) {
@@ -485,9 +578,9 @@ private fun FriendsRail(
             modifier = Modifier.padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            EyebrowText(stringResource(R.string.home_friends_eyebrow))
+            EyebrowText(eyebrow)
             Text(
-                text = stringResource(R.string.home_friends_title),
+                text = title,
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
@@ -729,13 +822,23 @@ private fun FriendActivityPopup(
 
 // ---- Carousels ----
 
+/** The five verdicts a reader can give without opening the book. */
+private val VERDICTS = listOf(
+    "loved" to "Love it",
+    "maybe" to "Maybe",
+    "not_for_me" to "Not for me",
+    "already_read" to "Already read",
+    "not_now" to "Not now"
+)
+
 @Composable
 private fun CarouselSection(
     eyebrow: String,
     title: String,
     items: List<RecommendationItem>,
     onOpenBook: (String) -> Unit,
-    trackImpression: (String) -> Unit = {}
+    trackImpression: (String) -> Unit = {},
+    onVerdict: (RecommendationItem, String) -> Unit = { _, _ -> }
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(
@@ -758,16 +861,41 @@ private fun CarouselSection(
         ) {
             items(items, key = { it.id }) { item ->
                 LaunchedEffect(item.id) { trackImpression(item.id) }
-                CarouselCoverCard(item, onClick = { onOpenBook(item.id) })
+                // Long-press to answer without opening. Verdict only — the
+                // "why" chips are a second screen and this has to be one
+                // cheap gesture. Reason codes come from the book page.
+                var menuOpen by remember(item.id) { mutableStateOf(false) }
+                Box {
+                    CarouselCoverCard(
+                        item,
+                        onClick = { onOpenBook(item.id) },
+                        onLongClick = { menuOpen = true }
+                    )
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        VERDICTS.forEach { (id, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = { menuOpen = false; onVerdict(item, id) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CarouselCoverCard(item: RecommendationItem, onClick: () -> Unit) {
+private fun CarouselCoverCard(
+    item: RecommendationItem,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
+) {
     Column(
-        modifier = Modifier.width(108.dp).clickable(onClick = onClick),
+        modifier = Modifier
+            .width(108.dp)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         BookCoverImage(
@@ -788,6 +916,29 @@ private fun CarouselCoverCard(item: RecommendationItem, onClick: () -> Unit) {
             )
             if (item.authorLine.isNotEmpty()) {
                 Text(text = item.authorLine, fontSize = 11.sp, color = HL.Muted, maxLines = 1)
+            }
+            // The pool has always shipped a server-authored reason
+            // ("Maya read this"); until now only web displayed it.
+            item.reason?.takeIf { it.isNotEmpty() }?.let { reason ->
+                Text(
+                    text = reason,
+                    fontSize = 9.sp,
+                    lineHeight = 12.sp,
+                    color = HL.Muted,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            item.confidence?.takeIf { it.isNotEmpty() }?.let { confidence ->
+                Text(
+                    text = confidence,
+                    fontSize = 9.sp,
+                    lineHeight = 12.sp,
+                    fontStyle = FontStyle.Italic,
+                    color = HL.Ink.copy(alpha = 0.6f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

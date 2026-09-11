@@ -31,6 +31,11 @@ class MainActivity : ComponentActivity() {
         window.decorView.post { disableScrollbars(window.decorView) }
     }
 
+    override fun onStart() {
+        super.onStart()
+        appState.recordDailyOpen()
+    }
+
     private fun disableScrollbars(view: View) {
         view.isVerticalScrollBarEnabled = false
         view.isHorizontalScrollBarEnabled = false

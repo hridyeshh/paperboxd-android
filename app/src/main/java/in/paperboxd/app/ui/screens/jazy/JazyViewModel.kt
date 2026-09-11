@@ -1,6 +1,8 @@
 package `in`.paperboxd.app.ui.screens.jazy
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.paperboxd.app.data.repository.BookRepository
@@ -21,6 +23,20 @@ data class JazyUiState(
     val matches: List<VibeMatch> = emptyList(),
     val showResults: Boolean = false,
     val errorMessage: String? = null,
+    /** Jazy's one-line framing above the deck, when Claude wrote one. */
+    val deckIntro: String? = null,
+    /**
+     * What the deck header quotes: the raw ask, or on a refinement the
+     * accumulated one — "shorter" alone would read as a search for that word.
+     */
+    val deckAsk: String = "",
+    /**
+     * Jazy's one clarifying question and its tappable replies. Set instead of
+     * results when the ask was too open to answer well; cleared on the next
+     * submit. Jazy never asks twice in a row.
+     */
+    val pendingQuestion: String? = null,
+    val questionOptions: List<String> = emptyList(),
     /**
      * Bookshelf total + TBR count, gating the camera. Null = not determined
      * yet or the request failed — callers must fail OPEN on null, since a
@@ -32,6 +48,7 @@ data class JazyUiState(
 /** Ask Jazy's vibe search. iOS twin: the search half of `JazyView`. */
 @HiltViewModel
 class JazyViewModel @Inject constructor(
+    @ApplicationContext context: Context,
     private val bookRepository: BookRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
@@ -40,6 +57,21 @@ class JazyViewModel @Inject constructor(
     val state: StateFlow<JazyUiState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+
+    /** Search conversation id from the backend; "shorter" refines the last ask. */
+    private var sessionId: String? = null
+
+    /**
+     * Stable per-install id so a logged-out reader can still hold a search
+     * conversation. Same key and contract as web's localStorage `pb_anon_id`.
+     */
+    private val anonId: String = context
+        .getSharedPreferences("pb_identity", Context.MODE_PRIVATE)
+        .let { prefs ->
+            prefs.getString("pb_anon_id", null) ?: java.util.UUID.randomUUID().toString().also {
+                prefs.edit().putString("pb_anon_id", it).apply()
+            }
+        }
 
     /**
      * Bookshelf + TBR size, for the Scan gate. Loaded once per open.
@@ -67,19 +99,36 @@ class JazyViewModel @Inject constructor(
         _state.update { it.copy(query = if (current.isEmpty()) chip else "$current $chip") }
     }
 
-    fun submit() {
+    /** Tapping one of Jazy's options re-sends the same ask with the answer. */
+    fun answer(option: String) = submit(answer = option)
+
+    fun submit(answer: String? = null) {
         val q = _state.value.query.trim()
         if (q.isEmpty() || _state.value.isSearching) return
         searchJob?.cancel()
-        _state.update { it.copy(isSearching = true, errorMessage = null) }
+        _state.update {
+            it.copy(isSearching = true, errorMessage = null, pendingQuestion = null, questionOptions = emptyList())
+        }
         searchJob = viewModelScope.launch {
             val startedAt = System.currentTimeMillis()
-            // The vibe endpoint is the only source of the score + reason the card
+            // The concierge is the only source of the score + reason the card
             // shows, so a failure has to surface rather than quietly show nothing.
-            bookRepository.vibeSearch(q, limit = 5)
+            bookRepository.jazy(q, sessionId = sessionId, answer = answer, anonId = anonId, limit = 5)
                 .also { holdSearchingScreen(startedAt) }
-                .onSuccess { resp ->
-                    val items = resp.items.orEmpty()
+                .onSuccess { turn ->
+                    sessionId = turn.sessionId.ifEmpty { sessionId }
+                    // One question, then an answer — never a second question.
+                    if (turn.isQuestion && answer == null) {
+                        _state.update {
+                            it.copy(
+                                isSearching = false,
+                                pendingQuestion = turn.question,
+                                questionOptions = turn.options.orEmpty()
+                            )
+                        }
+                        return@onSuccess
+                    }
+                    val items = turn.items.orEmpty()
                     _state.update {
                         if (items.isEmpty()) {
                             it.copy(
@@ -87,7 +136,13 @@ class JazyViewModel @Inject constructor(
                                 errorMessage = "Nothing on this shelf — try dropping a word"
                             )
                         } else {
-                            it.copy(isSearching = false, matches = items, showResults = true)
+                            it.copy(
+                                isSearching = false,
+                                matches = items,
+                                deckIntro = turn.intro,
+                                deckAsk = turn.understood?.takeIf { turn.refined } ?: it.query,
+                                showResults = true
+                            )
                         }
                     }
                 }

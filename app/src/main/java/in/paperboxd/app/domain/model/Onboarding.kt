@@ -25,16 +25,25 @@ data class Genre(val id: String, val label: String) {
     }
 }
 
-/** Reading tempo option. Cosmetic — collected but not persisted, matches web + iOS. */
-data class ReadingTempo(val id: String, val label: String, val sub: String) {
-    companion object {
-        val all: List<ReadingTempo> = listOf(
-            ReadingTempo("casual", "Casual", "1–3 books / month"),
-            ReadingTempo("regular", "Regular", "About 1 / week"),
-            ReadingTempo("voracious", "Voracious", "Multiple per week")
-        )
-    }
+/** Backend cap on favourites (Top 4); the "books you love" step reuses it. */
+const val ONBOARDING_MAX_PICKS = 4
+
+/** One row of GET /api/v1/users/suggested. `reason` is server-authored. */
+data class SuggestedReader(
+    val id: String,
+    val username: String,
+    val name: String? = null,
+    @SerializedName("avatar_url") val avatarUrl: String? = null,
+    val bio: String? = null,
+    @SerializedName("books_read_count") val booksReadCount: Int = 0,
+    @SerializedName("followers_count") val followersCount: Int = 0,
+    @SerializedName("shared_genres") val sharedGenres: List<String> = emptyList(),
+    val reason: String = ""
+) {
+    val displayName: String get() = name?.takeIf { it.isNotBlank() } ?: username
 }
+
+data class SuggestedReadersResponse(val users: List<SuggestedReader> = emptyList())
 
 /** POST /users/me/avatar/upload — full user response; only the URL is needed. */
 data class AvatarUploadResponse(

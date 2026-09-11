@@ -11,6 +11,7 @@ import `in`.paperboxd.app.domain.model.LeaderboardEntry
 import `in`.paperboxd.app.domain.model.LeaderboardResponse
 import `in`.paperboxd.app.domain.model.LikesResponse
 import `in`.paperboxd.app.domain.model.StreakResponse
+import `in`.paperboxd.app.domain.model.SuggestedReadersResponse
 import `in`.paperboxd.app.domain.model.TbrItem
 import `in`.paperboxd.app.domain.model.UserListResponse
 import `in`.paperboxd.app.domain.model.UserListsResponse
@@ -34,6 +35,13 @@ class UserRepository @Inject constructor(
         safeApiCall { api.updateProfile(username, fields) }
 
     suspend fun follow(username: String): Result<FollowResponse> = safeApiCall { api.follow(username) }
+
+    /** Readers to follow, ranked by genre overlap with the caller. */
+    suspend fun suggested(limit: Int = 8): Result<SuggestedReadersResponse> =
+        safeApiCall { api.suggestedUsers(limit) }
+
+    /** Records an app open for DAU/streaks. Backend awards XP at most once per UTC day. */
+    suspend fun dailyOpen(): Result<Unit> = safeApiCall { api.dailyOpen(); Unit }
 
     // ── Private profiles ──────────────────────────────────────────────────────
 

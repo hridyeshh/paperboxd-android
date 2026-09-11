@@ -1,12 +1,17 @@
 package `in`.paperboxd.app.data.remote
 
 import `in`.paperboxd.app.domain.model.AddToBookshelfBody
+import `in`.paperboxd.app.domain.model.SuggestedReadersResponse
+import `in`.paperboxd.app.domain.model.AddFavoriteBody
 import `in`.paperboxd.app.domain.model.AuthResponse
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
 import `in`.paperboxd.app.domain.model.ReadingActivity
+import `in`.paperboxd.app.domain.model.JazyTurn
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import `in`.paperboxd.app.domain.model.Wrapped
 import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.BookSocialResponse
+import `in`.paperboxd.app.domain.model.CommunityResponse
 import `in`.paperboxd.app.domain.model.AuthorInfo
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
@@ -23,6 +28,7 @@ import `in`.paperboxd.app.domain.model.FriendReviewsResponse
 import `in`.paperboxd.app.domain.model.FriendsReadingResponse
 import `in`.paperboxd.app.domain.model.GoogleAuthResponse
 import `in`.paperboxd.app.domain.model.HealthResponse
+import `in`.paperboxd.app.domain.model.FeedResponse
 import `in`.paperboxd.app.domain.model.HomeRecommendationsResponse
 import `in`.paperboxd.app.domain.model.LastLoggedBookResponse
 import `in`.paperboxd.app.domain.model.LeaderboardEntry
@@ -125,6 +131,12 @@ interface ApiService {
     @POST("api/v1/users/me/onboarding")
     suspend fun saveOnboarding(@Body body: OnboardingBody): ResponseBody
 
+    @GET("api/v1/users/suggested")
+    suspend fun suggestedUsers(@Query("limit") limit: Int = 8): SuggestedReadersResponse
+
+    @POST("api/v1/users/me/daily-open")
+    suspend fun dailyOpen(): ResponseBody
+
     @Multipart
     @POST("api/v1/users/me/avatar/upload")
     suspend fun uploadAvatar(@Part file: MultipartBody.Part): AvatarUploadResponse
@@ -193,12 +205,20 @@ interface ApiService {
     @GET("api/v1/books/{id}/reviews/friends")
     suspend fun bookReviewsByFriends(@Path("id") id: String): FriendReviewsResponse
 
+    /** Paperboxd's own reader stats for a book (rating, reads, TBR). */
+    @GET("api/v1/books/{id}/social")
+    suspend fun bookSocial(@Path("id") id: String): BookSocialResponse
+
     @GET("api/v1/books/{id}/friends-reading")
     suspend fun bookFriendsReading(@Path("id") id: String): FriendsReadingResponse
 
     // Vibe (semantic) search — powers Ask Jazy.
     @POST("api/v1/search/vibe")
     suspend fun vibeSearch(@Body body: Map<String, @JvmSuppressWildcards Any>): VibeSearchResponse
+
+    /** Jazy concierge — search with a voice, and permission to ask one question. */
+    @POST("api/v1/jazy")
+    suspend fun jazy(@Body body: Map<String, @JvmSuppressWildcards Any>): JazyTurn
 
     // Bookshelf
     @POST("api/v1/users/{username}/bookshelf")
@@ -317,6 +337,12 @@ interface ApiService {
     @GET("api/v1/users/{username}/tbr")
     suspend fun userTbr(@Path("username") username: String): List<TbrItem>
 
+    @POST("api/v1/users/{username}/favorites")
+    suspend fun addFavorite(
+        @Path("username") username: String,
+        @Body body: AddFavoriteBody
+    ): ResponseBody
+
     @GET("api/v1/users/{username}/favorites")
     suspend fun userFavorites(@Path("username") username: String): List<FavoriteBook>
 
@@ -395,6 +421,14 @@ interface ApiService {
     @POST("api/v1/events")
     suspend fun trackEvent(@Body body: TrackEventBody): Response<ResponseBody>
 
+    /** Verdict on a recommendation card — see service.RecordFeedback. */
+    @POST("api/v1/recommendations/feedback")
+    suspend fun recommendationFeedback(@Body body: Map<String, @JvmSuppressWildcards Any>): Response<ResponseBody>
+
+    /** Public community snapshot: trending books + public activity. No auth. */
+    @GET("api/v1/community")
+    suspend fun community(): CommunityResponse
+
     // Leaderboard
     @GET("api/v1/leaderboard/global")
     suspend fun globalLeaderboard(): LeaderboardResponse
@@ -408,6 +442,10 @@ interface ApiService {
     // Recommendations
     @GET("api/v1/recommendations/home")
     suspend fun homeRecommendations(): HomeRecommendationsResponse
+
+    /** The modular home. [tz] is the reader's IANA zone, for the greeting. */
+    @GET("api/v1/recommendations/feed")
+    suspend fun feed(@Query("tz") tz: String?): FeedResponse
 
     @GET("api/v1/recommendations/similar/{bookId}")
     suspend fun similarBooks(@Path("bookId") bookId: String): SimilarBooksResponse

@@ -39,3 +39,26 @@ data class VibeSearchResponse(
     val totalItems: Int = 0,
     val items: List<VibeMatch>? = null
 )
+
+/**
+ * One turn with Jazy: either a deck, or one clarifying question.
+ *
+ * Mirrors `service.ConciergeResponse`. [question] is set when Jazy wants one
+ * thing settled before answering; the client re-sends the same query with the
+ * tapped option as `answer`.
+ */
+data class JazyTurn(
+    val kind: String = "",
+    @SerializedName("sessionId") val sessionId: String = "",
+    val query: String = "",
+    val question: String? = null,
+    val options: List<String>? = null,
+    val intro: String? = null,
+    val personalised: Boolean = false,
+    val items: List<VibeMatch>? = null,
+    /** The accumulated ask ("like Murakami · under 300 pages"); [refined] when this turn edited the last. */
+    val understood: String? = null,
+    val refined: Boolean = false
+) {
+    val isQuestion: Boolean get() = kind == "jazy#question" && question != null
+}

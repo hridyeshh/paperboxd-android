@@ -11,6 +11,8 @@ import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.ActivityItem
 import `in`.paperboxd.app.domain.model.FollowRequestUser
 import `in`.paperboxd.app.domain.model.Book
+import `in`.paperboxd.app.domain.model.CommunityShelfBook
+import `in`.paperboxd.app.domain.model.FeedModule
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
@@ -22,21 +24,60 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.util.TimeZone
 import javax.inject.Inject
 
 data class HomeUiState(
     val recommendations: List<RecommendationItem> = emptyList(),
+    /**
+     * Server-assembled modules, each with its own title and reason. Rendered
+     * above the legacy rails; books in them are removed from those rails so
+     * nothing appears twice.
+     */
+    val feedModules: List<FeedModule> = emptyList(),
+    /** "Good evening." — written server-side in the reader's time zone. */
+    val greeting: String? = null,
     val lastLoggedBook: LastLoggedBook? = null,
     val latestBooks: List<Book> = emptyList(),
     val friendsActivities: List<ActivityItem> = emptyList(),
+    val trendingBooks: List<Book> = emptyList(),
+    val risingBooks: List<CommunityShelfBook> = emptyList(),
+    val mostTbrBooks: List<CommunityShelfBook> = emptyList(),
+    val communityActivities: List<ActivityItem> = emptyList(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val hasNewActivities: Boolean = false,
     val followRequests: List<FollowRequestUser> = emptyList()
 ) {
-    val pickedForYou: List<RecommendationItem> get() = recommendations.take(6)
-    val freshShelves: List<Book> get() = latestBooks.take(8)
+    /** Ids already shown inside a feed module. */
+    private val usedIds: Set<String> get() = feedModules.flatMap { m -> m.books.map { it.id } }.toSet()
+
+    val pickedForYou: List<RecommendationItem> get() = recommendations.filterNot { it.id in usedIds }.take(6)
+    val freshShelves: List<Book> get() = latestBooks.filterNot { it.id in usedIds }.take(8)
+
+    /** Needs a few titles to read as a trend rather than one person's week. */
+    val trending: List<Book>
+        get() = if (trendingBooks.size >= 4) trendingBooks.filterNot { it.id in usedIds }.take(10) else emptyList()
+
+    /**
+     * Same threshold for the discovery shelves; the server's label rides along
+     * as the card's reason line so the claim stays the server's.
+     */
+    val rising: List<RecommendationItem> get() = shelf(risingBooks)
+    val mostTbr: List<RecommendationItem> get() = shelf(mostTbrBooks)
+
+    private fun shelf(books: List<CommunityShelfBook>): List<RecommendationItem> =
+        if (books.size < 4) emptyList()
+        else books.filterNot { it.id in usedIds }.take(10).map {
+            RecommendationItem(
+                id = it.id, title = it.title, authors = it.authors,
+                coverUrl = it.coverUrl, reason = it.label
+            )
+        }
+
+    /** Public activity fills the rail while the follow graph is empty. */
+    val showsCommunityRail: Boolean get() = friendsActivities.isEmpty() && communityActivities.isNotEmpty()
 }
 
 @HiltViewModel
@@ -102,10 +143,13 @@ class HomeViewModel @Inject constructor(
                 userRepository.followRequests().getOrNull()?.requests.orEmpty()
             }
             val recsTask = async { recommendationRepository.home() }
+            // Best-effort: a missing feed leaves the legacy rails, never a blank home.
+            val feedTask = async { recommendationRepository.feed(TimeZone.getDefault().id).getOrNull() }
             val lastBookTask = async {
                 user?.username?.let { userRepository.lastLoggedBook(it).getOrNull()?.lastBook }
             }
             val latestTask = async { bookRepository.latestBooks(pageSize = 12).getOrNull()?.items.orEmpty() }
+            val communityTask = async { recommendationRepository.community().getOrNull() }
             val activitiesTask = async {
                 // Friends feed, never your own actions — iOS fetchFriendActivities twin.
                 recommendationRepository.followingActivities(pageSize = 10).getOrNull()
@@ -117,11 +161,20 @@ class HomeViewModel @Inject constructor(
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
             val activities = activitiesTask.await()
+            val community = communityTask.await()
+            val feed = feedTask.await()
             _state.update {
                 it.copy(
+                    feedModules = feed?.modules.orEmpty().filter { m -> m.books.isNotEmpty() },
+                    greeting = feed?.greeting ?: it.greeting,
                     lastLoggedBook = lastBookTask.await(),
                     latestBooks = latestTask.await(),
                     friendsActivities = activities,
+                    trendingBooks = community?.trendingBooks.orEmpty().filter { b -> b.coverUrl != null },
+                    risingBooks = community?.rising.orEmpty().filter { b -> b.coverUrl != null },
+                    mostTbrBooks = community?.mostTbr.orEmpty().filter { b -> b.coverUrl != null },
+                    communityActivities = community?.activity.orEmpty()
+                        .filter { a -> a.userId != user?.id && a.bookTitle != null },
                     followRequests = followRequestsTask.await(),
                     hasNewActivities = computeUnread(activities) || followRequestsTask.await().isNotEmpty(),
                     isLoading = false,
@@ -140,6 +193,23 @@ class HomeViewModel @Inject constructor(
     fun markActivitiesViewed() {
         prefs.edit().putLong(lastViewedKey(), System.currentTimeMillis()).apply()
         _state.update { it.copy(hasNewActivities = it.followRequests.isNotEmpty()) }
+    }
+
+    /**
+     * Records a verdict and removes the card from every rail. Removal is the
+     * confirmation — a card that stays after "not for me" reads as the button
+     * doing nothing. "loved" keeps it: that is a reason to leave the book in
+     * front of them, not to take it away.
+     */
+    fun giveVerdict(item: RecommendationItem, verdict: String) {
+        if (verdict != "loved") {
+            _state.update { st ->
+                st.copy(
+                    recommendations = st.recommendations.filterNot { it.id == item.id }
+                )
+            }
+        }
+        recommendationRepository.giveVerdict(item.id, verdict, item.reasonType)
     }
 
     fun trackImpression(bookId: String) {

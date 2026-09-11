@@ -3,6 +3,7 @@ package `in`.paperboxd.app
 import `in`.paperboxd.app.data.remote.SessionEvents
 import `in`.paperboxd.app.data.remote.ApiError
 import `in`.paperboxd.app.data.repository.AuthRepository
+import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ sealed class AppDestination {
 @Singleton
 class AppState @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     sessionEvents: SessionEvents
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -47,6 +49,11 @@ class AppState @Inject constructor(
                 _currentUser.value = null
                 _destination.value = AppDestination.Auth
             }
+        }
+        // First launch: MainActivity.onStart runs before bootstrap resolves, so
+        // also record the open the moment we land on Main.
+        scope.launch {
+            _destination.collect { if (it is AppDestination.Main) recordDailyOpen() }
         }
     }
 
@@ -150,6 +157,21 @@ class AppState @Inject constructor(
         _currentUser.value = updated
         authRepository.persistUser(updated)
         _destination.value = AppDestination.Main(updated)
+    }
+
+    /**
+     * Records an app open for DAU/streaks. The backend awards daily-open XP at
+     * most once per UTC day; the local guard just saves the call. Only fires
+     * once signed in and past onboarding, matching the web auth-provider.
+     */
+    private var lastDailyOpenDay: String? = null
+    fun recordDailyOpen() {
+        if (_destination.value !is AppDestination.Main) return
+        val today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString()
+        if (lastDailyOpenDay == today) return
+        scope.launch {
+            if (userRepository.dailyOpen().isSuccess) lastDailyOpenDay = today
+        }
     }
 
     fun signOut() {

@@ -2,11 +2,13 @@ package `in`.paperboxd.app.data.repository
 
 import `in`.paperboxd.app.data.remote.ApiService
 import `in`.paperboxd.app.data.remote.safeApiCall
+import `in`.paperboxd.app.domain.model.AddFavoriteBody
 import `in`.paperboxd.app.domain.model.AddToBookshelfBody
 import `in`.paperboxd.app.domain.model.AuthorInfo
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookListResponse
 import `in`.paperboxd.app.domain.model.BookReviewsResponse
+import `in`.paperboxd.app.domain.model.BookSocialResponse
 import `in`.paperboxd.app.domain.model.BookStatusResponse
 import `in`.paperboxd.app.domain.model.FriendReviewsResponse
 import `in`.paperboxd.app.domain.model.FriendsReadingResponse
@@ -17,6 +19,7 @@ import `in`.paperboxd.app.domain.model.ReviewBody
 import `in`.paperboxd.app.domain.model.ReviewUpdateResponse
 import `in`.paperboxd.app.domain.model.ScanAnalyzeBody
 import `in`.paperboxd.app.domain.model.ScanAnalyzeResponse
+import `in`.paperboxd.app.domain.model.JazyTurn
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,6 +49,30 @@ class BookRepository @Inject constructor(
     suspend fun vibeSearch(query: String, limit: Int = 10): Result<VibeSearchResponse> =
         safeApiCall { api.vibeSearch(mapOf("query" to query, "limit" to limit)) }
 
+    /**
+     * One turn with Jazy. [sessionId] carries the conversation so "shorter"
+     * after "like Murakami" refines rather than restarts; [answer] is the reply
+     * to a previous clarifying question; [anonId] lets a logged-out reader hold
+     * a session at all.
+     */
+    suspend fun jazy(
+        query: String,
+        sessionId: String? = null,
+        answer: String? = null,
+        anonId: String? = null,
+        limit: Int = 5
+    ): Result<JazyTurn> = safeApiCall {
+        api.jazy(
+            buildMap {
+                put("query", query)
+                put("limit", limit)
+                sessionId?.let { put("session_id", it) }
+                answer?.let { put("answer", it) }
+                anonId?.let { put("anon_id", it) }
+            }
+        )
+    }
+
     suspend fun like(bookId: String): Result<Unit> = safeApiCall { api.likeBook(bookId); Unit }
     suspend fun unlike(bookId: String): Result<Unit> = safeApiCall { api.unlikeBook(bookId); Unit }
 
@@ -55,6 +82,9 @@ class BookRepository @Inject constructor(
     suspend fun friendReviews(bookId: String): Result<FriendReviewsResponse> =
         safeApiCall { api.bookReviewsByFriends(bookId) }
 
+    suspend fun social(bookId: String): Result<BookSocialResponse> =
+        safeApiCall { api.bookSocial(bookId) }
+
     suspend fun friendsReading(bookId: String): Result<FriendsReadingResponse> =
         safeApiCall { api.bookFriendsReading(bookId) }
 
@@ -63,6 +93,9 @@ class BookRepository @Inject constructor(
         safeApiCall { api.addToBookshelf(username, AddToBookshelfBody(bookId, status)); Unit }
 
     /** Scan flow: add by ISBN — the backend auto-creates the book if uncached. */
+    suspend fun addFavorite(username: String, bookId: String, displayOrder: Int? = null): Result<Unit> =
+        safeApiCall { api.addFavorite(username, AddFavoriteBody(bookId = bookId, displayOrder = displayOrder)); Unit }
+
     suspend fun addToBookshelfByIsbn(username: String, isbn: String, status: String): Result<Unit> =
         safeApiCall {
             api.addToBookshelf(username, AddToBookshelfBody(status = status, isbn = isbn)); Unit

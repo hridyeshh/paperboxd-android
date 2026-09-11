@@ -66,7 +66,7 @@
 
     <!-- Home -->
     <string name="home_picked_eyebrow">For you</string>
-    <string name="home_picked_title">Your friends are liking these.</string>
+    <string name="home_picked_title">Picked from what you read.</string>
     <string name="home_fresh_eyebrow">Just added</string>
     <string name="home_fresh_title">New on the shelves.</string>
     <string name="home_hello">Hello, %1$s</string>
@@ -75,6 +75,14 @@
     <string name="home_log_pages">Log today\'s pages</string>
     <string name="home_friends_eyebrow">Your friends</string>
     <string name="home_friends_title">Between covers.</string>
+    <string name="home_rising_eyebrow">Rising</string>
+    <string name="home_rising_title">Picking up speed.</string>
+    <string name="home_most_saved_eyebrow">Most saved</string>
+    <string name="home_most_saved_title">Going onto TBRs.</string>
+    <string name="home_trending_eyebrow">This week</string>
+    <string name="home_trending_title">Trending on Paperboxd.</string>
+    <string name="home_community_eyebrow">Around Paperboxd</string>
+    <string name="home_community_title">What readers are into.</string>
     <string name="home_updates">Updates</string>
     <string name="home_no_updates">No updates yet</string>
     <string name="home_follow_hint">Follow people to see their reading activity here.</string>

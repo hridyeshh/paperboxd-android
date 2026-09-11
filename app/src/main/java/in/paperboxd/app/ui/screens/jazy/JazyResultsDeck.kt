@@ -77,6 +77,8 @@ import kotlin.math.roundToInt
 fun JazyResultsDeck(
     query: String,
     matches: List<VibeMatch>,
+    /** Jazy's one-line framing of the deck. Was decoded and never drawn. */
+    intro: String? = null,
     onClose: () -> Unit,
     onOpenBook: (String) -> Unit
 ) {
@@ -115,6 +117,7 @@ fun JazyResultsDeck(
 
             else -> PullBeat(
                 query = query,
+                intro = intro?.takeIf { index == 0 },
                 match = matches[index],
                 total = matches.size,
                 index = index,
@@ -140,6 +143,7 @@ fun JazyResultsDeck(
 @Composable
 private fun PullBeat(
     query: String,
+    intro: String?,
     match: VibeMatch,
     total: Int,
     index: Int,
@@ -178,6 +182,16 @@ private fun PullBeat(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 11.dp)
             )
+            intro?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it,
+                    fontSize = 12.sp,
+                    color = SK.faint,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+            }
         }
 
         Spacer(Modifier.weight(1f))

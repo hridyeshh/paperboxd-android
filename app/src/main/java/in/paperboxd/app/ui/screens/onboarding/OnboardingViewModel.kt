@@ -3,12 +3,18 @@ package `in`.paperboxd.app.ui.screens.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import `in`.paperboxd.app.data.repository.AnalyticsRepository
 import `in`.paperboxd.app.data.repository.AuthRepository
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.RecommendationRepository
+import `in`.paperboxd.app.data.repository.UserRepository
+import `in`.paperboxd.app.domain.model.ONBOARDING_MAX_PICKS
 import `in`.paperboxd.app.domain.model.RecommendationItem
+import `in`.paperboxd.app.domain.model.SuggestedReader
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class OnboardingStep { Username, Genres, Tempo, AhaLoading, AhaReveal }
+enum class OnboardingStep { Username, Genres, Books, Readers, AhaLoading, AhaReveal }
 
 sealed class UsernameAvailability {
     data object Idle : UsernameAvailability()
@@ -38,7 +44,18 @@ data class OnboardingUiState(
     val avatarUrl: String? = null,
     val isUploadingAvatar: Boolean = false,
     val selectedGenres: Set<String> = emptySet(),
-    val tempo: String = "regular",
+    // Books-you-love: picks become favourites (Top 4) *and* `read` shelf rows —
+    // `read` is what the recommendation engine ranks on.
+    val pickSuggestions: List<RecommendationItem> = emptyList(),
+    val isLoadingSuggestions: Boolean = false,
+    val picks: List<RecommendationItem> = emptyList(),
+    val searchQuery: String = "",
+    val searchResults: List<RecommendationItem> = emptyList(),
+    val isSearching: Boolean = false,
+    // Readers-to-follow
+    val readers: List<SuggestedReader> = emptyList(),
+    val isLoadingReaders: Boolean = false,
+    val followed: Set<String> = emptySet(),
     val ahaBooks: List<RecommendationItem> = emptyList(),
     val ahaIndex: Int = 0,
     val isAddingBook: Boolean = false,
@@ -46,6 +63,12 @@ data class OnboardingUiState(
     val errorMessage: String? = null
 ) {
     val currentAhaBook: RecommendationItem? get() = ahaBooks.getOrNull(ahaIndex)
+
+    /** What the picker grid shows: search hits while typing, suggestions otherwise. */
+    val pickGrid: List<RecommendationItem>
+        get() = if (searchQuery.trim().length >= 2) searchResults else pickSuggestions
+
+    fun isPicked(id: String): Boolean = picks.any { it.id == id }
 }
 
 sealed class OnboardingEvent {
@@ -57,7 +80,9 @@ sealed class OnboardingEvent {
 class OnboardingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val bookRepository: BookRepository,
-    private val recommendationRepository: RecommendationRepository
+    private val recommendationRepository: RecommendationRepository,
+    private val userRepository: UserRepository,
+    private val analytics: AnalyticsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OnboardingUiState())
@@ -71,6 +96,18 @@ class OnboardingViewModel @Inject constructor(
 
     private var claimedUsername: String? = null
     private var debounceJob: Job? = null
+    private var searchJob: Job? = null
+    private val startedAt = System.currentTimeMillis()
+
+    init {
+        analytics.track("onboarding_started", metadata = mapOf("entry_step" to "username"))
+    }
+
+    /** Claimed username wins; the init-time handle may be a stale auto-generated value. */
+    private fun resolvedUsername(): String? =
+        claimedUsername?.ifEmpty { null }
+            ?: _state.value.username.ifEmpty { null }
+            ?: initialUser?.username
 
     // MARK: Username
 
@@ -152,7 +189,7 @@ class OnboardingViewModel @Inject constructor(
                     _events.tryEmit(OnboardingEvent.UsernameSet(fallback))
                 }
             )
-            _events.tryEmit(OnboardingEvent.Finished)
+            finish(aha = "skipped_all")
         }
     }
 
@@ -169,7 +206,7 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    // MARK: Genres + tempo
+    // MARK: Genres
 
     fun toggleGenre(id: String) {
         _state.update {
@@ -179,27 +216,131 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Genres are saved here, not at the end: the picker suggestions and every
+     * later recommendation call are genre-aware, and a reader who bails after
+     * this step is still onboarded instead of being bounced back in.
+     */
     fun continueFromGenres() {
-        if (_state.value.selectedGenres.size >= 3) {
-            _state.update { it.copy(step = OnboardingStep.Tempo, errorMessage = null) }
+        if (_state.value.selectedGenres.size < 3) return
+        _state.update { it.copy(step = OnboardingStep.Books, errorMessage = null, isLoadingSuggestions = true) }
+        viewModelScope.launch {
+            authRepository.saveOnboarding(_state.value.selectedGenres.toList())
+            val books = recommendationRepository.home().getOrNull()?.recommendations.orEmpty()
+                .filter { it.coverUrl.isValidCover() && it.title.isNotEmpty() }
+                .take(12)
+            _state.update { it.copy(pickSuggestions = books, isLoadingSuggestions = false) }
         }
     }
 
-    fun selectTempo(id: String) = _state.update { it.copy(tempo = id) }
+    // MARK: Books you love
 
-    /** Persists genres (tempo is cosmetic), then fetches the aha reveal books. */
-    fun continueFromTempo() {
+    fun onSearchChange(raw: String) {
+        _state.update { it.copy(searchQuery = raw) }
+        searchJob?.cancel()
+        val q = raw.trim()
+        if (q.length < 2) {
+            _state.update { it.copy(searchResults = emptyList(), isSearching = false) }
+            return
+        }
+        _state.update { it.copy(isSearching = true) }
+        searchJob = viewModelScope.launch {
+            delay(300)
+            val items = bookRepository.searchBooks(q, pageSize = 8).getOrNull()?.items.orEmpty()
+                .map { b ->
+                    RecommendationItem(
+                        id = b.id,
+                        title = b.volumeInfo.title,
+                        authors = b.volumeInfo.authors.orEmpty(),
+                        coverUrl = b.coverUrl
+                    )
+                }
+            _state.update { it.copy(searchResults = items, isSearching = false) }
+        }
+    }
+
+    fun togglePick(book: RecommendationItem) {
+        val s = _state.value
+        if (s.isPicked(book.id)) {
+            _state.update { it.copy(picks = it.picks.filterNot { p -> p.id == book.id }) }
+            return
+        }
+        if (s.picks.size >= ONBOARDING_MAX_PICKS) {
+            _state.update { it.copy(errorMessage = "That's your top $ONBOARDING_MAX_PICKS — remove one to swap.") }
+            return
+        }
+        analytics.track(
+            "book_selected_during_onboarding",
+            metadata = mapOf(
+                "title" to book.title,
+                "source" to if (s.searchResults.any { it.id == book.id }) "search" else "suggested"
+            )
+        )
+        searchJob?.cancel()
+        _state.update {
+            it.copy(picks = it.picks + book, searchQuery = "", searchResults = emptyList(), isSearching = false, errorMessage = null)
+        }
+    }
+
+    /**
+     * Persists picks (favourite + read shelf entry, in parallel — one failure
+     * must not block the rest) while the readers list loads.
+     */
+    fun continueFromBooks() {
+        _state.update { it.copy(step = OnboardingStep.Readers, errorMessage = null, isLoadingReaders = true) }
+        viewModelScope.launch {
+            val username = resolvedUsername()
+            // display_order = pick order, so the Top 4 reads in the order they chose.
+            val saves = if (username != null) {
+                _state.value.picks.mapIndexed { i, book ->
+                    async {
+                        bookRepository.addToBookshelf(username, book.id, "read")
+                        bookRepository.addFavorite(username, book.id, displayOrder = i + 1)
+                    }
+                }
+            } else emptyList()
+            val load = async { userRepository.suggested(limit = 6).getOrNull()?.users.orEmpty() }
+            saves.awaitAll()
+            val readers = load.await()
+            _state.update { it.copy(readers = readers, isLoadingReaders = false) }
+        }
+    }
+
+    // MARK: Readers to follow
+
+    fun follow(reader: SuggestedReader) {
+        if (_state.value.followed.contains(reader.username)) return
+        _state.update { it.copy(followed = it.followed + reader.username, errorMessage = null) } // optimistic
+        viewModelScope.launch {
+            userRepository.follow(reader.username).fold(
+                onSuccess = {
+                    analytics.track(
+                        "person_followed_during_onboarding",
+                        metadata = mapOf("username" to reader.username, "reason" to reader.reason)
+                    )
+                },
+                onFailure = {
+                    _state.update {
+                        it.copy(followed = it.followed - reader.username, errorMessage = "Couldn't follow ${reader.displayName}.")
+                    }
+                }
+            )
+        }
+    }
+
+    /** Fetches the aha reveal books, excluding anything already picked. */
+    fun continueFromReaders() {
         _state.update { it.copy(step = OnboardingStep.AhaLoading, errorMessage = null) }
         viewModelScope.launch {
-            authRepository.saveOnboarding(_state.value.selectedGenres.toList())
             // Keep the loading state visible long enough to feel intentional.
             val minLoad = launch { delay(1_600) }
+            val pickedIds = _state.value.picks.map { it.id }.toSet()
             val books = recommendationRepository.home().getOrNull()?.recommendations.orEmpty()
-                .filter { it.coverUrl.isValidCover() && it.title.isNotEmpty() }
+                .filter { it.coverUrl.isValidCover() && it.title.isNotEmpty() && it.id !in pickedIds }
             minLoad.join()
 
             if (books.isEmpty()) {
-                _events.tryEmit(OnboardingEvent.Finished)
+                finish(aha = "none")
                 return@launch
             }
             _state.update {
@@ -216,14 +357,14 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun skipAha() = finish(aha = "skipped")
+
     fun saveToShelf() {
         val book = _state.value.currentAhaBook ?: run {
-            _events.tryEmit(OnboardingEvent.Finished)
+            finish(aha = "none")
             return
         }
-        val username = claimedUsername?.ifEmpty { null }
-            ?: _state.value.username.ifEmpty { null }
-            ?: initialUser?.username
+        val username = resolvedUsername()
         if (username == null) {
             _state.update { it.copy(errorMessage = "Couldn't find your username — restart onboarding.") }
             return
@@ -231,14 +372,26 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isAddingBook = true, errorMessage = null) }
             bookRepository.addToBookshelf(username, book.id, "to-read").fold(
-                onSuccess = { _events.tryEmit(OnboardingEvent.Finished) },
+                onSuccess = { finish(aha = "saved") },
                 onFailure = { e -> _state.update { it.copy(errorMessage = e.message) } }
             )
             _state.update { it.copy(isAddingBook = false) }
         }
     }
 
-    fun finish() {
+    /** Single exit so `onboarding_completed` fires exactly once, same metadata as web/iOS. */
+    private fun finish(aha: String) {
+        val s = _state.value
+        analytics.track(
+            "onboarding_completed",
+            metadata = mapOf(
+                "books_selected" to s.picks.size.toString(),
+                "people_followed" to s.followed.size.toString(),
+                "genres" to s.selectedGenres.size.toString(),
+                "seconds" to ((System.currentTimeMillis() - startedAt) / 1000).toString(),
+                "aha" to aha
+            )
+        )
         _events.tryEmit(OnboardingEvent.Finished)
     }
 

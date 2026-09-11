@@ -84,6 +84,14 @@ data class AddToBookshelfBody(
     val isbn: String? = null
 )
 
+/** POST /users/{username}/favorites — display_order is auto-assigned when omitted. */
+data class AddFavoriteBody(
+    @SerializedName("book_id") val bookId: String? = null,
+    val isbn: String? = null,
+    /** 1–4; omitted → backend picks the next free slot. */
+    @SerializedName("display_order") val displayOrder: Int? = null
+)
+
 data class ReviewBody(
     val rating: Int,
     val review: String? = null

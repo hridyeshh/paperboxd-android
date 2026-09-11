@@ -15,20 +15,36 @@ data class ActivityItem(
     @SerializedName("book_slug") val bookSlug: String? = null,
     @SerializedName("list_id") val listId: String? = null,
     @SerializedName("list_title") val listTitle: String? = null,
-    @SerializedName("created_at") val createdAt: String = ""
+    @SerializedName("created_at") val createdAt: String = "",
+    /** Per-type extras from the Go row; `rating` on "rated" / "finished_reading". */
+    val metadata: ActivityMetadata? = null,
+    /** Only the community feed sends a cover inline. */
+    @SerializedName("book_cover") val bookCover: String? = null
 ) {
+    /**
+     * Verb for "<name> <verb> <title>". Types are the ones the Go backend writes
+     * (handler/bookshelf.go shelfActivityType, diary.go, lists.go); the fallback
+     * turns any newer type into readable words.
+     */
     val verbPhrase: String
-        get() = when (activityType) {
-            "book_read" -> "finished"
-            "book_shelved" -> "shelved"
-            "book_reading" -> "started reading"
-            "book_tbr" -> "wants to read"
-            "diary_entry" -> "wrote about"
-            "book_liked" -> "liked"
-            "list_created" -> "made a list"
-            "list_saved" -> "saved a list"
-            "follow" -> "followed"
-            else -> activityType.replace('_', ' ')
+        get() {
+            val stars = metadata?.rating
+                ?.coerceIn(0, 5)
+                ?.takeIf { it > 0 }
+                ?.let { " " + "★".repeat(it) }
+                .orEmpty()
+            return when (activityType) {
+                "finished_reading" -> "finished$stars"
+                "started_reading" -> "started reading"
+                "wants_to_read" -> "wants to read"
+                "rated" -> "rated$stars"
+                "added_book" -> "shelved"
+                "created_diary_entry" -> "wrote about"
+                "created_list" -> "made a list"
+                "shared_list" -> "shared a list"
+                "shared_book" -> "shared"
+                else -> activityType.replace('_', ' ')
+            }
         }
 
     val objectTitle: String? get() = bookTitle ?: listTitle
@@ -37,15 +53,74 @@ data class ActivityItem(
         get() = if (name.isEmpty()) username else name.substringBefore(' ')
 }
 
+data class ActivityMetadata(val rating: Int? = null)
+
 data class FollowingActivitiesResponse(
     val activities: List<ActivityItem> = emptyList(),
     val page: Int = 1,
     @SerializedName("page_size") val pageSize: Int = 0
 )
 
+/**
+ * GET /api/v1/community — public "what is happening" snapshot. Only the parts
+ * the home screen renders are modelled; lists and readers ship on web first.
+ */
+data class CommunityResponse(
+    @SerializedName("trending_books") val trendingBooks: List<Book> = emptyList(),
+    val activity: List<ActivityItem> = emptyList(),
+    /**
+     * Phase 6 discovery shelves. Each entry carries a server-authored `label`
+     * stating the number that earned its place ("shelved by 7 readers this
+     * week"), so no client has to invent the claim.
+     */
+    val rising: List<CommunityShelfBook> = emptyList(),
+    @SerializedName("most_tbr") val mostTbr: List<CommunityShelfBook> = emptyList(),
+    @SerializedName("hidden_gems") val hiddenGems: List<CommunityShelfBook> = emptyList()
+)
+
+/**
+ * A book on a discovery shelf. The Go payload inlines the book fields next to
+ * `label`, so this mirrors the parts the home carousel needs rather than
+ * embedding Book (Gson has no flattening).
+ */
+data class CommunityShelfBook(
+    val id: String,
+    val slug: String? = null,
+    val volumeInfo: VolumeInfo,
+    val label: String = ""
+) {
+    val title: String get() = volumeInfo.title
+    val authors: List<String> get() = volumeInfo.authors ?: emptyList()
+    /** Mirrors Book.coverUrl: largest first, forced to HTTPS. */
+    val coverUrl: String?
+        get() {
+            val links = volumeInfo.imageLinks
+            val raw = links?.large ?: links?.medium ?: links?.thumbnail
+                ?: links?.small ?: links?.smallThumbnail
+            return raw?.replace("http://", "https://")
+        }
+}
+
+/**
+ * GET /api/v1/books/{id}/social — what Paperboxd readers did with a book.
+ * `books.average_rating` is the publisher's number; this one is ours.
+ */
+data class BookSocialResponse(val readers: BookReaderStats = BookReaderStats())
+
+data class BookReaderStats(
+    val rating: Double? = null,
+    @SerializedName("ratings_count") val ratingsCount: Int = 0,
+    val reads: Int = 0,
+    val reading: Int = 0,
+    val tbr: Int = 0,
+    @SerializedName("tbr_30d") val tbr30d: Int = 0
+)
+
 /** Body for POST /api/v1/events (impression tracking). */
 data class TrackEventBody(
     @SerializedName("event_type") val eventType: String,
     @SerializedName("book_id") val bookId: String? = null,
-    val metadata: Map<String, String> = emptyMap()
+    val metadata: Map<String, String> = emptyMap(),
+    /** events.source — the backend defaults a missing value to "web". */
+    val source: String = "mobile"
 )

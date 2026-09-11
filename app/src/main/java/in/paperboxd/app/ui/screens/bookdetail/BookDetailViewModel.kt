@@ -10,6 +10,7 @@ import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookReview
 import `in`.paperboxd.app.domain.model.FriendBookReview
+import `in`.paperboxd.app.domain.model.BookReaderStats
 import `in`.paperboxd.app.domain.model.FriendOnBook
 import `in`.paperboxd.app.domain.model.ReadingProgress
 import `in`.paperboxd.app.domain.model.RecommendationItem
@@ -46,6 +47,7 @@ data class BookDetailUiState(
     val errorMessage: String? = null,
     val similarBooks: List<RecommendationItem> = emptyList(),
     val bookState: BookUserState = BookUserState(),
+    val readerStats: BookReaderStats? = null,
     val friendsOnBook: List<FriendOnBook> = emptyList(),
     val friendsReadingCount: Int = 0,
     val friendReviews: List<FriendBookReview> = emptyList(),
@@ -132,6 +134,7 @@ class BookDetailViewModel @Inject constructor(
             val similarTask = async { recommendationRepository.similar(bookId) }
             val statusTask = async { username?.let { bookRepository.bookStatus(it, bookId).getOrNull() } }
             val friendsTask = async { bookRepository.friendsReading(bookId).getOrNull() }
+            val socialTask = async { bookRepository.social(bookId).getOrNull() }
             val friendReviewsTask = async { bookRepository.friendReviews(bookId).getOrNull() }
             val reviewsTask = async { bookRepository.reviews(bookId).getOrNull() }
             val progressTask = async { username?.let { bookRepository.readingProgress(it, bookId).getOrNull() } }
@@ -148,6 +151,7 @@ class BookDetailViewModel @Inject constructor(
                     bookState = status?.let { s ->
                         BookUserState(s.isRead, s.isLiked, s.isTBR, s.isOnShelf)
                     } ?: it.bookState,
+                    readerStats = socialTask.await()?.readers,
                     friendsOnBook = friends?.friends.orEmpty(),
                     friendsReadingCount = friends?.readingCount ?: 0,
                     friendReviews = friendReviewsTask.await()?.reviews.orEmpty(),

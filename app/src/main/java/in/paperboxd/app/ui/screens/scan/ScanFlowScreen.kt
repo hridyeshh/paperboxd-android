@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import `in`.paperboxd.app.data.remote.ApiError
+import `in`.paperboxd.app.data.repository.AnalyticsRepository
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,7 @@ data class ScanFlowUiState(
 @HiltViewModel
 class ScanFlowViewModel @Inject constructor(
     private val bookRepository: BookRepository,
+    private val analyticsRepository: AnalyticsRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -67,6 +69,9 @@ class ScanFlowViewModel @Inject constructor(
                 exhausted = false
             )
         }
+        // scan_succeeded / scan_failed are emitted server-side; only the start is
+        // visible from here, and it is what makes the drop-off measurable.
+        analyticsRepository.track("scan_started", metadata = mapOf("isbn" to isbn))
         viewModelScope.launch {
             bookRepository.scanAnalyze(isbn)
                 .onSuccess { response ->

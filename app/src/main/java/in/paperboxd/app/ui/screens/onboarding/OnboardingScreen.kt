@@ -15,6 +15,13 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -91,7 +98,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import `in`.paperboxd.app.domain.model.Genre
-import `in`.paperboxd.app.domain.model.ReadingTempo
+import `in`.paperboxd.app.domain.model.ONBOARDING_MAX_PICKS
+import `in`.paperboxd.app.domain.model.RecommendationItem
+import `in`.paperboxd.app.domain.model.SuggestedReader
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -101,7 +110,7 @@ import kotlinx.coroutines.launch
  * theme (dark only on the aha-loading step), a staged pill header, serif titles,
  * a dashed avatar ring, availability-coloured username field, genre chips with a
  * live counter, tempo rows, a pulsing dark loading screen, and the first-match
- * reveal. Steps: username → genres → tempo → ahaLoading → ahaReveal.
+ * reveal. Steps: username → genres → books → readers → ahaLoading → ahaReveal.
  */
 
 // Onboarding runs on the same paper ground as auth and home — these are named
@@ -180,10 +189,14 @@ fun OnboardingScreen(
         onSubmitUsername = viewModel::submitUsername,
         onToggleGenre = viewModel::toggleGenre,
         onContinueFromGenres = viewModel::continueFromGenres,
-        onSelectTempo = viewModel::selectTempo,
-        onContinueFromTempo = viewModel::continueFromTempo,
+        onSearchChange = viewModel::onSearchChange,
+        onTogglePick = viewModel::togglePick,
+        onContinueFromBooks = viewModel::continueFromBooks,
+        onFollow = viewModel::follow,
+        onContinueFromReaders = viewModel::continueFromReaders,
         onSaveToShelf = viewModel::saveToShelf,
-        onShowAnother = viewModel::showAnother
+        onShowAnother = viewModel::showAnother,
+        onSkipAha = viewModel::skipAha
     )
 }
 
@@ -197,10 +210,14 @@ private fun OnboardingContent(
     onSubmitUsername: () -> Unit,
     onToggleGenre: (String) -> Unit,
     onContinueFromGenres: () -> Unit,
-    onSelectTempo: (String) -> Unit,
-    onContinueFromTempo: () -> Unit,
+    onSearchChange: (String) -> Unit,
+    onTogglePick: (RecommendationItem) -> Unit,
+    onContinueFromBooks: () -> Unit,
+    onFollow: (SuggestedReader) -> Unit,
+    onContinueFromReaders: () -> Unit,
     onSaveToShelf: () -> Unit,
-    onShowAnother: () -> Unit
+    onShowAnother: () -> Unit,
+    onSkipAha: () -> Unit
 ) {
     val isDark = state.step == OnboardingStep.AhaLoading
     val bg by animateColorAsState(
@@ -246,9 +263,10 @@ private fun OnboardingContent(
                         onDisplayNameChange, onSubmitUsername
                     )
                     OnboardingStep.Genres -> GenresStep(state, onToggleGenre, onContinueFromGenres)
-                    OnboardingStep.Tempo -> TempoStep(state, onSelectTempo, onContinueFromTempo)
+                    OnboardingStep.Books -> BooksStep(state, onSearchChange, onTogglePick, onContinueFromBooks)
+                    OnboardingStep.Readers -> ReadersStep(state, onFollow, onContinueFromReaders)
                     OnboardingStep.AhaLoading -> AhaLoadingStep()
-                    OnboardingStep.AhaReveal -> AhaRevealStep(state, onSaveToShelf, onShowAnother)
+                    OnboardingStep.AhaReveal -> AhaRevealStep(state, onSaveToShelf, onShowAnother, onSkipAha)
                 }
             }
         }
@@ -261,13 +279,14 @@ private fun OnboardingContent(
 private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
     val stages = listOf("Sign up", "Set up", "Aha")
     val activeStage = when (step) {
-        OnboardingStep.Username, OnboardingStep.Genres, OnboardingStep.Tempo -> 1
+        OnboardingStep.Username, OnboardingStep.Genres, OnboardingStep.Books, OnboardingStep.Readers -> 1
         OnboardingStep.AhaLoading, OnboardingStep.AhaReveal -> 2
     }
     val subStep = when (step) {
         OnboardingStep.Username -> 1
         OnboardingStep.Genres -> 2
-        OnboardingStep.Tempo -> 3
+        OnboardingStep.Books -> 3
+        OnboardingStep.Readers -> 4
         else -> null
     }
 
@@ -288,7 +307,7 @@ private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
         }
         if (subStep != null) {
             Text(
-                "STEP $subStep OF 3",
+                "STEP $subStep OF 4",
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Medium,
                 fontSize = 11.sp,
@@ -807,86 +826,292 @@ private fun PulledTally(count: Int) {
     }
 }
 
-// ── Step 3: Tempo ────────────────────────────────────────────────────────────
+
+// ── Step 3: Books you love ───────────────────────────────────────────────────
+//
+// Up to four books the reader already loves. Search on top, a suggestion grid
+// underneath; picks sit in a tray of four slots so the cap is visible before
+// it bites. iOS twin: BooksStepView.
 
 @Composable
-private fun TempoStep(
+private fun BooksStep(
     state: OnboardingUiState,
-    onSelectTempo: (String) -> Unit,
-    onContinueFromTempo: () -> Unit
+    onSearchChange: (String) -> Unit,
+    onTogglePick: (RecommendationItem) -> Unit,
+    onContinue: () -> Unit
 ) {
-    Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 26.dp)
-                .padding(top = 28.dp, bottom = 24.dp)
-        ) {
-            OnbTitle("Set a tempo,\nnot a target.")
-            Spacer(Modifier.height(8.dp))
-            OnbSubtitle("Helps us pace recommendations. No streaks, no pressure.")
-            Spacer(Modifier.height(22.dp))
+    Column(Modifier.fillMaxSize().imePadding()) {
+        Column(Modifier.padding(horizontal = 26.dp).padding(top = 22.dp, bottom = 14.dp)) {
+            OnbTitle("Books you\nalready love.")
+            Spacer(Modifier.height(7.dp))
+            OnbSubtitle("Pick up to $ONBOARDING_MAX_PICKS. They become your Top 4 and teach us your taste.")
+        }
 
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                ReadingTempo.all.forEach { option ->
-                    TempoRow(option.id, option.label, option.sub, state.tempo == option.id) {
-                        onSelectTempo(option.id)
+        PicksTray(state.picks, onTogglePick, Modifier.padding(horizontal = 26.dp).padding(bottom = 12.dp))
+        PickSearchField(state, onSearchChange, Modifier.padding(horizontal = 26.dp).padding(bottom = 12.dp))
+
+        val grid = state.pickGrid
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp),
+            modifier = Modifier.weight(1f).fillMaxWidth()
+        ) {
+            when {
+                state.isLoadingSuggestions && grid.isEmpty() -> items(8) {
+                    Box(
+                        Modifier.aspectRatio(2f / 3f).background(OB.recessed)
+                            .border(1.5.dp, HL.Ink.copy(alpha = 0.12f))
+                    )
+                }
+                grid.isEmpty() -> item(span = { GridItemSpan(4) }) {
+                    Text(
+                        if (state.searchQuery.trim().length >= 2) "Nothing found — try another title."
+                        else "Search for a book you love.",
+                        fontSize = 13.sp, color = OB.muted, textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)
+                    )
+                }
+                else -> items(grid, key = { it.id }) { book ->
+                    val picked = state.isPicked(book.id)
+                    val scale by animateFloatAsState(if (picked) 0.96f else 1f, tween(180), label = "pick-scale")
+                    Box(
+                        Modifier
+                            .aspectRatio(2f / 3f)
+                            .scale(scale)
+                            .border(if (picked) 2.5.dp else 1.5.dp, if (picked) OB.ink else OB.line)
+                            .clickable { onTogglePick(book) }
+                    ) {
+                        PickCover(book.coverUrl, book.title, Modifier.fillMaxSize())
+                        if (picked) {
+                            Box(Modifier.fillMaxSize().background(OB.ink.copy(alpha = 0.35f)), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Filled.Check, null, tint = HL.Cream, modifier = Modifier.size(20.dp))
+                            }
+                        }
                     }
                 }
             }
         }
-        OnbPrimaryButton(
-            title = "Get my recommendations",
-            onClick = onContinueFromTempo,
-            modifier = Modifier
-                .navigationBarsPadding()
-                .padding(horizontal = 26.dp)
-                .padding(bottom = 16.dp)
-        )
+
+        Column(
+            Modifier.navigationBarsPadding().padding(horizontal = 26.dp).padding(top = 8.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            state.errorMessage?.let {
+                Text(it, fontSize = 12.sp, color = OB.red, textAlign = TextAlign.Center)
+            }
+            OnbPrimaryButton(
+                title = if (state.picks.isEmpty()) "Skip for now" else "Continue",
+                onClick = onContinue
+            )
+        }
     }
 }
 
-/**
- * Each tempo carries a step of the reading-heatmap ramp, so the choice previews
- * the colour the user will live with on their profile.
- */
-private val tempoRamp = mapOf(
-    "casual" to Color(0xFFE7A87D),
-    "regular" to Color(0xFFD97A4A),
-    "voracious" to Color(0xFFC0271C)
-)
+@Composable
+private fun PicksTray(
+    picks: List<RecommendationItem>,
+    onRemove: (RecommendationItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        repeat(ONBOARDING_MAX_PICKS) { i ->
+            val book = picks.getOrNull(i)
+            if (book != null) {
+                Box(
+                    Modifier
+                        .size(width = 48.dp, height = 72.dp)
+                        .border(2.dp, OB.ink)
+                        .clickable { onRemove(book) }
+                ) {
+                    PickCover(book.coverUrl, book.title, Modifier.fillMaxSize())
+                }
+            } else {
+                Box(
+                    Modifier
+                        .size(width = 48.dp, height = 72.dp)
+                        .background(OB.well)
+                        .drawBehind {
+                            drawRect(
+                                color = OB.line,
+                                style = Stroke(
+                                    width = 1.5.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                                )
+                            )
+                        }
+                )
+            }
+        }
+    }
+}
 
 @Composable
-private fun TempoRow(id: String, label: String, sub: String, active: Boolean, onClick: () -> Unit) {
-    val ramp = tempoRamp[id] ?: Color(0xFFD97A4A)
+private fun PickSearchField(state: OnboardingUiState, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    var focused by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .background(if (active) ramp else OB.well)
-            .border(2.dp, if (active) ramp else OB.rule)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 15.dp)
+            .height(48.dp)
+            .background(OB.well)
+            .border(2.dp, if (focused) OB.ink else OB.hairline)
+            .padding(horizontal = 14.dp)
     ) {
-        Box(
-            Modifier
-                .size(width = 6.dp, height = 34.dp)
-                .background(if (active) Color.White.copy(alpha = 0.75f) else ramp)
+        Icon(Icons.Filled.Search, null, tint = OB.muted, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(10.dp))
+        BasicTextField(
+            value = state.searchQuery,
+            onValueChange = onChange,
+            singleLine = true,
+            textStyle = TextStyle(fontSize = 15.sp, color = OB.ink),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Search),
+            modifier = Modifier.weight(1f).onFocusChanged { focused = it.isFocused },
+            decorationBox = { inner ->
+                Box {
+                    if (state.searchQuery.isEmpty()) {
+                        Text("Search a title or author", fontSize = 15.sp, color = OB.faint)
+                    }
+                    inner()
+                }
+            }
         )
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                label, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold,
-                color = if (active) Color.White else OB.ink
-            )
-            Text(
-                sub, fontSize = 12.5.sp,
-                color = if (active) Color.White.copy(alpha = 0.78f) else OB.muted
+        when {
+            state.isSearching -> CircularProgressIndicator(color = OB.muted, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+            state.searchQuery.isNotEmpty() -> Icon(
+                Icons.Filled.Close, "Clear", tint = OB.muted,
+                modifier = Modifier.size(16.dp).clickable { onChange("") }
             )
         }
-        if (active) {
-            Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(15.dp))
+    }
+}
+
+/** Cover with a titled fallback so a book with no image is still pickable. */
+@Composable
+private fun PickCover(url: String?, title: String, modifier: Modifier = Modifier) {
+    Box(modifier.background(OB.recessed), contentAlignment = Alignment.Center) {
+        if (url.isNullOrBlank()) {
+            Text(
+                title, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = OB.muted,
+                textAlign = TextAlign.Center, maxLines = 4, modifier = Modifier.padding(4.dp)
+            )
+        } else {
+            AsyncImage(
+                model = url, contentDescription = title, contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+// ── Step 4: Readers to follow ────────────────────────────────────────────────
+//
+// The home feed is empty until you follow someone. Suggestions come with a
+// server-authored reason so the same line shows on every platform.
+
+@Composable
+private fun ReadersStep(
+    state: OnboardingUiState,
+    onFollow: (SuggestedReader) -> Unit,
+    onContinue: () -> Unit
+) {
+    Column(Modifier.fillMaxSize()) {
+        Column(Modifier.padding(horizontal = 26.dp).padding(top = 22.dp, bottom = 18.dp)) {
+            OnbTitle("Readers\nto follow.")
+            Spacer(Modifier.height(7.dp))
+            OnbSubtitle("Your home fills up with what they read, finish and write.")
+        }
+
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 26.dp).padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            when {
+                state.isLoadingReaders && state.readers.isEmpty() -> repeat(4) {
+                    Box(Modifier.fillMaxWidth().height(62.dp).background(OB.recessed).border(1.5.dp, HL.Ink.copy(alpha = 0.12f)))
+                }
+                state.readers.isEmpty() -> Text(
+                    "You're early — no readers to suggest yet. You can find people from search any time.",
+                    fontSize = 13.sp, color = OB.muted, textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)
+                )
+                else -> state.readers.forEach { reader ->
+                    ReaderRow(reader, followed = reader.username in state.followed) { onFollow(reader) }
+                }
+            }
+        }
+
+        Column(
+            Modifier.navigationBarsPadding().padding(horizontal = 26.dp).padding(top = 8.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            state.errorMessage?.let {
+                Text(it, fontSize = 12.sp, color = OB.red, textAlign = TextAlign.Center)
+            }
+            OnbPrimaryButton(
+                title = if (state.followed.isEmpty()) "Skip for now" else "Get my recommendations",
+                onClick = onContinue
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReaderRow(reader: SuggestedReader, followed: Boolean, onFollow: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(OB.well)
+            .border(1.5.dp, OB.line)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Box(
+            Modifier.size(40.dp).clip(CircleShape).background(OB.recessed).border(1.5.dp, OB.ink, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (reader.avatarUrl.isNullOrBlank()) {
+                Text(
+                    reader.displayName.take(1).uppercase(),
+                    fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OB.ink
+                )
+            } else {
+                AsyncImage(
+                    model = reader.avatarUrl, contentDescription = null, contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(reader.displayName, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = OB.ink, maxLines = 1)
+            Text(
+                if (reader.booksReadCount > 0) "${reader.reason} · ${reader.booksReadCount} read" else reader.reason,
+                fontSize = 12.sp, color = OB.muted, maxLines = 1
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier
+                .height(32.dp)
+                .background(if (followed) HL.Ochre else OB.ink)
+                .border(2.dp, OB.ink)
+                .clickable(enabled = !followed, onClick = onFollow)
+                .padding(horizontal = 12.dp)
+        ) {
+            Icon(
+                if (followed) Icons.Filled.Check else Icons.Filled.Add, null,
+                tint = if (followed) OB.ink else HL.Cream, modifier = Modifier.size(12.dp)
+            )
+            Text(
+                if (followed) "Following" else "Follow",
+                fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                color = if (followed) OB.ink else HL.Cream
+            )
         }
     }
 }
@@ -975,7 +1200,8 @@ private fun AhaLoadingStep() {
 private fun AhaRevealStep(
     state: OnboardingUiState,
     onSaveToShelf: () -> Unit,
-    onShowAnother: () -> Unit
+    onShowAnother: () -> Unit,
+    onSkip: () -> Unit
 ) {
     val book = state.currentAhaBook ?: return
     Column(Modifier.fillMaxSize()) {
@@ -1056,6 +1282,20 @@ private fun AhaRevealStep(
                     )
             ) {
                 Text("Show me another", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = OB.ink)
+            }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = !state.isAddingBook,
+                        onClick = onSkip
+                    )
+            ) {
+                Text("Skip to home", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = OB.faint)
             }
         }
     }
