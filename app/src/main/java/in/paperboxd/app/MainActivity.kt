@@ -1,5 +1,6 @@
 package `in`.paperboxd.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) appState.handleIncomingUri(intent?.data)
         enableEdgeToEdge()
         setContent {
             PaperBoxdTheme {
@@ -29,6 +31,12 @@ class MainActivity : ComponentActivity() {
         // whenever a Compose list is touched (it reports scroll range + awakens
         // system scrollbars). Disable scrollbars across the view tree to kill it.
         window.decorView.post { disableScrollbars(window.decorView) }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        appState.handleIncomingUri(intent.data)
     }
 
     override fun onStart() {

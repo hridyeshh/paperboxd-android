@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,9 @@ import `in`.paperboxd.app.ui.screens.author.AuthorDetailScreen
 import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailScreen
 import `in`.paperboxd.app.ui.screens.diary.DiaryEntryDetailScreen
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedRoute
+import `in`.paperboxd.app.ui.screens.fusion.FusionRootScreen
+import `in`.paperboxd.app.ui.screens.fusion.FusionRouting
+import `in`.paperboxd.app.ui.screens.fusion.LocalFusionRouting
 import `in`.paperboxd.app.ui.screens.write.WriteScreen
 import `in`.paperboxd.app.ui.screens.home.HomeScreen
 import `in`.paperboxd.app.ui.screens.leaderboard.LeaderboardScreen
@@ -100,7 +104,9 @@ fun MainScaffold(user: User, appState: AppState) {
 
     val currentUser by appState.currentUser.collectAsState()
     val sessionUser = currentUser ?: user
+    val fusionRoute by appState.fusionRoute.collectAsState()
 
+    CompositionLocalProvider(LocalFusionRouting provides FusionRouting(fusionRoute, appState::openFusion)) {
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         NavHost(
             navController = navController,
@@ -252,6 +258,12 @@ fun MainScaffold(user: User, appState: AppState) {
         // Full-screen celebration takeovers (shelved / streak / level-up),
         // above the dock and the write sheet. iOS twin: MainTabView overlay.
         CelebrationOverlayHost()
+
+        // Fusion links, notification taps and the profile list all land here.
+        fusionRoute?.let { route ->
+            FusionRootScreen(route = route, user = sessionUser, onClose = { appState.openFusion(null) })
+        }
+    }
     }
 }
 

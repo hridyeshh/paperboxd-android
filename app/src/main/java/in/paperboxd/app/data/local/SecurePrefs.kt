@@ -55,6 +55,13 @@ class SecurePrefs @Inject constructor(
         return runCatching { gson.fromJson(json, User::class.java) }.getOrNull()
     }
 
+    /** An invite link opened before sign-in, held until the main tabs show. */
+    fun getPendingFusion(): String? = prefs.getString(KEY_PENDING_FUSION, null)
+
+    fun setPendingFusion(token: String?) {
+        prefs.edit().apply { if (token == null) remove(KEY_PENDING_FUSION) else putString(KEY_PENDING_FUSION, token) }.apply()
+    }
+
     fun clearAll() {
         prefs.edit().remove(KEY_TOKEN).remove(KEY_REFRESH_TOKEN).remove(KEY_USER).apply()
     }
@@ -63,5 +70,6 @@ class SecurePrefs @Inject constructor(
         const val KEY_TOKEN = "auth.token"
         const val KEY_REFRESH_TOKEN = "auth.refreshToken"
         const val KEY_USER = "auth.user"
+        const val KEY_PENDING_FUSION = "fusion.pendingToken"
     }
 }

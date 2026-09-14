@@ -78,24 +78,34 @@ fun wrappedChapters(w: Wrapped): List<WrappedChapter> = buildList {
 
 @Composable
 private fun CoverChapter(w: Wrapped) {
+    // The discs move with the content inset so the masthead keeps its
+    // design-grid clearance above the terra circle.
+    val inset = LocalWrappedTopInset.current
     Box(Modifier.fillMaxSize().background(PBW.Ink).clipToBounds()) {
-        PbStamp(delayMillis = 80, durationMillis = 620, modifier = Modifier.offset((-70).dp, 168.dp)) {
+        PbStamp(delayMillis = 80, durationMillis = 620, modifier = Modifier.offset((-70).dp, 168.dp + inset)) {
             Box(Modifier.size(268.dp).clip(CircleShape).background(PBW.Terra))
         }
-        PbStamp(delayMillis = 240, durationMillis = 620, modifier = Modifier.offset(284.dp, 372.dp)) {
+        PbStamp(delayMillis = 240, durationMillis = 620, modifier = Modifier.offset(284.dp, 372.dp + inset)) {
             Box(Modifier.size(152.dp).clip(CircleShape).background(PBW.Amber))
         }
         Column(
-            Modifier.fillMaxSize().padding(top = 76.dp, bottom = 112.dp).padding(horizontal = 30.dp)
+            Modifier.fillMaxSize().padding(top = 76.dp + inset, bottom = 112.dp).padding(horizontal = 30.dp)
         ) {
             PbFade { Text("PaperBoxd", fontFamily = PBW.Script, fontSize = 34.sp, color = PBW.Cream) }
-            PbKicker("Monthly Wrapped", delayMillis = 160, modifier = Modifier.padding(top = 6.dp))
+            PbKicker(
+                "Monthly Wrapped", color = PBW.Cream.copy(alpha = 0.85f), delayMillis = 160,
+                modifier = Modifier.padding(top = 6.dp), fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold
+            )
             Spacer(Modifier.weight(1f))
             PbRise(delayMillis = 420) {
+                // Eight-plus letters ("SEPTEMBER", "NOVEMBER") overflow 72sp on the
+                // 342dp column; step down rather than wrap.
+                val monthSize = if (w.month.length >= 8) 56.sp else 72.sp
                 Text(
                     w.month.uppercase(),
                     fontFamily = PBW.Display, fontWeight = FontWeight.Black,
-                    fontSize = 72.sp, lineHeight = 62.sp, letterSpacing = (-2).sp, color = PBW.Cream
+                    fontSize = monthSize, lineHeight = monthSize, letterSpacing = (-2).sp, color = PBW.Cream,
+                    maxLines = 1, softWrap = false
                 )
             }
             PbFade(delayMillis = 620, modifier = Modifier.padding(top = 14.dp)) {
@@ -200,9 +210,11 @@ private fun BooksChapter(w: Wrapped) {
                             color = if (i == 0) PBW.Terra else PBW.Ink.copy(alpha = 0.4f),
                             modifier = Modifier.width(20.dp)
                         )
-                        Box(Modifier.width(26.dp).height(39.dp).background(PBW.spine(i))) {
-                            Box(Modifier.offset(x = 2.dp).width(1.dp).fillMaxHeight()
-                                .background(Color.Black.copy(alpha = 0.25f)))
+                        Box(Modifier.width(26.dp).height(39.dp).background(PBW.spine(i)).clipToBounds()) {
+                            PbCoverArt(book.cover) {
+                                Box(Modifier.offset(x = 2.dp).width(1.dp).fillMaxHeight()
+                                    .background(Color.Black.copy(alpha = 0.25f)))
+                            }
                         }
                         Column(Modifier.weight(1f)) {
                             Text(book.title, fontFamily = PBW.Display, fontWeight = FontWeight.SemiBold,
@@ -516,7 +528,7 @@ private fun TopRatedChapter(w: Wrapped) {
             Modifier.padding(top = 20.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            PbBookBlock(f.title, f.author, PBW.spine(1), Color(0xFFE9E2CF), 104.dp, 260, -3f)
+            PbBookBlock(f.title, f.author, PBW.spine(1), Color(0xFFE9E2CF), 104.dp, 260, -3f, cover = f.cover)
             Column(Modifier.weight(1f).padding(top = 4.dp)) {
                 PbRise(delayMillis = 420) {
                     Text(f.title, fontFamily = PBW.Display, fontWeight = FontWeight.SemiBold,
@@ -571,7 +583,7 @@ private fun AbandonedChapter(w: Wrapped) {
         PbKicker("Left unfinished", color = PBW.Terra)
         Box(Modifier.fillMaxWidth().padding(top = 24.dp), contentAlignment = Alignment.Center) {
             Box {
-                PbBookBlock(a.title, a.author, PBW.spine(5), Color(0xFFEFE6F2), 128.dp, 240, 4f)
+                PbBookBlock(a.title, a.author, PBW.spine(5), Color(0xFFEFE6F2), 128.dp, 240, 4f, cover = a.cover)
                 // The bookmark still sitting in it.
                 PbSlide(
                     delayMillis = 720, durationMillis = 620, from = SlideFrom.Top, distance = 40.dp,
@@ -692,7 +704,7 @@ private fun ArchetypeChapter(w: Wrapped) {
             Box(Modifier.size(300.dp).border(1.5.dp, PBW.Terra.copy(alpha = 0.4f), CircleShape))
         }
         Column(
-            Modifier.fillMaxSize().padding(top = 76.dp, bottom = 112.dp).padding(horizontal = 30.dp)
+            Modifier.fillMaxSize().padding(top = 76.dp + LocalWrappedTopInset.current, bottom = 112.dp).padding(horizontal = 30.dp)
         ) {
             Row(Modifier.fillMaxWidth()) {
                 Column(Modifier.weight(1f)) {

@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.SubcomposeAsyncImage
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -303,20 +306,44 @@ fun PbKicker(
     text: String,
     color: Color = PBW.Muted,
     delayMillis: Int = 0,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fontSize: androidx.compose.ui.unit.TextUnit = 10.5.sp,
+    fontWeight: FontWeight = FontWeight.Normal
 ) {
     PbFade(delayMillis, 520, modifier) {
         Text(
             text.uppercase(),
             fontFamily = PBW.Mono,
-            fontSize = 10.5.sp,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
             letterSpacing = 1.9.sp,
             color = color
         )
     }
 }
 
-/** A book as printed matter: spine, board, no artwork. */
+/**
+ * Real cover art when the backend has it; [fallback] (the drawn board) while it
+ * loads, when it fails, or when there is no URL. Fills its parent.
+ */
+@Composable
+fun PbCoverArt(url: String?, fallback: @Composable () -> Unit) {
+    val secure = url?.replace("http://", "https://")
+    if (secure.isNullOrEmpty()) {
+        fallback()
+    } else {
+        SubcomposeAsyncImage(
+            model = secure,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            loading = { fallback() },
+            error = { fallback() },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+/** A book as printed matter: the real cover when we have it, otherwise spine, board and type. */
 @Composable
 fun PbBookBlock(
     title: String,
@@ -325,7 +352,8 @@ fun PbBookBlock(
     accent: Color,
     width: Dp = 96.dp,
     delayMillis: Int = 0,
-    rotation: Float = 0f
+    rotation: Float = 0f,
+    cover: String? = null
 ) {
     PbStamp(delayMillis = delayMillis, rotation = rotation) {
         Box(
@@ -335,6 +363,14 @@ fun PbBookBlock(
                 .background(spine)
                 .clipToBounds()
         ) {
+            PbCoverArt(cover) { PbBookBoard(title, author, spine, accent, width) }
+        }
+    }
+}
+
+@Composable
+private fun PbBookBoard(title: String, author: String, spine: Color, accent: Color, width: Dp) {
+        Box(Modifier.fillMaxSize().background(spine)) {
             Box(
                 Modifier
                     .fillMaxSize()
@@ -379,8 +415,13 @@ fun PbBookBlock(
                 }
             }
         }
-    }
 }
+
+/**
+ * Extra top padding, in design units, that the player adds so chapter content
+ * clears the status bar / cutout plus the rails + label chrome.
+ */
+val LocalWrappedTopInset = compositionLocalOf { 0.dp }
 
 /** Every chapter sits on this: full-bleed colour, the design's page margins. */
 @Composable
@@ -398,7 +439,7 @@ fun WrappedScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(top = topPadding, bottom = 112.dp)
+                .padding(top = topPadding + LocalWrappedTopInset.current, bottom = 112.dp)
                 .padding(horizontal = 30.dp),
             content = content
         )

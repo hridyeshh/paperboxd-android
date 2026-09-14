@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Wrapped share sheet checks for Instagram's story intent before offering it. -->
+    <queries>
+        <package android:name="com.instagram.android" />
+    </queries>
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -37,10 +42,12 @@
             </intent-filter>
 
             <!--
-              Deep links: paperboxd.in book + profile pages only. Without the path
-              prefixes this filter claims every paperboxd.in URL — including /privacy,
-              /terms and the marketing pages, which the app cannot render.
-              Handled in NavGraph via Screen.BookDetail.deepLink / Screen.Profile.deepLink.
+              Deep links: paperboxd.in book, profile and Fusion invite pages only.
+              Without the path prefixes this filter claims every paperboxd.in URL —
+              including /privacy, /terms and the marketing pages, which the app
+              cannot render. Books and profiles are handled in NavGraph via
+              Screen.BookDetail.deepLink / Screen.Profile.deepLink; /fusion/ in
+              MainActivity → AppState.handleIncomingUri.
             -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -48,6 +55,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="paperboxd.in" android:pathPrefix="/b/" />
                 <data android:scheme="https" android:host="paperboxd.in" android:pathPrefix="/u/" />
+                <data android:scheme="https" android:host="paperboxd.in" android:pathPrefix="/fusion/" />
+            </intent-filter>
+
+            <!-- paperboxd://fusion/<token>: the web join page's "Open in the app",
+                 which works before App Links verification does. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="paperboxd" android:host="fusion" />
             </intent-filter>
         </activity>
 

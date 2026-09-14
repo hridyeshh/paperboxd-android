@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import `in`.paperboxd.app.data.repository.AuthRepository
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.RecommendationRepository
 import `in`.paperboxd.app.data.repository.UserRepository
@@ -15,8 +16,11 @@ import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.UserProfile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -32,6 +36,8 @@ data class SearchUiState(
     val users: List<UserProfile> = emptyList(),
     val isSearching: Boolean = false,
     val errorMessage: String? = null,
+    /** Books quick-added from a result row this session; the row shows a check. */
+    val addedIds: Set<String> = emptySet(),
     val wallBooks: List<Book> = emptyList(),
     val isLoadingWall: Boolean = false,
     val isLoadingMoreWall: Boolean = false,
@@ -50,6 +56,7 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     @ApplicationContext context: Context,
+    private val authRepository: AuthRepository,
     private val bookRepository: BookRepository,
     private val userRepository: UserRepository,
     private val recommendationRepository: RecommendationRepository
@@ -57,6 +64,9 @@ class SearchViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(SearchUiState())
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
+
+    private val _toast = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val toast: SharedFlow<String> = _toast.asSharedFlow()
 
     private val prefs = context.getSharedPreferences("pb_search", Context.MODE_PRIVATE)
     private val gson = Gson()
@@ -78,9 +88,12 @@ class SearchViewModel @Inject constructor(
         searchJob?.cancel()
         val q = raw.trim()
         if (q.isEmpty()) {
-            _state.update { it.copy(books = emptyList(), users = emptyList(), errorMessage = null) }
+            _state.update { it.copy(books = emptyList(), users = emptyList(), errorMessage = null, isSearching = false) }
             return
         }
+        // Spinner from the first keystroke, so the debounce window doesn't flash
+        // "Nothing found" before the request has even been sent.
+        _state.update { it.copy(isSearching = true) }
         searchJob = viewModelScope.launch {
             delay(400L)
             search(q)
@@ -114,6 +127,25 @@ class SearchViewModel @Inject constructor(
             }
         }
         _state.update { it.copy(isSearching = false) }
+    }
+
+    /**
+     * Plus button on a result row: straight to TBR. The backend resolves whatever
+     * id the result carries (UUID, Google volume id, ISBN).
+     */
+    fun addToTBR(book: Book) {
+        if (book.id in _state.value.addedIds) return
+        val username = authRepository.cachedUser()?.username
+        if (username == null) { _toast.tryEmit("Sign in to save books"); return }
+        viewModelScope.launch {
+            bookRepository.addToBookshelf(username, book.id, "to-read").fold(
+                onSuccess = {
+                    _state.update { it.copy(addedIds = it.addedIds + book.id) }
+                    _toast.tryEmit("Added to your TBR")
+                },
+                onFailure = { _toast.tryEmit(it.message ?: "Couldn't add — try again") }
+            )
+        }
     }
 
     // MARK: - Trending wall

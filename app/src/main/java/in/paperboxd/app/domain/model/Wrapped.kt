@@ -105,6 +105,7 @@ data class Wrapped(
     data class Abandoned(
         val title: String = "",
         val author: String = "",
+        val cover: String = "",
         val page: Int = 0,
         val of: Int = 0,
         val started: String = "",

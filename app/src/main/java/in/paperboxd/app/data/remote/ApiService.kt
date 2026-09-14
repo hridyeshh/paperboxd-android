@@ -9,6 +9,11 @@ import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.JazyTurn
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import `in`.paperboxd.app.domain.model.Wrapped
+import `in`.paperboxd.app.domain.model.FusionAcceptResponse
+import `in`.paperboxd.app.domain.model.FusionInvite
+import `in`.paperboxd.app.domain.model.FusionInvitePreview
+import `in`.paperboxd.app.domain.model.FusionList
+import `in`.paperboxd.app.domain.model.FusionStory
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookSocialResponse
 import `in`.paperboxd.app.domain.model.CommunityResponse
@@ -453,4 +458,23 @@ interface ApiService {
     // Scan & Know
     @POST("api/v1/scan/analyze")
     suspend fun scanAnalyze(@Body body: ScanAnalyzeBody): ScanAnalyzeResponse
+
+    // Fusion — one-time invite links and the two-reader story.
+    @GET("api/v1/fusions")
+    suspend fun fusions(): FusionList
+
+    @POST("api/v1/fusions/invites")
+    suspend fun createFusionInvite(): FusionInvite
+
+    @DELETE("api/v1/fusions/invites/{token}")
+    suspend fun cancelFusionInvite(@Path("token") token: String): Response<Unit>
+
+    @GET("api/v1/fusions/invites/{token}")
+    suspend fun fusionInvite(@Path("token") token: String): FusionInvitePreview
+
+    @POST("api/v1/fusions/invites/{token}/accept")
+    suspend fun acceptFusionInvite(@Path("token") token: String): FusionAcceptResponse
+
+    @GET("api/v1/fusions/{id}")
+    suspend fun fusion(@Path("id") id: String): FusionStory
 }

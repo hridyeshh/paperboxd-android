@@ -1,7 +1,5 @@
 package `in`.paperboxd.app.ui.screens.wrapped
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -25,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -32,13 +31,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.IosShare
-import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -159,8 +158,13 @@ private fun WrappedStoryPlayer(w: Wrapped, onClose: () -> Unit) {
                 }
                 .clipToBounds()
         ) {
-            // A new chapter re-runs its own typesetting.
-            key(chapter.id) { chapter.content(w) }
+            // Chapters keep their design-grid 76dp top margin, measured from below
+            // the status bar / cutout rather than the screen edge, so the rails +
+            // label row never overlap the chapter's own header.
+            CompositionLocalProvider(LocalWrappedTopInset provides insets.calculateTopPadding() / scale) {
+                // A new chapter re-runs its own typesetting.
+                key(chapter.id) { chapter.content(w) }
+            }
         }
 
         // Tap zones: left third goes back, the rest goes forward, a press and
@@ -266,7 +270,7 @@ private fun WrappedStoryPlayer(w: Wrapped, onClose: () -> Unit) {
     }
 
     if (shareOpen) {
-        WrappedShareSheet(w) { shareOpen = false }
+        WrappedShareSheet(w, chapter) { shareOpen = false }
     }
 }
 
@@ -274,7 +278,7 @@ private fun WrappedStoryPlayer(w: Wrapped, onClose: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WrappedShareSheet(w: Wrapped, onDismiss: () -> Unit) {
+private fun WrappedShareSheet(w: Wrapped, chapter: WrappedChapter, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val cardLayer = rememberGraphicsLayer()
@@ -302,23 +306,37 @@ private fun WrappedShareSheet(w: Wrapped, onDismiss: () -> Unit) {
         ) {
             Box(Modifier.size(width = 40.dp, height = 3.5.dp).background(PBW.Cream.copy(alpha = 0.3f)))
 
-            // Recorded at full card size and only *drawn* scaled, so the export
-            // is a 1080-wide asset rather than a screenshot of the preview.
+            // The chapter on screen when "Share this" was tapped is what gets
+            // exported (the card chapter exports the recap card itself). Recorded
+            // at full size and only *drawn* scaled, so the export is a 1080-wide
+            // asset rather than a screenshot of the preview.
+            val exportWidth = if (chapter.id == "card") 360.dp else PBW.DesignWidth
+            val exportHeight = exportWidth * 16f / 9f
+            val previewScale = 230f / exportWidth.value
             Box(
                 Modifier
                     .padding(top = 18.dp)
-                    .graphicsLayer {
-                        scaleX = 230f / 360f
-                        scaleY = 230f / 360f
-                        transformOrigin = TransformOrigin(0.5f, 0f)
-                    }
-                    .drawWithContent {
-                        cardLayer.record { this@drawWithContent.drawContent() }
-                        drawLayer(cardLayer)
-                    }
+                    .size(230.dp, exportHeight * previewScale)
+                    .wrapContentSize(Alignment.TopStart, unbounded = true)
+                    .clipToBounds()
             ) {
-                WrappedStill {
-                    WrappedRecapCard(w, width = 360.dp)
+                Box(
+                    Modifier
+                        .requiredWidth(exportWidth)
+                        .requiredHeight(exportHeight)
+                        .graphicsLayer {
+                            scaleX = previewScale
+                            scaleY = previewScale
+                            transformOrigin = TransformOrigin(0f, 0f)
+                        }
+                        .drawWithContent {
+                            cardLayer.record { this@drawWithContent.drawContent() }
+                            drawLayer(cardLayer)
+                        }
+                ) {
+                    WrappedStill {
+                        if (chapter.id == "card") WrappedRecapCard(w, width = 360.dp) else chapter.content(w)
+                    }
                 }
             }
 
@@ -331,35 +349,27 @@ private fun WrappedShareSheet(w: Wrapped, onDismiss: () -> Unit) {
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             )
 
+            // Two destinations the card was drawn for, not the system chooser:
+            // straight into an Instagram story, or into the gallery to post anywhere.
+            val instagram = remember { instagramStoryIntent(context) }
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 18.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ShareTile(Icons.Outlined.IosShare, "SHARE", Modifier.weight(1f), accent = true) {
-                    scope.launch {
-                        val uri = cacheWrappedCard(context, render())
-                        if (uri != null) {
-                            val send = Intent(Intent.ACTION_SEND).apply {
-                                type = "image/png"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "My ${w.month} ${w.year} on PaperBoxd"
-                                )
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(Intent.createChooser(send, "Share"))
-                            onDismiss()
-                        } else toast = "Couldn’t prepare image"
+                if (instagram != null) {
+                    ShareTile(Icons.Outlined.IosShare, "INSTAGRAM STORY", Modifier.weight(1f), accent = true) {
+                        scope.launch {
+                            val uri = cacheWrappedCard(context, render())
+                            if (uri != null) {
+                                instagram.setDataAndType(uri, "image/png")
+                                context.startActivity(instagram)
+                                onDismiss()
+                            } else toast = "Couldn’t prepare image"
+                        }
                     }
                 }
-                ShareTile(Icons.Outlined.Download, "SAVE", Modifier.weight(1f)) {
+                ShareTile(Icons.Outlined.Download, "SAVE IMAGE", Modifier.weight(1f)) {
                     scope.launch { saveCard(render()) }
-                }
-                ShareTile(Icons.Outlined.Link, "COPY", Modifier.weight(1f)) {
-                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    cm.setPrimaryClip(ClipData.newPlainText("PaperBoxd", "https://paperboxd.in"))
-                    toast = "Link copied"
                 }
             }
 
@@ -394,6 +404,19 @@ private fun ShareTile(
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(17.dp))
         Text(label, fontFamily = PBW.Mono, fontSize = 9.sp, letterSpacing = 1.sp, color = tint)
     }
+}
+
+/**
+ * Instagram's "share to story" intent with the card as the background image, or
+ * null when Instagram isn't installed (needs the <queries> entry in the manifest).
+ */
+private fun instagramStoryIntent(context: Context): Intent? {
+    val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
+        putExtra("source_application", context.packageName)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        type = "image/png"
+    }
+    return intent.takeIf { context.packageManager.resolveActivity(it, 0) != null }
 }
 
 /** Writes the card to cache and returns a FileProvider content:// URI for sharing. */

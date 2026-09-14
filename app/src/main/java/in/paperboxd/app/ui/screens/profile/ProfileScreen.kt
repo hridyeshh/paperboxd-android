@@ -117,6 +117,9 @@ import `in`.paperboxd.app.ui.screens.settings.SettingsSheet
 import `in`.paperboxd.app.ui.theme.PBScript
 import java.time.Instant
 import java.time.ZoneId
+import `in`.paperboxd.app.FusionRoute
+import `in`.paperboxd.app.ui.screens.fusion.FusionsSection
+import `in`.paperboxd.app.ui.screens.fusion.LocalFusionRouting
 import java.time.format.DateTimeFormatter
 
 private val Line = Color(0xFFE6DFD0)
@@ -341,6 +344,16 @@ fun ProfileContent(
                             WrappedEntryCard(
                                 onClick = onOpenWrapped,
                                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
+                            )
+                        }
+                        item {
+                            val fusion = LocalFusionRouting.current
+                            FusionsSection(
+                                myInitial = profile.username.take(1).uppercase(),
+                                // Reload when a Fusion closes: its score may be new.
+                                reloadKey = fusion.active == null,
+                                onOpenFusion = { fusion.open(FusionRoute.Open(it.id, null)) },
+                                modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 14.dp)
                             )
                         }
                     }

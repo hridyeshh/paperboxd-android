@@ -1,5 +1,10 @@
 package `in`.paperboxd.app.ui.screens.search
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,7 +17,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,13 +33,17 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Star
@@ -59,7 +70,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -72,6 +85,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.UserProfile
@@ -80,6 +96,8 @@ import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.EyebrowText
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.ShimmerBox
+import `in`.paperboxd.app.ui.screens.scan.CameraScannerView
+import `in`.paperboxd.app.ui.screens.scan.ScannerStatus
 
 /** Hairline #e6dfd0 from "Search - Brutalist Mobile.html". */
 private val Line = Color(0xFFE6DFD0)
@@ -99,6 +117,8 @@ fun SearchScreen(
     var focused by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    var toast by remember { mutableStateOf<String?>(null) }
+    var showScanner by rememberSaveable { mutableStateOf(false) }
 
     // Search mode is "there is an active search", not "the field has focus".
     // Opening a book takes this screen out of composition and drops keyboard
@@ -110,6 +130,13 @@ fun SearchScreen(
         viewModel.loadWallIfNeeded()
         viewModel.loadRecommendationsIfNeeded()
     }
+    LaunchedEffect(Unit) {
+        viewModel.toast.collect {
+            toast = it
+            kotlinx.coroutines.delay(2500)
+            toast = null
+        }
+    }
 
     val view = LocalView.current
     DisposableEffect(Unit) {
@@ -120,6 +147,7 @@ fun SearchScreen(
         onDispose { controller.isAppearanceLightStatusBars = wasLight }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(modifier = Modifier.fillMaxSize().background(HL.Paper).statusBarsPadding()) {
         SearchHeader(
             state = state,
@@ -132,12 +160,13 @@ fun SearchScreen(
                 focusManager.clearFocus()
                 viewModel.onQueryChanged("")
             },
-            onClear = { viewModel.onQueryChanged("") }
+            onClear = { viewModel.onQueryChanged("") },
+            onScan = { showScanner = true }
         )
 
         if (inSearchMode) {
             if (state.hasQuery) {
-                ResultsOverlay(state, onOpenBook, onOpenProfile)
+                ResultsOverlay(state, onOpenBook, onOpenProfile, onAdd = viewModel::addToTBR)
             } else {
                 RecentsOverlay(
                     recents = state.recentSearches,
@@ -147,6 +176,134 @@ fun SearchScreen(
             }
         } else {
             WallScroll(state, viewModel, onOpenBook)
+        }
+    }
+
+    toast?.let {
+        ToastBar(it, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp))
+    }
+
+    // Barcode → book page. The EAN-13 on a back cover is the ISBN, and
+    // GET /books/{id} resolves an ISBN server-side, so no lookup here.
+    if (showScanner) {
+        BarcodeScanSheet(
+            onCode = { showScanner = false; onOpenBook(it) },
+            onClose = { showScanner = false }
+        )
+    }
+    }
+}
+
+@Composable
+private fun ToastBar(message: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(HL.Ink)
+            .border(2.dp, HL.Accent, RectangleShape)
+            .padding(horizontal = 15.dp, vertical = 9.dp)
+    ) {
+        Text(
+            message.uppercase(),
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+            letterSpacing = 1.sp,
+            color = HL.Paper
+        )
+    }
+}
+
+/** Full-screen camera overlay for the search bar. Reuses the Scan & Know scanner; only the chrome differs. */
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun BarcodeScanSheet(onCode: (String) -> Unit, onClose: () -> Unit) {
+    val context = LocalContext.current
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+    var status by remember { mutableStateOf(ScannerStatus.Scanning) }
+    var requested by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(onBack = onClose)
+    LaunchedEffect(Unit) {
+        if (!cameraPermission.status.isGranted && !requested) {
+            requested = true
+            cameraPermission.launchPermissionRequest()
+        }
+    }
+    val denied = !cameraPermission.status.isGranted && requested || status == ScannerStatus.Denied
+
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        if (cameraPermission.status.isGranted) {
+            CameraScannerView(
+                torchOn = false,
+                onCode = onCode,
+                onStatus = { status = it },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        if (cameraPermission.status.isGranted && status == ScannerStatus.Scanning) {
+            Box(
+                Modifier
+                    .align(Alignment.Center)
+                    .size(260.dp, 150.dp)
+                    .border(2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
+            )
+        }
+        Column(Modifier.fillMaxSize().statusBarsPadding()) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "SCAN THE BARCODE",
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.5.sp,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp).clickable(onClick = onClose).padding(8.dp)
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(bottom = 44.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    when {
+                        denied -> "Camera access is off, so scanning can't start."
+                        status == ScannerStatus.Unavailable -> "No camera on this device — type the title instead."
+                        else -> "Point the camera at the barcode on the back cover."
+                    },
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 15.sp,
+                    color = Color.White.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center
+                )
+                if (denied) {
+                    Text(
+                        "Open Settings",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        modifier = Modifier.clickable {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", context.packageName, null)
+                                )
+                            )
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -162,7 +319,8 @@ private fun SearchHeader(
     onQueryChanged: (String) -> Unit,
     onTypeChanged: (SearchType) -> Unit,
     onBack: () -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    onScan: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -198,6 +356,7 @@ private fun SearchHeader(
                 onFocusChanged = onFocusChanged,
                 onQueryChanged = onQueryChanged,
                 onClear = onClear,
+                onScan = onScan,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -230,6 +389,7 @@ private fun SearchBarField(
     onFocusChanged: (Boolean) -> Unit,
     onQueryChanged: (String) -> Unit,
     onClear: () -> Unit,
+    onScan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val shadow = 5.dp
@@ -251,9 +411,9 @@ private fun SearchBarField(
             }
             .background(HL.Card)
             .border(1.5.dp, HL.Ink)
-            .padding(horizontal = 14.dp, vertical = 13.dp),
+            .padding(start = 14.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Icon(
             Icons.Outlined.Search,
@@ -261,6 +421,8 @@ private fun SearchBarField(
             tint = HL.Ink,
             modifier = Modifier.size(16.dp)
         )
+        // Hit areas: the field spans the bar's full height and the icons get
+        // 44dp targets, so a tap anywhere on the bar lands somewhere useful.
         BasicTextField(
             value = state.query,
             onValueChange = onQueryChanged,
@@ -270,7 +432,7 @@ private fun SearchBarField(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { }),
             decorationBox = { inner ->
-                Box(contentAlignment = Alignment.CenterStart) {
+                Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
                     if (state.query.isEmpty()) {
                         Text(placeholder, fontSize = 15.sp, color = HL.Muted)
                     }
@@ -279,6 +441,7 @@ private fun SearchBarField(
             },
             modifier = Modifier
                 .weight(1f)
+                .heightIn(min = 46.dp)
                 .focusRequester(focusRequester)
                 .onFocusChanged { onFocusChanged(it.isFocused) }
         )
@@ -287,9 +450,15 @@ private fun SearchBarField(
                 Icons.Filled.Cancel,
                 contentDescription = "Clear",
                 tint = HL.Muted,
-                modifier = Modifier.size(16.dp).clickable(onClick = onClear)
+                modifier = Modifier.size(32.dp).clickable(onClick = onClear).padding(8.dp)
             )
         }
+        Icon(
+            Icons.Outlined.QrCodeScanner,
+            contentDescription = "Scan a book barcode",
+            tint = HL.Ink,
+            modifier = Modifier.size(44.dp).clickable(onClick = onScan).padding(12.dp)
+        )
     }
 }
 
@@ -518,7 +687,8 @@ private fun RecentsOverlay(
 private fun ResultsOverlay(
     state: SearchUiState,
     onOpenBook: (String) -> Unit,
-    onOpenProfile: (String) -> Unit
+    onOpenProfile: (String) -> Unit,
+    onAdd: (Book) -> Unit
 ) {
     LazyColumn(contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)) {
         if (state.isSearching) {
@@ -542,7 +712,12 @@ private fun ResultsOverlay(
                 item { NoResults() }
             } else {
                 lazyItems(items, key = { it.id }) { book ->
-                    BookResultRow(book, onClick = { onOpenBook(book.id) })
+                    BookResultRow(
+                        book,
+                        added = book.id in state.addedIds,
+                        onClick = { onOpenBook(book.id) },
+                        onAdd = { onAdd(book) }
+                    )
                     HairLine()
                 }
             }
@@ -562,7 +737,7 @@ private fun HairLine() {
 }
 
 @Composable
-private fun BookResultRow(book: Book, onClick: () -> Unit) {
+private fun BookResultRow(book: Book, added: Boolean, onClick: () -> Unit, onAdd: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -621,6 +796,19 @@ private fun BookResultRow(book: Book, onClick: () -> Unit) {
                 )
             }
         }
+        // Quick-add to TBR. Once added it turns into a check and stops firing.
+        Icon(
+            if (added) Icons.Outlined.Check else Icons.Outlined.Add,
+            contentDescription = if (added) "Added to TBR" else "Add to TBR",
+            tint = if (added) HL.Paper else HL.Ink,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(if (added) HL.Ink else Color.Transparent)
+                .border(1.dp, Line, CircleShape)
+                .clickable(enabled = !added, onClick = onAdd)
+                .padding(8.dp)
+        )
     }
 }
 

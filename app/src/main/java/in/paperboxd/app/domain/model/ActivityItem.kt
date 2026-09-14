@@ -43,6 +43,7 @@ data class ActivityItem(
                 "created_list" -> "made a list"
                 "shared_list" -> "shared a list"
                 "shared_book" -> "shared"
+                "fusion_joined" -> "fused with you. Tap to play your Fusion"
                 else -> activityType.replace('_', ' ')
             }
         }
@@ -53,7 +54,11 @@ data class ActivityItem(
         get() = if (name.isEmpty()) username else name.substringBefore(' ')
 }
 
-data class ActivityMetadata(val rating: Int? = null)
+data class ActivityMetadata(
+    val rating: Int? = null,
+    /** Set on "fusion_joined": the Fusion the tap should open. */
+    @SerializedName("fusion_id") val fusionId: String? = null
+)
 
 data class FollowingActivitiesResponse(
     val activities: List<ActivityItem> = emptyList(),

@@ -1,5 +1,7 @@
 package `in`.paperboxd.app
 
+import android.net.Uri
+import `in`.paperboxd.app.data.local.SecurePrefs
 import `in`.paperboxd.app.data.remote.SessionEvents
 import `in`.paperboxd.app.data.remote.ApiError
 import `in`.paperboxd.app.data.repository.AuthRepository
@@ -15,6 +17,38 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/**
+ * How a Fusion gets opened: an invite link (App Link or paperboxd://fusion/<token>),
+ * or an existing Fusion from the profile list or a notification. Mirrors iOS FusionRoute.
+ */
+sealed interface FusionRoute {
+    val key: String
+
+    data class Link(val token: String) : FusionRoute {
+        override val key get() = "link-$token"
+    }
+
+    data class Open(val id: String, val introFrom: String?) : FusionRoute {
+        override val key get() = "fusion-$id"
+    }
+
+    companion object {
+        private val TOKEN = Regex("^[a-z0-9]{12}$")
+
+        fun from(uri: Uri?): FusionRoute? {
+            uri ?: return null
+            val segments = uri.pathSegments
+            val token = when {
+                uri.scheme == "paperboxd" && uri.host == "fusion" -> segments.firstOrNull()
+                uri.scheme == "https" && uri.host in setOf("paperboxd.in", "www.paperboxd.in") &&
+                    segments.firstOrNull() == "fusion" -> segments.getOrNull(1)
+                else -> null
+            }?.lowercase() ?: return null
+            return if (TOKEN.matches(token)) Link(token) else null
+        }
+    }
+}
 
 /** Root navigation states. Mirrors iOS AppScreen. */
 sealed class AppDestination {
@@ -33,6 +67,7 @@ sealed class AppDestination {
 class AppState @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val securePrefs: SecurePrefs,
     sessionEvents: SessionEvents
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -42,6 +77,26 @@ class AppState @Inject constructor(
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+
+    /**
+     * A Fusion waiting to open over the main tabs. A link that arrives signed
+     * out waits here (and survives process death) until sign-in or onboarding
+     * finishes.
+     */
+    private val _fusionRoute = MutableStateFlow<FusionRoute?>(securePrefs.getPendingFusion()?.let { FusionRoute.Link(it) })
+    val fusionRoute: StateFlow<FusionRoute?> = _fusionRoute.asStateFlow()
+
+    fun openFusion(route: FusionRoute?) {
+        _fusionRoute.value = route
+        securePrefs.setPendingFusion((route as? FusionRoute.Link)?.token)
+    }
+
+    /** App Links and paperboxd:// URIs. Returns false for anything that is not ours. */
+    fun handleIncomingUri(uri: Uri?): Boolean {
+        val route = FusionRoute.from(uri) ?: return false
+        openFusion(route)
+        return true
+    }
 
     init {
         scope.launch {

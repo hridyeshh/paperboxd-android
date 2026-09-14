@@ -39,7 +39,9 @@ import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.ActivityItem
 import `in`.paperboxd.app.domain.model.FollowRequestUser
 import `in`.paperboxd.app.ui.components.AvatarImage
+import `in`.paperboxd.app.FusionRoute
 import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.screens.fusion.LocalFusionRouting
 import `in`.paperboxd.app.ui.components.brutalPlate
 import java.time.Instant
 
@@ -56,6 +58,7 @@ fun NotificationsSheet(
     onOpenBook: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val fusion = LocalFusionRouting.current
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = HL.Paper) {
         Column {
             Text(
@@ -92,9 +95,15 @@ fun NotificationsSheet(
                     }
 
                     items(activities, key = { it.id }) { activity ->
+                        val fusionId = activity.metadata?.fusionId
                         ActivityRow(
                             activity = activity,
-                            onClick = activity.bookId?.let { id -> { onDismiss(); onOpenBook(id) } }
+                            onClick = when {
+                                activity.activityType == "fusion_joined" && fusionId != null -> {
+                                    { onDismiss(); fusion.open(FusionRoute.Open(fusionId, activity.displayName)) }
+                                }
+                                else -> activity.bookId?.let { id -> { onDismiss(); onOpenBook(id) } }
+                            }
                         )
                     }
                 }
