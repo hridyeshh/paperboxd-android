@@ -67,7 +67,7 @@ private val LeaderboardTab.unit: String
         LeaderboardTab.Books -> "books"
         LeaderboardTab.Pages -> "pages"
         LeaderboardTab.Streak -> "days"
-        LeaderboardTab.Diary -> "entries"
+        LeaderboardTab.Thoughts -> "thoughts"
     }
 
 private fun formatValue(n: Int): String = when {

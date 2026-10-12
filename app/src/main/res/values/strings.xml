@@ -26,13 +26,17 @@
     <string name="auth_otp_sent_to">Sent to %1$s</string>
     <string name="auth_password_strength">Password strength: %1$s</string>
 
-    <!-- Auth chrome (brutalist redesign, mirrors iOS Login/Register/OTP) -->
-    <string name="auth_eyebrow_signin">sign in</string>
-    <string name="auth_eyebrow_register">register</string>
-    <string name="auth_login_title">Welcome back,\nreader.</string>
-    <string name="auth_login_subtitle">Your shelves are right where you left them.</string>
+    <!-- Auth chrome (dark canvas, mirrors iOS Login/Register/OTP) -->
+    <string name="auth_login_title">Read anything new?</string>
+    <string name="auth_login_subtitle">Sign in to your account &amp; save it.</string>
     <string name="auth_register_title">Start your\nreading life.</string>
-    <string name="auth_register_subtitle">Track every book worth remembering.</string>
+    <string name="auth_register_subtitle">Track books, follow friends, get smarter recs the more you read.</string>
+    <string name="auth_email_placeholder_paper">you@example.com</string>
+    <string name="auth_continue_with_email">Continue with email</string>
+    <string name="auth_legal_footer">By continuing you agree to our terms and privacy policy.</string>
+    <string name="welcome_title">Welcome to</string>
+    <string name="welcome_get_started">Get Started</string>
+    <string name="welcome_sign_in">Already have an account? Sign in</string>
     <string name="auth_otp_title">Enter your code.</string>
     <string name="auth_or">or</string>
     <string name="auth_new_here">New here?</string>

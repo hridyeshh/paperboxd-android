@@ -50,6 +50,7 @@ import androidx.compose.material.icons.outlined.Lock
 import `in`.paperboxd.app.domain.model.ListWithBooksResponse
 import `in`.paperboxd.app.ui.components.BookCoverImage
 import `in`.paperboxd.app.ui.components.HL
+import `in`.paperboxd.app.ui.components.brutalPlate
 import `in`.paperboxd.app.ui.components.brutalButton
 import kotlinx.coroutines.launch
 
@@ -348,7 +349,9 @@ fun ListDetailSheet(
     listId: String,
     onLoadDetail: suspend (String) -> ListWithBooksResponse?,
     onOpenBook: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** "Send on Paperboxd" for this list; null hides the action. */
+    onSend: (() -> Unit)? = null
 ) {
     var detail by remember { mutableStateOf<ListWithBooksResponse?>(null) }
     var loading by remember { mutableStateOf(true) }
@@ -404,14 +407,30 @@ fun ListDetailSheet(
                         modifier = Modifier.padding(top = 10.dp)
                     )
                 }
-                Text(
-                    "${d.bookCount} ${if (d.bookCount == 1L) "book" else "books"}",
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.6.sp,
-                    color = HL.Muted,
-                    modifier = Modifier.padding(top = 14.dp)
-                )
+                Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${d.bookCount} ${if (d.bookCount == 1L) "book" else "books"}",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.6.sp,
+                        color = HL.Muted,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (onSend != null) {
+                        Text(
+                            "SEND",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.6.sp,
+                            color = HL.Ink,
+                            modifier = Modifier
+                                .brutalPlate(fill = HL.Card, borderWidth = 1.5.dp, offset = 2.dp)
+                                .clickable(onClick = onSend)
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                }
                 Box(
                     Modifier
                         .fillMaxWidth()

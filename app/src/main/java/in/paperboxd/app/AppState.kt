@@ -78,6 +78,15 @@ class AppState @Inject constructor(
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    /** One-shot "Set a Tempo" prompt shown over Home right after onboarding
+     * finishes. Local-only preference — no backend field for it yet. */
+    private val _showTempoPrompt = MutableStateFlow(false)
+    val showTempoPrompt: StateFlow<Boolean> = _showTempoPrompt.asStateFlow()
+
+    fun dismissTempoPrompt() {
+        _showTempoPrompt.value = false
+    }
+
     /**
      * A Fusion waiting to open over the main tabs. A link that arrives signed
      * out waits here (and survives process death) until sign-in or onboarding
@@ -172,7 +181,12 @@ class AppState @Inject constructor(
         )
     }
 
-    private suspend fun holdSplash(startMillis: Long, minimumMillis: Long = 4_600) {
+    /**
+     * The full clip plays once per install. After that the floor only stops a
+     * flicker: making every cold start wait 4.6s was most of the "slow to open".
+     */
+    private suspend fun holdSplash(startMillis: Long) {
+        val minimumMillis = if (securePrefs.consumeSplashPlayed()) 1_200L else 4_600L
         val elapsed = System.currentTimeMillis() - startMillis
         if (elapsed < minimumMillis) delay(minimumMillis - elapsed)
     }
@@ -211,6 +225,7 @@ class AppState @Inject constructor(
         val updated = user.copy(onboardingCompleted = true)
         _currentUser.value = updated
         authRepository.persistUser(updated)
+        _showTempoPrompt.value = true
         _destination.value = AppDestination.Main(updated)
     }
 

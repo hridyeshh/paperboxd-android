@@ -65,6 +65,9 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import `in`.paperboxd.app.domain.model.FusionBook
 import `in`.paperboxd.app.domain.model.FusionStory
+import `in`.paperboxd.app.domain.model.AttachKind
+import `in`.paperboxd.app.domain.model.AttachmentRef
+import `in`.paperboxd.app.ui.screens.messages.SendSheet
 import `in`.paperboxd.app.ui.screens.wrapped.PbPauseBars
 import `in`.paperboxd.app.ui.screens.wrapped.PbRise
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedStill
@@ -310,6 +313,7 @@ fun FusionShareSheet(story: FusionStory, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val cardLayer = rememberGraphicsLayer()
     var failed by remember { mutableStateOf(false) }
+    var showSend by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -337,7 +341,10 @@ fun FusionShareSheet(story: FusionStory, onDismiss: () -> Unit) {
                 }
             }
             FzLabel("No ratings, titles or notes are on the card", 9f, FZ.Bg.copy(alpha = 0.5f), Modifier.padding(top = 16.dp))
-            FzPill("Share card", solid = true, light = true, modifier = Modifier.padding(horizontal = 26.dp).padding(top = 16.dp)) {
+            FzPill("Send on Paperboxd", solid = true, light = true, modifier = Modifier.padding(horizontal = 26.dp).padding(top = 16.dp)) {
+                showSend = true
+            }
+            FzPill("Share card", solid = false, light = true, modifier = Modifier.padding(horizontal = 26.dp).padding(top = 10.dp)) {
                 scope.launch {
                     val uri = cacheCard(context, cardLayer.toImageBitmap().asAndroidBitmap())
                     if (uri == null) { failed = true; return@launch }
@@ -354,6 +361,7 @@ fun FusionShareSheet(story: FusionStory, onDismiss: () -> Unit) {
             if (failed) FzLabel("Couldn't prepare the image", 9f, FZ.Accent, Modifier.padding(top = 12.dp))
         }
     }
+    if (showSend) SendSheet(AttachmentRef(AttachKind.FUSION, story.id), onDismiss = { showSend = false })
 }
 
 private fun cacheCard(context: Context, bitmap: Bitmap): Uri? = runCatching {

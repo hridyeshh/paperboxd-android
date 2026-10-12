@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -26,6 +28,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import `in`.paperboxd.app.AppDestination
 import `in`.paperboxd.app.AppState
@@ -33,15 +37,24 @@ import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.screens.auth.AuthScreen
 import `in`.paperboxd.app.ui.screens.author.AuthorDetailScreen
 import `in`.paperboxd.app.ui.screens.bookdetail.BookDetailScreen
+import `in`.paperboxd.app.ui.screens.bookdetail.GutenbergReaderScreen
 import `in`.paperboxd.app.ui.screens.diary.DiaryEntryDetailScreen
+import `in`.paperboxd.app.ui.screens.plus.SmartTbrScreen
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedRoute
 import `in`.paperboxd.app.ui.screens.fusion.FusionRootScreen
 import `in`.paperboxd.app.ui.screens.fusion.FusionRouting
 import `in`.paperboxd.app.ui.screens.fusion.LocalFusionRouting
 import `in`.paperboxd.app.ui.screens.write.WriteScreen
+import `in`.paperboxd.app.domain.model.AttachKind
+import `in`.paperboxd.app.FusionRoute
+import `in`.paperboxd.app.ui.screens.messages.ChatScreen
+import `in`.paperboxd.app.ui.screens.messages.InboxScreen
+import `in`.paperboxd.app.ui.screens.messages.InboxViewModel
+import `in`.paperboxd.app.ui.screens.messages.PollWhileResumed
 import `in`.paperboxd.app.ui.screens.home.HomeScreen
 import `in`.paperboxd.app.ui.screens.leaderboard.LeaderboardScreen
 import `in`.paperboxd.app.ui.screens.onboarding.OnboardingScreen
+import `in`.paperboxd.app.ui.screens.onboarding.TempoPromptSheet
 import `in`.paperboxd.app.ui.screens.profile.EditProfileScreen
 import `in`.paperboxd.app.ui.screens.profile.ProfileScreen
 import `in`.paperboxd.app.ui.screens.search.SearchScreen
@@ -86,6 +99,7 @@ fun AppRoot(appState: AppState) {
 private val tabRoutes = mapOf(
     DockTab.Home to Screen.Home.route,
     DockTab.Search to Screen.Search.route,
+    DockTab.Inbox to Screen.Messages.route,
     DockTab.Leaderboard to Screen.Leaderboard.route,
     DockTab.Profile to Screen.ProfileTab.route
 )
@@ -105,6 +119,12 @@ fun MainScaffold(user: User, appState: AppState) {
     val currentUser by appState.currentUser.collectAsState()
     val sessionUser = currentUser ?: user
     val fusionRoute by appState.fusionRoute.collectAsState()
+    // Messages badge on the dock. No push yet: polled while the app is open,
+    // and on every tab/screen change.
+    val inbox: InboxViewModel = hiltViewModel()
+    val inboxState by inbox.state.collectAsState()
+    PollWhileResumed(30_000) { inbox.refreshBadge() }
+    LaunchedEffect(currentRoute) { inbox.refreshBadge() }
 
     CompositionLocalProvider(LocalFusionRouting provides FusionRouting(fusionRoute, appState::openFusion)) {
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
@@ -145,10 +165,12 @@ fun MainScaffold(user: User, appState: AppState) {
                     onSignOut = { appState.signOut() },
                     onOpenEditProfile = { navController.navigate("edit-profile") },
                     onOpenWrapped = { navController.navigate("wrapped") },
-                    onOpenDiaryEntry = {
-                        navController.navigate("diary-entry/${sessionUser.username.orEmpty()}/$it")
+                    onOpenSmartTbr = { navController.navigate("smart-tbr") },
+                    onOpenDiaryEntry = { entry, compose ->
+                        navController.navigate("diary-entry/${entry.username}/${entry.id}?compose=$compose")
                     },
-                    reloadKey = reloadKey
+                    reloadKey = reloadKey,
+                    onOpenChat = { navController.navigate(Screen.Chat.route(username = it)) }
                 )
             }
             composable(
@@ -160,7 +182,16 @@ fun MainScaffold(user: User, appState: AppState) {
                     onBack = { navController.popBackStack() },
                     onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) },
                     onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
-                    onOpenAuthor = { navController.navigate(Screen.Author.route(it)) }
+                    onOpenAuthor = { navController.navigate(Screen.Author.route(it)) },
+                    onReadFree = { title, url -> navController.navigate(Screen.GutenbergReader.route(title, url)) },
+                    onWrite = { showWrite = true }
+                )
+            }
+            composable(Screen.GutenbergReader.route) { entry ->
+                GutenbergReaderScreen(
+                    title = entry.arguments?.getString("title").orEmpty(),
+                    url = entry.arguments?.getString("url").orEmpty(),
+                    onClose = { navController.popBackStack() }
                 )
             }
             composable(
@@ -180,8 +211,12 @@ fun MainScaffold(user: User, appState: AppState) {
                     onSignOut = {},
                     onOpenEditProfile = { navController.navigate("edit-profile") },
                     onOpenWrapped = { navController.navigate("wrapped") },
-                    onOpenDiaryEntry = { navController.navigate("diary-entry/$username/$it") },
-                    reloadKey = reloadKey
+                    onOpenSmartTbr = { navController.navigate("smart-tbr") },
+                    onOpenDiaryEntry = { entry, compose ->
+                        navController.navigate("diary-entry/${entry.username}/${entry.id}?compose=$compose")
+                    },
+                    reloadKey = reloadKey,
+                    onOpenChat = { navController.navigate(Screen.Chat.route(username = it)) }
                 )
             }
             composable(Screen.Author.route) {
@@ -192,6 +227,13 @@ fun MainScaffold(user: User, appState: AppState) {
             }
             composable("wrapped") {
                 WrappedRoute(onClose = { navController.popBackStack() })
+            }
+            composable("smart-tbr") {
+                SmartTbrScreen(
+                    user = sessionUser,
+                    onClose = { navController.popBackStack() },
+                    onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) }
+                )
             }
             composable("edit-profile") {
                 EditProfileScreen(
@@ -205,7 +247,41 @@ fun MainScaffold(user: User, appState: AppState) {
                     }
                 )
             }
-            composable("diary-entry/{username}/{entryId}") {
+            composable(Screen.Messages.route) {
+                // A dock tab: no back arrow.
+                InboxScreen(
+                    onBack = null,
+                    onOpenChat = { navController.navigate(Screen.Chat.route(conversationId = it)) }
+                )
+            }
+            composable(
+                Screen.Chat.route,
+                arguments = listOf(
+                    navArgument("conversationId") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("username") { type = NavType.StringType; defaultValue = "" }
+                )
+            ) {
+                ChatScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenProfile = { navController.navigate(Screen.Profile.route(it)) },
+                    onOpenFusionLink = { appState.openFusion(FusionRoute.Link(it)) },
+                    // Lists have no screen of their own on Android; they open from the owner's profile.
+                    onOpenAttachment = { a ->
+                        when (a.kind) {
+                            AttachKind.BOOK -> navController.navigate(Screen.BookDetail.route(a.refId))
+                            AttachKind.PROFILE -> navController.navigate(Screen.Profile.route(a.str("username")))
+                            AttachKind.LIST -> navController.navigate(Screen.Profile.route(a.str("owner_username")))
+                            AttachKind.THOUGHT -> navController.navigate("diary-entry/${a.str("author_username")}/${a.refId}")
+                            AttachKind.FUSION -> appState.openFusion(FusionRoute.Open(a.refId, null))
+                        }
+                    }
+                )
+            }
+            // {username} is the thought's author, not the profile it was opened from.
+            composable(
+                "diary-entry/{username}/{entryId}?compose={compose}",
+                arguments = listOf(navArgument("compose") { type = NavType.BoolType; defaultValue = false })
+            ) {
                 DiaryEntryDetailScreen(
                     onBack = { navController.popBackStack() },
                     onOpenBook = { navController.navigate(Screen.BookDetail.route(it)) }
@@ -225,6 +301,7 @@ fun MainScaffold(user: User, appState: AppState) {
             BottomNavBar(
                 selected = tabRoutes.entries.firstOrNull { it.value == currentRoute }?.key
                     ?: DockTab.Home,
+                inboxBadge = inboxState.badge.total,
                 onSelect = { tab ->
                     val route = tabRoutes.getValue(tab)
                     navController.navigate(route) {
@@ -262,6 +339,12 @@ fun MainScaffold(user: User, appState: AppState) {
         // Fusion links, notification taps and the profile list all land here.
         fusionRoute?.let { route ->
             FusionRootScreen(route = route, user = sessionUser, onClose = { appState.openFusion(null) })
+        }
+
+        // One-shot reading-pace prompt right after onboarding finishes.
+        val showTempoPrompt by appState.showTempoPrompt.collectAsState()
+        if (showTempoPrompt) {
+            TempoPromptSheet(onDismiss = appState::dismissTempoPrompt)
         }
     }
     }

@@ -1,17 +1,22 @@
 package `in`.paperboxd.app.ui.navigation
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -27,54 +32,61 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import `in`.paperboxd.app.ui.components.HL
 
 /**
- * Android-native floating dock — a solid white rounded pill with side margins,
- * icon-only tabs, and a Sienna tonal-pill active indicator. Diverges on purpose
- * from the iOS glass dock (see "Bottom Dock.html · 03 Android redesign", variant
- * "A · tonal pill"). Four tabs (Home | Search | Leaderboard | Profile); Scan/Buddy
- * stay separate as the floating [PipScanButton], not part of the dock.
+ * Brutal-block dock — iOS `CustomDock` twin: a flat card with a 2dp ink border and a hard
+ * offset shadow, like the onboarding buttons. The active tab is an ink square with the
+ * icon knocked out in paper; the unread badge is a crimson square. Five tabs
+ * (Home | Search | Messages | Leaderboard | Profile); Scan/Buddy stay separate as the
+ * floating [PipScanButton], not part of the dock.
  */
-enum class DockTab { Home, Search, Leaderboard, Profile }
+enum class DockTab { Home, Search, Inbox, Leaderboard, Profile }
 
-// PaperBoxd Sienna — brand accent for the active tab.
-private val DockAccent = Color(0xFFBE5B37)
-private val DockActivePill = Color(0x24BE5B37)   // ~14% sienna tint behind active icon
-private val DockInactive = Color(0xFF9C948A)     // muted ink for idle icons
-private val DockShadow = Color(0x33151513)
+private val DockShape = RoundedCornerShape(4.dp)
 
 @Composable
 fun BottomNavBar(
     selected: DockTab,
     onSelect: (DockTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    inboxBadge: Int = 0
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = modifier
-            .padding(horizontal = 22.dp, vertical = 10.dp)
+            .padding(start = 16.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)
             .fillMaxWidth()
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(30.dp),
-                clip = false,
-                ambientColor = DockShadow,
-                spotColor = DockShadow
-            )
-            .clip(RoundedCornerShape(30.dp))
-            .background(Color.White)
-            .height(60.dp)
-            .padding(horizontal = 8.dp),
+            .height(58.dp)
+            .drawBehind {
+                val o = 4.dp.toPx()
+                drawRoundRect(HL.Ink, topLeft = Offset(o, o), size = size, cornerRadius = CornerRadius(4.dp.toPx()))
+            }
+            .clip(DockShape)
+            .background(HL.Card)
+            .border(2.dp, HL.Ink, DockShape)
+            .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         DockTab.entries.forEach { tab ->
             TabButton(
                 tab = tab,
                 active = selected == tab,
-                onClick = { onSelect(tab) },
+                badge = tab == DockTab.Inbox && inboxBadge > 0,
+                onClick = {
+                    if (tab != selected) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onSelect(tab)
+                },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -85,19 +97,23 @@ fun BottomNavBar(
 private fun TabButton(
     tab: DockTab,
     active: Boolean,
+    badge: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val icon: ImageVector = when (tab) {
         DockTab.Home -> if (active) Icons.Filled.Home else Icons.Outlined.Home
         DockTab.Search -> if (active) Icons.Filled.Search else Icons.Outlined.Search
+        DockTab.Inbox -> if (active) Icons.AutoMirrored.Filled.Send else Icons.AutoMirrored.Outlined.Send
         DockTab.Leaderboard -> if (active) Icons.Filled.EmojiEvents else Icons.Outlined.EmojiEvents
         DockTab.Profile -> if (active) Icons.Filled.Person else Icons.Outlined.Person
     }
-    val tint by animateColorAsState(if (active) DockAccent else DockInactive, label = "dockTint")
+    // The ink square pops in on the newly selected tab.
+    val on by animateFloatAsState(if (active) 1f else 0f, spring(dampingRatio = 0.65f), label = "dockIndicator")
     Box(
         modifier = modifier
-            .height(44.dp)
+            .height(48.dp)
+            .semantics { selected = active }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -105,19 +121,27 @@ private fun TabButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        if (active) {
-            Box(
-                Modifier
-                    .size(width = 52.dp, height = 36.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DockActivePill)
-            )
-        }
+        Box(
+            Modifier
+                .size(42.dp)
+                .graphicsLayer { scaleX = 0.6f + 0.4f * on; scaleY = 0.6f + 0.4f * on; alpha = on }
+                .clip(RoundedCornerShape(2.dp))
+                .background(HL.Ink)
+        )
         Icon(
             imageVector = icon,
-            contentDescription = tab.name,
-            tint = tint,
-            modifier = Modifier.size(24.dp)
+            contentDescription = if (tab == DockTab.Inbox) "Messages" else tab.name,
+            tint = if (active) HL.Card else HL.Muted,
+            modifier = Modifier.size(if (tab == DockTab.Inbox) 19.dp else 20.dp)
         )
+        if (badge) {
+            Box(
+                Modifier
+                    .offset(x = 11.dp, y = (-10).dp)
+                    .size(8.dp)
+                    .background(HL.Crimson)
+                    .border(1.5.dp, HL.Ink)
+            )
+        }
     }
 }

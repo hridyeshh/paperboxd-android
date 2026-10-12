@@ -62,3 +62,32 @@ data class JazyTurn(
 ) {
     val isQuestion: Boolean get() = kind == "jazy#question" && question != null
 }
+
+/** Response from GET /api/v1/subscriptions/me and the link endpoints. */
+data class SubscriptionStatus(
+    val active: Boolean = false,
+    @SerializedName("scans_remaining") val scansRemaining: Int? = null,
+    @SerializedName("scans_unlimited") val scansUnlimited: Boolean? = null
+)
+
+/** One TBR book, ranked — mirrors `service.SmartTBRItem`. */
+data class SmartTbrItem(
+    val id: String = "",
+    val title: String = "",
+    val authors: List<String> = emptyList(),
+    @SerializedName("cover_url") val coverUrl: String? = null,
+    val reason: String? = null,
+    val confidence: String? = null,
+    val bucket: String = "",
+    @SerializedName("days_on_shelf") val daysOnShelf: Int = 0,
+    @SerializedName("page_count") val pageCount: Int? = null,
+    val lines: List<String> = emptyList()
+)
+
+/** GET /api/v1/users/me/tbr/smart. */
+data class SmartTbr(
+    val next: SmartTbrItem? = null,
+    val queue: List<SmartTbrItem> = emptyList(),
+    val buckets: Map<String, List<SmartTbrItem>> = emptyMap(),
+    val total: Int = 0
+)

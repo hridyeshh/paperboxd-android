@@ -304,7 +304,7 @@ fun FusionJoinScreen(inviter: FusionPerson, viewer: User, fusing: Boolean, onFus
                 }
                 FzRule(1120)
             }
-            PbFade(1180, modifier = Modifier.padding(top = 12.dp)) { FzBody("Your diary entries and notes are never included.", 12.5f) }
+            PbFade(1180, modifier = Modifier.padding(top = 12.dp)) { FzBody("Your thoughts and notes are never included.", 12.5f) }
             Spacer(Modifier.weight(1f))
             PbFade(1260) { FzPill(if (fusing) "Fusing…" else "Fuse with ${inviter.first}", solid = true, enabled = !fusing, onClick = onFuse) }
             PbFade(1320, modifier = Modifier.fillMaxWidth().padding(top = 14.dp)) {

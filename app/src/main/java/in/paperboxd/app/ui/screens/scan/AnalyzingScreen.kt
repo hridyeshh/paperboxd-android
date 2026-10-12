@@ -70,7 +70,8 @@ fun AnalyzingScreen(
     onReveal: () -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onGetPlus: () -> Unit = {}
 ) {
     var gameOpen by remember { mutableStateOf(false) }
     var popupDismissed by remember { mutableStateOf(false) }
@@ -98,7 +99,7 @@ fun AnalyzingScreen(
 
     Box(Modifier.fillMaxSize().background(SK.bg)) {
         when {
-            error != null && exhausted -> ExhaustedView(error, onBack, onClose)
+            error != null && exhausted -> ExhaustedView(error, onGetPlus, onBack, onClose)
             error != null -> ErrorView(error, onRetry, onClose)
             else -> {
                 Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -474,7 +475,7 @@ private fun ResultPopup(title: String, onReveal: () -> Unit, onKeepPlaying: () -
 // ── Exhausted (free-scan quota used up) ──────────────────────────────────────
 
 @Composable
-private fun ExhaustedView(message: String, onBack: () -> Unit, onClose: () -> Unit) {
+private fun ExhaustedView(message: String, onGetPlus: () -> Unit, onBack: () -> Unit, onClose: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -489,10 +490,14 @@ private fun ExhaustedView(message: String, onBack: () -> Unit, onClose: () -> Un
             color = SK.ink, textAlign = TextAlign.Center
         )
         Text(
-            "You've used your free scans. More scans coming soon.",
+            "Free readers get 3 scans a month. Plus makes it unlimited.",
             fontSize = 13.sp, color = SK.sub, textAlign = TextAlign.Center
         )
-        BruButton(title = "Back", onClick = onBack, modifier = Modifier.padding(top = 6.dp))
+        BruButton(title = "Get Plus", onClick = onGetPlus, modifier = Modifier.padding(top = 6.dp))
+        MonoLabel(
+            text = "Back", size = 11f, tracking = 1.4f, color = SK.sub,
+            modifier = Modifier.clickable(onClick = onBack).padding(8.dp)
+        )
         MonoLabel(
             text = "Close", size = 11f, tracking = 1.4f, color = SK.sub,
             modifier = Modifier.clickable(onClick = onClose).padding(8.dp)

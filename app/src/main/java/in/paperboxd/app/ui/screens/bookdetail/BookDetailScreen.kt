@@ -128,9 +128,22 @@ fun BookDetailScreen(
     onOpenBook: (String) -> Unit,
     onOpenProfile: (String) -> Unit,
     onOpenAuthor: (String) -> Unit,
+    onReadFree: (title: String, url: String) -> Unit = { _, _ -> },
+    onWrite: () -> Unit = {},
     viewModel: BookDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+
+    if (state.showFinishSheet) {
+        FinishSheet(
+            state = state,
+            initialRating = viewModel.myReview?.rating ?: 0,
+            onRate = { r -> viewModel.submitReview(r, null) {} },
+            onWriteNote = { viewModel.dismissFinishSheet(); onWrite() },
+            onOpenBook = { viewModel.dismissFinishSheet(); onOpenBook(it) },
+            onDismiss = viewModel::dismissFinishSheet
+        )
+    }
     var toast by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(user.id) { viewModel.user = user }
@@ -152,6 +165,7 @@ fun BookDetailScreen(
         onBack = onBack,
         onOpenBook = onOpenBook,
         onOpenAuthor = onOpenAuthor,
+        onReadFree = onReadFree,
         onToggleLike = viewModel::toggleLike,
         onSelectShelf = viewModel::selectShelf,
         onSubmitReview = { rating, review, done -> viewModel.submitReview(rating, review, done) },
@@ -172,6 +186,7 @@ private fun BookDetailContent(
     onBack: () -> Unit,
     onOpenBook: (String) -> Unit,
     onOpenAuthor: (String) -> Unit = {},
+    onReadFree: (title: String, url: String) -> Unit = { _, _ -> },
     onToggleLike: () -> Unit,
     onSelectShelf: (LibraryShelf?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
@@ -209,6 +224,7 @@ private fun BookDetailContent(
                     activePanel = activePanel,
                     onOpenBook = onOpenBook,
                     onOpenAuthor = onOpenAuthor,
+                    onReadFree = onReadFree,
                     onShare = { showShare = true },
                     onSetPanel = { if (it != null && !canRate) showRateGate = true else activePanel = it },
                     onSubmitReview = onSubmitReview,
@@ -340,6 +356,7 @@ private fun DetailBody(
     activePanel: InlinePanel?,
     onOpenBook: (String) -> Unit,
     onOpenAuthor: (String) -> Unit,
+    onReadFree: (title: String, url: String) -> Unit,
     onShare: () -> Unit,
     onSetPanel: (InlinePanel?) -> Unit,
     onSubmitReview: (Int, String?, (Boolean) -> Unit) -> Unit,
@@ -355,7 +372,7 @@ private fun DetailBody(
     ) {
         item { CoverBlock(book, state.friendsOnBook, state.friendsReadingCount) }
         item { TitleBlock(book, onOpenAuthor) }
-        item { StatStrip(book, state.readerStats) }
+        item { StatStrip(book, state.readerStats, state.thoughtsCount) }
 
         item {
             Column(
@@ -386,6 +403,13 @@ private fun DetailBody(
                     onClose = { onSetPanel(null) }
                 )
                 DescriptionSection(book)
+                book.readLinks?.let { links ->
+                    ReadNowSection(
+                        links = links,
+                        onReadFree = links.gutenbergHtmlUrl?.takeIf { links.isPublicDomain }?.let { url -> { onReadFree(book.title, url) } },
+                        header = { BrutalSectionHeader("02", "Read now") }
+                    )
+                }
             }
         }
 
@@ -524,7 +548,7 @@ private fun bookTagline(book: Book): String? {
 // ---- Stat strip ----
 
 @Composable
-private fun StatStrip(book: Book, readerStats: BookReaderStats?) {
+private fun StatStrip(book: Book, readerStats: BookReaderStats?, thoughtsCount: Int = 0) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -552,7 +576,12 @@ private fun StatStrip(book: Book, readerStats: BookReaderStats?) {
             StatCell(readingTime(book), "Time to read", Modifier.weight(1f))
         }
         Box(Modifier.width(2.dp).height(62.dp).background(Line))
-        StatCell(book.pageCount?.toString() ?: "—", "Pages", Modifier.weight(1f))
+        // The conversation beats the page count once there is one.
+        if (thoughtsCount > 0) {
+            StatCell("$thoughtsCount", "Thoughts", Modifier.weight(1f))
+        } else {
+            StatCell(book.pageCount?.toString() ?: "—", "Pages", Modifier.weight(1f))
+        }
     }
 }
 
@@ -1149,7 +1178,7 @@ private fun StepButton(symbol: String, onStep: () -> Unit, onLongStep: () -> Uni
 // ---- Sections ----
 
 @Composable
-private fun BrutalSectionHeader(num: String, title: String) {
+internal fun BrutalSectionHeader(num: String, title: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1201,7 +1230,7 @@ private fun SimilarSection(items: List<RecommendationItem>, onOpenBook: (String)
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-            BrutalSectionHeader("02", "Readers also enjoyed")
+            BrutalSectionHeader("03", "Readers also enjoyed")
         }
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1231,7 +1260,7 @@ private fun FriendsSaySection(reviews: List<FriendBookReview>) {
         modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        BrutalSectionHeader("03", "What friends say")
+        BrutalSectionHeader("04", "What friends say")
         if (reviews.isEmpty()) {
             Text(
                 "No reviews from people you follow yet.",
@@ -1277,7 +1306,7 @@ private fun AllReviewsSection(
 ) {
     var reportTarget by remember { mutableStateOf<BookReview?>(null) }
     Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
-        BrutalSectionHeader("04", "All reviews")
+        BrutalSectionHeader("05", "All reviews")
         reviews.forEachIndexed { idx, review ->
             if (idx > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Line.copy(alpha = 0.3f)))
             Row(

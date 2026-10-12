@@ -75,6 +75,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import `in`.paperboxd.app.domain.model.User
 import `in`.paperboxd.app.ui.navigation.PipFace
+import `in`.paperboxd.app.ui.screens.plus.PlusFeature
+import `in`.paperboxd.app.ui.screens.plus.PlusPaywallSheet
 import `in`.paperboxd.app.ui.screens.scan.MonoLabel
 import `in`.paperboxd.app.ui.screens.scan.SK
 import `in`.paperboxd.app.ui.screens.scan.ScanFlowScreen
@@ -122,7 +124,7 @@ fun JazyScreen(
     var showTasteGate by rememberSaveable { mutableStateOf(false) }
 
     val hasText = state.query.trim().isNotEmpty()
-    val scansLeft = remember { ScanPrefs.scansRemaining(context) }
+    val scansLabel = remember { ScanPrefs.counterLabel(context) }
 
     // Loaded up front so tapping the camera never waits on the network.
     LaunchedEffect(user.username) { viewModel.loadShelfSize(user.username) }
@@ -142,7 +144,7 @@ fun JazyScreen(
             else -> JazyLabelLayer(
                 query = state.query,
                 hasText = hasText,
-                scansLeft = scansLeft,
+                scansLabel = scansLabel,
                 errorMessage = state.errorMessage,
                 pendingQuestion = state.pendingQuestion,
                 questionOptions = state.questionOptions,
@@ -180,6 +182,22 @@ fun JazyScreen(
             )
         }
 
+        AnimatedVisibility(
+            visible = state.showPaywall,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(200))
+        ) {
+            PlusPaywallSheet(
+                billing = viewModel.billing,
+                feature = PlusFeature.Jazy,
+                onUnlocked = {
+                    viewModel.setPaywall(false)
+                    viewModel.submit()
+                },
+                onDismiss = { viewModel.setPaywall(false) }
+            )
+        }
+
         if (showScan) {
             ScanFlowScreen(user = user, onDismiss = { showScan = false })
         }
@@ -192,7 +210,7 @@ fun JazyScreen(
 private fun JazyLabelLayer(
     query: String,
     hasText: Boolean,
-    scansLeft: Int,
+    scansLabel: String,
     errorMessage: String?,
     pendingQuestion: String?,
     questionOptions: List<String>,
@@ -363,7 +381,7 @@ private fun JazyLabelLayer(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
-                MonoLabel("$scansLeft free scans left", size = 9.5f, tracking = 1.8f, color = SK.sub)
+                MonoLabel(scansLabel, size = 9.5f, tracking = 1.8f, color = SK.sub)
                 Spacer(Modifier.weight(1f))
                 MonoLabel("01 / label", size = 9.5f, tracking = 1.8f, color = SK.faint)
             }

@@ -13,6 +13,8 @@ sealed class ApiError(override val message: String) : Exception(message) {
     class NotFound(message: String) : ApiError(message)
     class ValidationError(message: String) : ApiError(message)
     class RateLimited(message: String) : ApiError(message)
+    /** 402 SUBSCRIPTION_REQUIRED — open the Plus paywall. */
+    class SubscriptionRequired(message: String) : ApiError(message)
     class ServerError(message: String, val code: String) : ApiError(message)
     class NetworkError(message: String) : ApiError(message)
     class DecodingError(message: String) : ApiError(message)
@@ -31,12 +33,14 @@ sealed class ApiError(override val message: String) : Exception(message) {
                 "NOT_FOUND" -> NotFound(msg)
                 "VALIDATION_ERROR" -> ValidationError(msg)
                 "RATE_LIMITED" -> RateLimited(msg)
+                "SUBSCRIPTION_REQUIRED" -> SubscriptionRequired(msg)
                 "INTERNAL_ERROR" -> ServerError(msg, envelope.code)
                 else -> when {
                     status == 401 -> Unauthorized(msg)
                     status == 403 -> Forbidden(msg)
                     status == 404 -> NotFound(msg)
                     status == 429 -> RateLimited(msg)
+                    status == 402 -> SubscriptionRequired(msg)
                     status in 500..599 -> ServerError(msg, envelope.code ?: "INTERNAL_ERROR")
                     status in 400..499 -> ValidationError(msg)
                     else -> Unknown(msg, envelope.code ?: "UNKNOWN")

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.JoinInner
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PersonAddAlt
@@ -92,6 +93,8 @@ fun SettingsSheet(
     email: String,
     onDismiss: () -> Unit,
     onSignOut: () -> Unit,
+    /** Opens the Fusion link window; null hides the row. */
+    onCreateFusion: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     ModalBottomSheet(
@@ -109,6 +112,7 @@ fun SettingsSheet(
             email = email,
             onSignOut = onSignOut,
             viewModel = viewModel,
+            onCreateFusion = onCreateFusion,
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f),
             header = {
                 Spacer(Modifier.width(62.dp))
@@ -152,7 +156,8 @@ private fun SettingsBody(
     onSignOut: () -> Unit,
     viewModel: SettingsViewModel,
     header: @Composable RowScope.() -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCreateFusion: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -192,6 +197,12 @@ private fun SettingsBody(
                         .padding(top = 24.dp, bottom = 44.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
+                    if (onCreateFusion != null) {
+                        Section("Fusion") {
+                            SettingsRow(Icons.Outlined.JoinInner, "Create a Fusion", onCreateFusion)
+                        }
+                    }
+
                     Section("Privacy") {
                         val isPublic by viewModel.isPublic.collectAsState()
                         val requests by viewModel.followRequests.collectAsState()
@@ -212,7 +223,7 @@ private fun SettingsBody(
                                 )
                                 Text(
                                     if (isPublic) {
-                                        "Anyone can see your shelves, diary and lists."
+                                        "Anyone can see your shelves, thoughts and lists."
                                     } else {
                                         "Only followers you approve can see your shelves."
                                     },
@@ -285,9 +296,10 @@ private fun SettingsBody(
                         // Re-read whenever the sheet reopens; the scan flow writes
                         // this back to prefs. iOS gets that free from @AppStorage.
                         val remaining = remember(page) { ScanPrefs.scansRemaining(context) }
+                        val unlimited = remember(page) { ScanPrefs.scansUnlimited(context) }
                         InfoRow(Icons.Outlined.QrCodeScanner, "Free Scans Remaining") {
                             Text(
-                                if (remaining == 0) "NONE LEFT" else "$remaining LEFT",
+                                if (unlimited) "UNLIMITED" else if (remaining == 0) "NONE LEFT" else "$remaining LEFT",
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 12.sp,

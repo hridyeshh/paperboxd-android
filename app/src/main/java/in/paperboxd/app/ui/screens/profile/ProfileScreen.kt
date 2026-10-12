@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -98,9 +99,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import `in`.paperboxd.app.ui.screens.diary.ThoughtRow
+import `in`.paperboxd.app.ui.screens.diary.ThoughtShareSheet
 import `in`.paperboxd.app.ui.screens.wrapped.WrappedEntryCard
 import `in`.paperboxd.app.domain.model.BookWithStatus
 import `in`.paperboxd.app.domain.model.DiaryEntry
+import `in`.paperboxd.app.domain.model.AttachKind
+import `in`.paperboxd.app.domain.model.AttachmentRef
+import `in`.paperboxd.app.ui.screens.messages.SendSheet
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.ReaderProgress
 import `in`.paperboxd.app.domain.model.ReadingList
@@ -118,7 +124,7 @@ import `in`.paperboxd.app.ui.theme.PBScript
 import java.time.Instant
 import java.time.ZoneId
 import `in`.paperboxd.app.FusionRoute
-import `in`.paperboxd.app.ui.screens.fusion.FusionsSection
+import `in`.paperboxd.app.ui.screens.fusion.FusionCreateSheet
 import `in`.paperboxd.app.ui.screens.fusion.LocalFusionRouting
 import java.time.format.DateTimeFormatter
 
@@ -144,8 +150,10 @@ fun ProfileScreen(
     onSignOut: () -> Unit,
     onOpenEditProfile: () -> Unit,
     onOpenWrapped: () -> Unit,
-    onOpenDiaryEntry: (String) -> Unit,
+    onOpenSmartTbr: () -> Unit = {},
+    onOpenDiaryEntry: (entry: DiaryEntry, compose: Boolean) -> Unit,
     reloadKey: Any = Unit,
+    onOpenChat: (username: String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -154,6 +162,8 @@ fun ProfileScreen(
     // `reloadKey` bumps after an edit-profile save so the screen re-fetches.
     LaunchedEffect(username, reloadKey) { viewModel.start(username, viewer) }
     LaunchedEffect(Unit) { viewModel.toast.collect { snackbar.showSnackbar(it) } }
+    // Back from a thread: pick up its likes, reposts, follow-ups and deletes.
+    LaunchedEffect(Unit) { viewModel.reloadThoughtsIfStale() }
 
     val view = LocalView.current
     DisposableEffect(Unit) {
@@ -176,7 +186,14 @@ fun ProfileScreen(
         onOpenProfile = onOpenProfile,
         onOpenEditProfile = onOpenEditProfile,
         onOpenWrapped = onOpenWrapped,
-        onOpenDiaryEntry = onOpenDiaryEntry,
+        onOpenSmartTbr = onOpenSmartTbr,
+        onOpenDiaryEntry = { entry, compose ->
+            viewModel.markThoughtsStale()
+            onOpenDiaryEntry(entry, compose)
+        },
+        onToggleThoughtLike = viewModel::toggleThoughtLike,
+        onToggleThoughtRepost = viewModel::toggleThoughtRepost,
+        viewerUsername = viewer.username,
         onTabSelected = viewModel::onTabSelected,
         onToggleFollow = viewModel::toggleFollow,
         onReportUser = viewModel::reportUser,
@@ -186,7 +203,8 @@ fun ProfileScreen(
         fetchShelfIfNeeded = viewModel::fetchShelfIfNeeded,
         fetchDiaryIfNeeded = viewModel::fetchDiaryIfNeeded,
         onCreateList = viewModel::createList,
-        onLoadListDetail = viewModel::loadListDetail
+        onLoadListDetail = viewModel::loadListDetail,
+        onMessage = { onOpenChat(username) }
     )
 }
 
@@ -204,7 +222,8 @@ fun ProfileContent(
     onOpenProfile: (String) -> Unit,
     onOpenEditProfile: () -> Unit,
     onOpenWrapped: () -> Unit,
-    onOpenDiaryEntry: (String) -> Unit,
+    onOpenSmartTbr: () -> Unit = {},
+    onOpenDiaryEntry: (entry: DiaryEntry, compose: Boolean) -> Unit,
     onTabSelected: (ProfileTab) -> Unit,
     onToggleFollow: () -> Unit,
     onReportUser: (String) -> Unit = {},
@@ -213,18 +232,25 @@ fun ProfileContent(
     onSelectActivityYear: (Int) -> Unit = {},
     fetchShelfIfNeeded: (BookWithStatus) -> Unit,
     fetchDiaryIfNeeded: (DiaryEntry) -> Unit,
+    onToggleThoughtLike: (DiaryEntry) -> Unit = {},
+    onToggleThoughtRepost: (DiaryEntry) -> Unit = {},
+    viewerUsername: String? = null,
     onCreateList: suspend (String, String?, Boolean) -> Boolean = { _, _, _ -> false },
-    onLoadListDetail: suspend (String) -> ListWithBooksResponse? = { null }
+    onLoadListDetail: suspend (String) -> ListWithBooksResponse? = { null },
+    onMessage: () -> Unit = {}
 ) {
+    var sendRef by remember { mutableStateOf<AttachmentRef?>(null) }
     var followSheet by remember { mutableStateOf<FollowListMode?>(null) }
     var showCreateList by remember { mutableStateOf(false) }
     var openList by remember { mutableStateOf<ReadingList?>(null) }
     var showShare by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showFusion by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) } // SHOW MORE lifts the 9-item cap
     var showReportUser by remember { mutableStateOf(false) }
     var showBlockConfirm by remember { mutableStateOf(false) }
     var showLevelSheet by remember { mutableStateOf(false) }
+    var thoughtShare by remember { mutableStateOf<DiaryEntry?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(HL.Paper)) {
         when {
@@ -261,18 +287,24 @@ fun ProfileContent(
                             streak = state.streak ?: 0,
                             isOwnProfile = isOwnProfile,
                             isFollowLoading = state.isFollowLoading,
+                            readingNow = state.lastLoggedBook,
                             onFollow = onToggleFollow,
                             onEdit = onOpenEditProfile,
                             onShare = { showShare = true },
                             onFollowers = { followSheet = FollowListMode.Followers },
                             onReport = { showReportUser = true },
                             onBlock = { showBlockConfirm = true },
+                            onMessage = onMessage,
+                            onSendProfile = { sendRef = AttachmentRef(AttachKind.PROFILE, profile.id) },
                             progress = state.progress,
                             onAvatarTap = { showLevelSheet = true }
                         )
                     }
 
-                    if (!profile.canView && !isOwnProfile) {
+                    // Private account, Instagram-style: header and Follow stay, and
+                    // everything they have read gives way to the lock card.
+                    val isLocked = !profile.canView && !isOwnProfile
+                    if (isLocked) {
                         item {
                             Column(
                                 modifier = Modifier
@@ -290,9 +322,9 @@ fun ProfileContent(
                                 Spacer(Modifier.height(8.dp))
                                 Text(
                                     if (profile.hasRequested) {
-                                        "${profile.displayName} has to approve your request before you can see their shelves, diary and lists."
+                                        "${profile.displayName} has to approve your request before you can see their shelves, thoughts and lists."
                                     } else {
-                                        "Follow ${profile.displayName} to see their shelves, diary and lists."
+                                        "Follow ${profile.displayName} to see their shelves, thoughts and lists."
                                     },
                                     fontSize = 14.sp,
                                     color = HL.Muted,
@@ -302,6 +334,7 @@ fun ProfileContent(
                         }
                     }
 
+                    if (!isLocked) {
                     state.activity?.let { activity ->
                         item {
                             ReadingHeatmap(
@@ -346,16 +379,6 @@ fun ProfileContent(
                                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
                             )
                         }
-                        item {
-                            val fusion = LocalFusionRouting.current
-                            FusionsSection(
-                                myInitial = profile.username.take(1).uppercase(),
-                                // Reload when a Fusion closes: its score may be new.
-                                reloadKey = fusion.active == null,
-                                onOpenFusion = { fusion.open(FusionRoute.Open(it.id, null)) },
-                                modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 14.dp)
-                            )
-                        }
                     }
 
                     if (state.favoriteBooks.isNotEmpty()) {
@@ -385,8 +408,13 @@ fun ProfileContent(
                         state = state,
                         expanded = expanded,
                         onExpand = { expanded = true },
+                        onOpenSmartTbr = onOpenSmartTbr,
                         onOpenBook = onOpenBook,
                         onOpenDiaryEntry = onOpenDiaryEntry,
+                        onToggleThoughtLike = onToggleThoughtLike,
+                        onToggleThoughtRepost = onToggleThoughtRepost,
+                        onShareThought = { thoughtShare = it },
+                        viewerUsername = viewerUsername,
                         fetchShelfIfNeeded = fetchShelfIfNeeded,
                         fetchDiaryIfNeeded = fetchDiaryIfNeeded,
                         isOwnProfile = isOwnProfile,
@@ -399,6 +427,7 @@ fun ProfileContent(
                             profile = profile,
                             modifier = Modifier.padding(top = 28.dp)
                         )
+                    }
                     }
                 }
                 }
@@ -413,6 +442,10 @@ fun ProfileContent(
         )
 
         SnackbarHost(snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+
+    thoughtShare?.let { entry ->
+        ThoughtShareSheet(entry = entry, onDismiss = { thoughtShare = null })
     }
 
     if (showReportUser) {
@@ -476,7 +509,17 @@ fun ProfileContent(
         SettingsSheet(
             email = viewerEmail,
             onDismiss = { showSettings = false },
-            onSignOut = onSignOut
+            onSignOut = onSignOut,
+            onCreateFusion = { showSettings = false; showFusion = true }
+        )
+    }
+
+    if (showFusion) {
+        val fusion = LocalFusionRouting.current
+        FusionCreateSheet(
+            myInitial = (state.profile?.username ?: "").take(1).uppercase(),
+            onOpenFusion = { showFusion = false; fusion.open(FusionRoute.Open(it.id, null)) },
+            onDismiss = { showFusion = false }
         )
     }
 
@@ -492,8 +535,13 @@ fun ProfileContent(
             listId = list.id,
             onLoadDetail = onLoadListDetail,
             onOpenBook = { bookId -> openList = null; onOpenBook(bookId) },
-            onDismiss = { openList = null }
+            onDismiss = { openList = null },
+            onSend = { sendRef = AttachmentRef(AttachKind.LIST, list.id) }
         )
+    }
+
+    sendRef?.let { ref ->
+        SendSheet(attachment = ref, onDismiss = { sendRef = null })
     }
 }
 
@@ -608,8 +656,12 @@ private fun ProfileHeader(
     onFollowers: () -> Unit,
     onReport: () -> Unit = {},
     onBlock: () -> Unit = {},
+    onMessage: () -> Unit = {},
+    onSendProfile: () -> Unit = {},
     /** Drives the avatar's XP ring. Null → plain avatar, no ring, no tap. */
     progress: ReaderProgress? = null,
+    /** "Reading now" status line under the bio, like "listening to…". */
+    readingNow: LastLoggedBook? = null,
     onAvatarTap: () -> Unit = {}
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -666,6 +718,20 @@ private fun ProfileHeader(
             )
         }
 
+        readingNow?.let { now ->
+            Row(
+                modifier = Modifier.padding(top = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("READING NOW", fontFamily = FontFamily.Monospace, fontSize = 10.sp, letterSpacing = 1.8.sp, color = HL.Muted)
+                Text(now.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = HL.Ink, maxLines = 1)
+                if (now.totalPages > 0) {
+                    Text("${minOf(100, now.currentPage * 100 / now.totalPages)}%", fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = HL.Muted)
+                }
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -681,7 +747,7 @@ private fun ProfileHeader(
             StatCell(booksCount, "Books", Modifier.weight(1f))
             StatCell(streak, "Streak", Modifier.weight(1f))
             StatCell(profile.followersCount, "Friends", Modifier.weight(1f).clickable(onClick = onFollowers))
-            StatCell(profile.diaryEntriesCount, "Reviews", Modifier.weight(1f))
+            StatCell(profile.thoughtsCount, "Thoughts", Modifier.weight(1f))
         }
 
         Row(
@@ -704,10 +770,15 @@ private fun ProfileHeader(
                     modifier = Modifier.weight(1f),
                     onClick = onFollow
                 )
+                BrutalPill("Message", filled = false, modifier = Modifier.weight(1f), onClick = onMessage)
                 var menuOpen by remember { mutableStateOf(false) }
                 Box {
                     BrutalPill("•••", filled = false, onClick = { menuOpen = true })
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Send profile") },
+                            onClick = { menuOpen = false; onSendProfile() }
+                        )
                         DropdownMenuItem(
                             text = { Text("Report user") },
                             onClick = { menuOpen = false; onReport() }
@@ -942,7 +1013,7 @@ private fun TabDock(
         val p = state.profile ?: return null
         return when (tab) {
             ProfileTab.Bookshelf -> state.shelfTotal ?: p.booksReadCount
-            ProfileTab.Diary -> p.diaryEntriesCount
+            ProfileTab.Diary -> p.thoughtsCount
             ProfileTab.Lists -> p.listsCount
             ProfileTab.Tbr -> state.tbrItems.size.takeIf { it > 0 }
         }
@@ -1181,9 +1252,14 @@ private fun LazyListScope.tabContent(
     expanded: Boolean,
     onExpand: () -> Unit,
     onOpenBook: (String) -> Unit,
-    onOpenDiaryEntry: (String) -> Unit,
+    onOpenSmartTbr: () -> Unit = {},
+    onOpenDiaryEntry: (entry: DiaryEntry, compose: Boolean) -> Unit,
     fetchShelfIfNeeded: (BookWithStatus) -> Unit,
     fetchDiaryIfNeeded: (DiaryEntry) -> Unit,
+    onToggleThoughtLike: (DiaryEntry) -> Unit,
+    onToggleThoughtRepost: (DiaryEntry) -> Unit,
+    onShareThought: (DiaryEntry) -> Unit,
+    viewerUsername: String?,
     isOwnProfile: Boolean = false,
     onOpenList: (ReadingList) -> Unit = {},
     onNewList: () -> Unit = {}
@@ -1207,11 +1283,20 @@ private fun LazyListScope.tabContent(
         }
         ProfileTab.Diary -> {
             if (state.diaryEntries.isEmpty()) {
-                item { EmptyTab("No diary entries yet") }
+                item { EmptyTab("No thoughts yet") }
             } else {
-                items(state.diaryEntries, key = { it.id }) { entry ->
-                    LaunchedEffect(entry.id) { fetchDiaryIfNeeded(entry) }
-                    DiaryRow(entry, onClick = { onOpenDiaryEntry(entry.id) })
+                itemsIndexed(state.diaryEntries, key = { _, e -> e.rowKey }) { idx, entry ->
+                    LaunchedEffect(entry.rowKey) { fetchDiaryIfNeeded(entry) }
+                    if (idx > 0) Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(1.dp).background(HL.Ink.copy(alpha = 0.08f)))
+                    ThoughtRow(
+                        entry = entry,
+                        viewerUsername = viewerUsername,
+                        onOpen = { onOpenDiaryEntry(entry, false) },
+                        onContinue = { onOpenDiaryEntry(entry, true) },
+                        onToggleLike = { onToggleThoughtLike(entry) },
+                        onToggleRepost = { onToggleThoughtRepost(entry) },
+                        onShare = { onShareThought(entry) }
+                    )
                 }
             }
         }
@@ -1234,6 +1319,8 @@ private fun LazyListScope.tabContent(
             if (state.tbrItems.isEmpty()) {
                 item { EmptyTab("Nothing on the TBR list yet") }
             } else {
+                // Smart TBR — own profile only; the reader's shelf, ordered.
+                if (isOwnProfile) item { SmartTbrLink(onOpenSmartTbr) }
                 val capped = if (expanded) state.tbrItems else state.tbrItems.take(9)
                 items(capped.chunked(3), key = { row -> "tbr-" + row.first().id }) { row ->
                     CoverRow(cells = row.map { it.book.coverUrl to it.bookId }, onOpen = onOpenBook)
@@ -1267,88 +1354,6 @@ private fun CoverRow(cells: List<Pair<String?, String>>, onOpen: (String) -> Uni
             )
         }
         repeat(3 - cells.size) { Spacer(Modifier.weight(1f)) }
-    }
-}
-
-@Composable
-private fun DiaryRow(entry: DiaryEntry, onClick: () -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            BookCoverImage(
-                url = entry.book?.coverUrl,
-                title = entry.book?.title ?: "",
-                modifier = Modifier.width(44.dp).aspectRatio(2f / 3f),
-                cornerRadius = 4.dp
-            )
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        entry.book?.title ?: entry.title ?: "Untitled",
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.5.sp,
-                        color = HL.Ink,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        monthDay(entry.createdAt),
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 9.5.sp,
-                        letterSpacing = 1.sp,
-                        color = HL.Muted
-                    )
-                }
-                if (entry.plainTextPreview.isNotEmpty()) {
-                    Text(
-                        "“${entry.plainTextPreview}”",
-                        fontFamily = FontFamily.Serif,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 13.5.sp,
-                        lineHeight = 18.sp,
-                        color = HL.Ink.copy(alpha = 0.72f),
-                        maxLines = 3
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    entry.rating?.let { r ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            for (i in 1..5) {
-                                Icon(
-                                    if (i <= r) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                                    contentDescription = null,
-                                    tint = if (i <= r) HL.Accent else HL.Muted.copy(alpha = 0.5f),
-                                    modifier = Modifier.size(10.dp)
-                                )
-                            }
-                        }
-                    }
-                    entry.book?.categories?.firstOrNull()?.let {
-                        Text(
-                            it,
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = HL.Accent,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(HL.Accent.copy(alpha = 0.12f))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                }
-            }
-        }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Line))
     }
 }
 
@@ -1451,6 +1456,34 @@ private fun ShowMore(onClick: () -> Unit) {
     )
 }
 
+/** Plus entry above the TBR grid — same frame as ShowMore. */
+@Composable
+private fun SmartTbrLink(onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(top = 16.dp)
+            .border(1.5.dp, HL.Ink)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp)
+    ) {
+        Text(
+            "WHAT SHOULD I READ NEXT?",
+            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
+            fontSize = 11.sp, letterSpacing = 1.5.sp, color = HL.Ink
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            "PLUS",
+            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold,
+            fontSize = 9.sp, letterSpacing = 1.5.sp, color = HL.Ink,
+            modifier = Modifier.border(1.dp, HL.Ink).padding(horizontal = 6.dp, vertical = 2.dp)
+        )
+    }
+}
+
 @Composable
 private fun EmptyTab(message: String) {
     Text(
@@ -1481,7 +1514,7 @@ private fun EditorialSignature(profile: UserProfile, modifier: Modifier = Modifi
     ) {
         EyebrowText("This year")
         Text(
-            "${profile.booksReadCount} books · $pagesStr pages · ${profile.diaryEntriesCount} reviews.",
+            "${profile.booksReadCount} books · $pagesStr pages · ${profile.thoughtsCount} thoughts.",
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
@@ -1499,8 +1532,3 @@ private fun EditorialSignature(profile: UserProfile, modifier: Modifier = Modifi
     }
 }
 
-private fun monthDay(iso: String): String = runCatching {
-    DateTimeFormatter.ofPattern("MMM d")
-        .format(Instant.parse(iso).atZone(ZoneId.systemDefault()))
-        .uppercase()
-}.getOrDefault("")

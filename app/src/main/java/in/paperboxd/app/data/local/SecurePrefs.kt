@@ -58,6 +58,13 @@ class SecurePrefs @Inject constructor(
     /** An invite link opened before sign-in, held until the main tabs show. */
     fun getPendingFusion(): String? = prefs.getString(KEY_PENDING_FUSION, null)
 
+    /** True once the full splash clip has played on this install; flips it on read. */
+    fun consumeSplashPlayed(): Boolean {
+        val played = prefs.getBoolean("pb_splash_played", false)
+        if (!played) prefs.edit().putBoolean("pb_splash_played", true).apply()
+        return played
+    }
+
     fun setPendingFusion(token: String?) {
         prefs.edit().apply { if (token == null) remove(KEY_PENDING_FUSION) else putString(KEY_PENDING_FUSION, token) }.apply()
     }

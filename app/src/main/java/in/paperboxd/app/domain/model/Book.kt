@@ -12,7 +12,9 @@ data class Book(
     val volumeInfo: VolumeInfo,
     val paperboxdStats: PaperboxdStats? = null,
     val googleBooksId: String? = null,
-    val apiSource: String? = null
+    val apiSource: String? = null,
+    /** Single-book detail only; null on search and list items. */
+    @SerializedName("read_links") val readLinks: BookReadLinks? = null
 ) {
     val title: String get() = volumeInfo.title
     val authors: List<String> get() = volumeInfo.authors ?: emptyList()

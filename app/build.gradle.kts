@@ -107,6 +107,8 @@ dependencies {
 
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+    // Animated GIFs / stickers in DMs (decoders registered in PaperBoxdApp).
+    implementation("io.coil-kt:coil-gif:2.5.0")
 
     // Secure storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
@@ -135,4 +137,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
+    // Plus subscriptions (Google Play Billing)
+    implementation("com.android.billingclient:billing:9.1.0")
 }

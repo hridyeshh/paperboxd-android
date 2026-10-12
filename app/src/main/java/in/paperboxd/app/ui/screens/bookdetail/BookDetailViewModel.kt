@@ -11,6 +11,7 @@ import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookReview
 import `in`.paperboxd.app.domain.model.FriendBookReview
 import `in`.paperboxd.app.domain.model.BookReaderStats
+import `in`.paperboxd.app.domain.model.BookSocialFriend
 import `in`.paperboxd.app.domain.model.FriendOnBook
 import `in`.paperboxd.app.domain.model.ReadingProgress
 import `in`.paperboxd.app.domain.model.RecommendationItem
@@ -54,7 +55,11 @@ data class BookDetailUiState(
     val reviews: List<BookReview> = emptyList(),
     val isSubmittingReview: Boolean = false,
     val progress: ReadingProgress? = null,
-    val isSavingProgress: Boolean = false
+    val isSavingProgress: Boolean = false,
+    val socialFriends: List<BookSocialFriend> = emptyList(),
+    val thoughtsCount: Int = 0,
+    /** Set after a finish; the screen shows FinishSheet. */
+    val showFinishSheet: Boolean = false
 )
 
 @HiltViewModel
@@ -152,6 +157,8 @@ class BookDetailViewModel @Inject constructor(
                         BookUserState(s.isRead, s.isLiked, s.isTBR, s.isOnShelf)
                     } ?: it.bookState,
                     readerStats = socialTask.await()?.readers,
+                    socialFriends = socialTask.await()?.friends.orEmpty(),
+                    thoughtsCount = socialTask.await()?.thoughtsCount ?: 0,
                     friendsOnBook = friends?.friends.orEmpty(),
                     friendsReadingCount = friends?.readingCount ?: 0,
                     friendReviews = friendReviewsTask.await()?.reviews.orEmpty(),
@@ -241,6 +248,9 @@ class BookDetailViewModel @Inject constructor(
                 _toast.tryEmit(e.message ?: "Couldn't update TBR")
             }
             _state.update { it.copy(bookState = it.bookState.copy(isMutating = false)) }
+            if (result.isSuccess && !prev.isTbr) {
+                userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
+            }
         }
     }
 
@@ -251,6 +261,8 @@ class BookDetailViewModel @Inject constructor(
      * entry, which only exists once the reader has logged progress — rating no
      * longer silently shelves the book, so [canRate] gates the call site.
      */
+    fun dismissFinishSheet() = _state.update { it.copy(showFinishSheet = false) }
+
     fun submitReview(rating: Int, review: String?, onDone: (Boolean) -> Unit) {
         val username = user?.username ?: return onDone(false)
         viewModelScope.launch {
@@ -336,7 +348,7 @@ class BookDetailViewModel @Inject constructor(
                 onSuccess = {
                     if (target == LibraryShelf.Read) {
                         _state.value.book?.pageCount?.takeIf { it > 0 }?.let { total ->
-                            // Suppressed: the shelved takeover plays for this moment.
+                            // Suppressed here; the streak check runs once after the shelved poster.
                             updateProgress(total, total, celebrateStreak = false)
                         }
                     }
@@ -350,6 +362,9 @@ class BookDetailViewModel @Inject constructor(
                                 coverUrl = book?.coverUrl
                             )
                         )
+                        // Shelving is a log too: the streak takeover queues after the poster.
+                        userRepository.streak(username).onSuccess { celebrationCenter.checkStreak(it.streak) }
+                        if (target == LibraryShelf.Read) _state.update { it.copy(showFinishSheet = true) }
                     } else {
                         _toast.tryEmit("Removed from library")
                     }
@@ -364,10 +379,10 @@ class BookDetailViewModel @Inject constructor(
     }
 
     /**
-     * Logging pages is what extends the reading streak (the server counts any
-     * UTC day with >=1 page logged), so a successful log refetches it and
-     * celebrates a growth. [celebrateStreak] is false for the mark-as-read path —
-     * that moment already gets the shelved takeover, and only one can play.
+     * A successful forward log refetches the streak and celebrates the day's
+     * first log (the server counts the day before it responds). [celebrateStreak]
+     * is false for the mark-as-read path, which runs its own streak check after
+     * the shelved takeover.
      */
     fun updateProgress(currentPage: Int, totalPages: Int, celebrateStreak: Boolean = true) {
         val username = user?.username ?: return

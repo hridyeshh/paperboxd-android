@@ -20,8 +20,21 @@ sealed class Screen(val route: String) {
         const val DEEP_LINK = "https://paperboxd.in/b/{bookId}"
     }
 
+    /** Public-domain reader. The Gutenberg URL rides as an encoded argument so the screen needs no refetch. */
+    data object GutenbergReader : Screen("gutenberg-reader/{title}/{url}") {
+        fun route(title: String, url: String) = "gutenberg-reader/" + Uri.encode(title) + "/" + Uri.encode(url)
+    }
+
     data object Author : Screen("author/{name}") {
         fun route(name: String) = "author/" + Uri.encode(name)
+    }
+
+    data object Messages : Screen("messages")
+
+    /** A DM, by conversation id, or by username when opened from a profile (none may exist yet). */
+    data object Chat : Screen("chat?conversationId={conversationId}&username={username}") {
+        fun route(conversationId: String? = null, username: String? = null) =
+            "chat?conversationId=${conversationId.orEmpty()}&username=${username.orEmpty()}"
     }
 
     data object Profile : Screen("profile/{username}") {

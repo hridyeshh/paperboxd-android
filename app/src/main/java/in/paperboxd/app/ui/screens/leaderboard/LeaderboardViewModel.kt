@@ -15,14 +15,14 @@ import javax.inject.Inject
 
 /** Mirrors iOS LeaderboardTab: global/friends use dedicated routes, others a dimension. */
 enum class LeaderboardTab(val dimension: String?) {
-    Global(null), Books("books"), Pages("pages"), Streak("streak"), Diary("diary"), Friends(null);
+    Global(null), Books("books"), Pages("pages"), Streak("streak"), Thoughts("thoughts"), Friends(null);
 
     fun value(e: LeaderboardEntry): Int = when (this) {
         Global, Friends -> e.totalXp
         Books -> e.booksRead
         Pages -> e.pagesRead
         Streak -> e.currentStreak
-        Diary -> e.diaryEntries
+        Thoughts -> e.thoughts
     }
 
     fun rank(e: LeaderboardEntry): Int? = when (this) {
@@ -30,7 +30,7 @@ enum class LeaderboardTab(val dimension: String?) {
         Books -> e.booksRank
         Pages -> e.pagesRank
         Streak -> e.streakRank
-        Diary -> e.diaryRank
+        Thoughts -> e.thoughtsRank
     }
 }
 

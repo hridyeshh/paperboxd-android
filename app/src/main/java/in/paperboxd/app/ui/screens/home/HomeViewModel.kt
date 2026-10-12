@@ -14,6 +14,7 @@ import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.CommunityShelfBook
 import `in`.paperboxd.app.domain.model.FeedModule
 import `in`.paperboxd.app.domain.model.LastLoggedBook
+import `in`.paperboxd.app.domain.model.NowCard
 import `in`.paperboxd.app.domain.model.RecommendationItem
 import `in`.paperboxd.app.domain.model.User
 import kotlinx.coroutines.async
@@ -44,6 +45,8 @@ data class HomeUiState(
     val risingBooks: List<CommunityShelfBook> = emptyList(),
     val mostTbrBooks: List<CommunityShelfBook> = emptyList(),
     val communityActivities: List<ActivityItem> = emptyList(),
+    /** Right Now on Paperboxd; empty when too little is happening. */
+    val nowCards: List<NowCard> = emptyList(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
@@ -173,6 +176,7 @@ class HomeViewModel @Inject constructor(
                     trendingBooks = community?.trendingBooks.orEmpty().filter { b -> b.coverUrl != null },
                     risingBooks = community?.rising.orEmpty().filter { b -> b.coverUrl != null },
                     mostTbrBooks = community?.mostTbr.orEmpty().filter { b -> b.coverUrl != null },
+                    nowCards = community?.now.orEmpty(),
                     communityActivities = community?.activity.orEmpty()
                         .filter { a -> a.userId != user?.id && a.bookTitle != null },
                     followRequests = followRequestsTask.await(),

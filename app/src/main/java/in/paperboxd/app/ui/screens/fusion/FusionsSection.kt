@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,8 +55,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Your side of Fusion: the profile section (waiting link + Fusions) and the
-// Create sheet (landing → link). Twin of iOS FusionsSection.swift and the design
+// Your side of Fusion: the Create sheet (landing → link, then your Fusions),
+// opened from the profile menu. Twin of iOS FusionsSection.swift and the design
 // prototype's FLanding / FInvite / FList.
 
 @HiltViewModel
@@ -114,93 +117,22 @@ private fun shareLink(context: Context, url: String) {
     context.startActivity(Intent.createChooser(send, "Share"))
 }
 
-/** Sits on your own profile. Quiet until there is something in it. */
+/**
+ * "Create a Fusion", opened from the profile menu: the landing, or your live
+ * link once made, with the Fusions you already have listed underneath.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FusionsSection(
+fun FusionCreateSheet(
     myInitial: String,
-    reloadKey: Any,
     onOpenFusion: (FusionSummary) -> Unit,
-    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
     viewModel: FusionsViewModel = hiltViewModel()
 ) {
     val list by viewModel.list.collectAsStateWithLifecycle()
-    val toast by viewModel.toast.collectAsStateWithLifecycle()
-    var showCreate by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-
-    LaunchedEffect(reloadKey) { viewModel.load() }
-
-    Column(modifier.fillMaxWidth().background(FZ.Bg).border(1.dp, FZ.Ink).padding(18.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FzLabel("Fusion", 9.5f, FZ.Accent)
-            Spacer(Modifier.weight(1f))
-            if (list.fusions.isNotEmpty()) FzLabel("${list.fusions.size} ${if (list.fusions.size == 1) "reader" else "readers"}", 9f)
-        }
-
-        if (list.fusions.isEmpty() && list.invite == null) {
-            Row(Modifier.padding(top = 10.dp).fillMaxWidth().fzClick { showCreate = true }, verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FzHeading("Two tastes. One discovery.", 19f)
-                    FzBody("Send one reader a link and see how your shelves line up.", 13f)
-                }
-                Text("→", color = FZ.Accent, fontFamily = FZ.Sans, fontWeight = FontWeight.Bold, fontSize = 24.sp, modifier = Modifier.padding(start = 8.dp))
-            }
-        } else {
-            list.invite?.let { inv ->
-                Column(Modifier.padding(top = 12.dp).fillMaxWidth().border(1.dp, FZ.Ink).padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Box(Modifier.size(7.dp).background(FZ.Accent))
-                        FzLabel("Link waiting", 9f, FZ.Ink)
-                        Spacer(Modifier.weight(1f))
-                        FzLabel("${inv.daysLeft} ${if (inv.daysLeft == 1) "day" else "days"} left", 9f)
-                    }
-                    FzNum(inv.url.removePrefix("https://"), 12.5f, bold = false)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FzPill("Share", solid = true, compact = true, fullWidth = false) { shareLink(context, inv.url) }
-                        FzPill("Copy", compact = true, fullWidth = false) { copyLink(context, inv.url); viewModel.flash("Fusion link copied") }
-                        FzPill("Cancel", compact = true, fullWidth = false) { viewModel.cancel(inv) }
-                    }
-                }
-            }
-            list.fusions.forEach { f ->
-                Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(1.dp).background(FZ.Line))
-                Row(
-                    Modifier.padding(top = 12.dp).fillMaxWidth().fzClick { onOpenFusion(f) },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row {
-                        FzMonogram(myInitial, 30.dp, accent = true)
-                        FzMonogram(f.them.initial, 30.dp)
-                    }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        FzHeading(f.them.displayName, 17f, maxLines = 1)
-                        FzLabel("@${f.them.username}", 9f)
-                    }
-                    FzNum(f.score?.let { "$it%" } ?: "New", 22f, FZ.Accent)
-                }
-            }
-            if (list.invite == null) {
-                FzPill("Create a Fusion", compact = true, modifier = Modifier.padding(top = 16.dp)) { showCreate = true }
-            }
-        }
-        toast?.let { FzToast(it, Modifier.padding(top = 12.dp)) }
-    }
-
-    if (showCreate) {
-        FusionCreateSheet(viewModel, initial = list.invite) {
-            showCreate = false
-            viewModel.load()
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FusionCreateSheet(viewModel: FusionsViewModel, initial: FusionInvite?, onDismiss: () -> Unit) {
-    var invite by remember { mutableStateOf(initial) }
     val creating by viewModel.creating.collectAsStateWithLifecycle()
     val toast by viewModel.toast.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.load() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -208,14 +140,51 @@ private fun FusionCreateSheet(viewModel: FusionsViewModel, initial: FusionInvite
         containerColor = FZ.Bg,
         dragHandle = null
     ) {
-        Box(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
-            val inv = invite
-            if (inv == null) {
-                FusionLandingScreen(creating) { viewModel.create { invite = it } }
-            } else {
-                FusionInviteScreen(inv, viewModel, onCancelled = onDismiss)
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
+            Box(Modifier.fillMaxWidth().weight(1f)) {
+                val inv = list.invite
+                if (inv == null) {
+                    FusionLandingScreen(creating) { viewModel.create {} }
+                } else {
+                    // Cancelling drops back to the landing; list.invite clears.
+                    FusionInviteScreen(inv, viewModel, onCancelled = {})
+                }
+                toast?.let { FzToast(it, Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp)) }
             }
-            toast?.let { FzToast(it, Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp)) }
+            if (list.fusions.isNotEmpty()) {
+                YourFusions(list.fusions, myInitial, onOpenFusion)
+            }
+        }
+    }
+}
+
+@Composable
+private fun YourFusions(fusions: List<FusionSummary>, myInitial: String, onOpen: (FusionSummary) -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().heightIn(max = 240.dp).border(1.dp, FZ.Ink)
+            .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 14.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            FzLabel("Your Fusions", 9.5f, FZ.Accent)
+            Spacer(Modifier.weight(1f))
+            FzLabel("${fusions.size} ${if (fusions.size == 1) "reader" else "readers"}", 9f)
+        }
+        fusions.forEach { f ->
+            Row(
+                Modifier.padding(top = 12.dp).fillMaxWidth().fzClick { onOpen(f) },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row {
+                    FzMonogram(myInitial, 30.dp, accent = true)
+                    FzMonogram(f.them.initial, 30.dp)
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    FzHeading(f.them.displayName, 17f, maxLines = 1)
+                    FzLabel("@${f.them.username}", 9f)
+                }
+                FzNum(f.score?.let { "$it%" } ?: "New", 22f, FZ.Accent)
+            }
         }
     }
 }

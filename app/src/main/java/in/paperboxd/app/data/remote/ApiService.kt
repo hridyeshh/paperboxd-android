@@ -7,6 +7,8 @@ import `in`.paperboxd.app.domain.model.AuthResponse
 import `in`.paperboxd.app.domain.model.AvatarUploadResponse
 import `in`.paperboxd.app.domain.model.ReadingActivity
 import `in`.paperboxd.app.domain.model.JazyTurn
+import `in`.paperboxd.app.domain.model.SmartTbr
+import `in`.paperboxd.app.domain.model.SubscriptionStatus
 import `in`.paperboxd.app.domain.model.VibeSearchResponse
 import `in`.paperboxd.app.domain.model.Wrapped
 import `in`.paperboxd.app.domain.model.FusionAcceptResponse
@@ -14,6 +16,15 @@ import `in`.paperboxd.app.domain.model.FusionInvite
 import `in`.paperboxd.app.domain.model.FusionInvitePreview
 import `in`.paperboxd.app.domain.model.FusionList
 import `in`.paperboxd.app.domain.model.FusionStory
+import `in`.paperboxd.app.domain.model.ConversationList
+import `in`.paperboxd.app.domain.model.ConversationPage
+import `in`.paperboxd.app.domain.model.ConversationWith
+import `in`.paperboxd.app.domain.model.InboxBadge
+import `in`.paperboxd.app.domain.model.SendMessageRequest
+import `in`.paperboxd.app.domain.model.SendResult
+import `in`.paperboxd.app.domain.model.GifList
+import `in`.paperboxd.app.domain.model.MediaUpload
+import `in`.paperboxd.app.domain.model.SharedList
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.BookSocialResponse
 import `in`.paperboxd.app.domain.model.CommunityResponse
@@ -26,6 +37,8 @@ import `in`.paperboxd.app.domain.model.CheckUsernameResponse
 import `in`.paperboxd.app.domain.model.DiaryCreateBody
 import `in`.paperboxd.app.domain.model.DiaryEntriesResponse
 import `in`.paperboxd.app.domain.model.DiaryEntry
+import `in`.paperboxd.app.domain.model.ThoughtCountResponse
+import `in`.paperboxd.app.domain.model.ThoughtThreadResponse
 import `in`.paperboxd.app.domain.model.FavoriteBook
 import `in`.paperboxd.app.domain.model.FollowResponse
 import `in`.paperboxd.app.domain.model.FollowingActivitiesResponse
@@ -62,6 +75,7 @@ import `in`.paperboxd.app.domain.model.ReadingList
 import `in`.paperboxd.app.domain.model.UserProfile
 import `in`.paperboxd.app.domain.model.FollowRequestsResponse
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -221,9 +235,26 @@ interface ApiService {
     @POST("api/v1/search/vibe")
     suspend fun vibeSearch(@Body body: Map<String, @JvmSuppressWildcards Any>): VibeSearchResponse
 
-    /** Jazy concierge — search with a voice, and permission to ask one question. */
+    /**
+     * Jazy concierge — search with a voice, and permission to ask one question.
+     * Plus-only: 402 SUBSCRIPTION_REQUIRED without an active subscription.
+     */
     @POST("api/v1/jazy")
     suspend fun jazy(@Body body: Map<String, @JvmSuppressWildcards Any>): JazyTurn
+
+    // Plus subscription: the backend owns the entitlement, Play supplies receipts.
+    @GET("api/v1/subscriptions/me")
+    suspend fun subscriptionStatus(): SubscriptionStatus
+
+    @POST("api/v1/subscriptions/google")
+    suspend fun linkGoogleSubscription(@Body body: Map<String, String>): SubscriptionStatus
+
+    // Smart TBR (Plus): the reader's TBR, ranked.
+    @GET("api/v1/users/me/tbr/smart")
+    suspend fun smartTbr(): SmartTbr
+
+    @POST("api/v1/users/me/tbr/smart/{bookId}/keep")
+    suspend fun keepTbr(@Path("bookId") bookId: String): Response<Unit>
 
     // Bookshelf
     @POST("api/v1/users/{username}/bookshelf")
@@ -378,43 +409,62 @@ interface ApiService {
         @Query("year") year: Int
     ): ReadingActivity
 
-    // Diary
-    @GET("api/v1/users/{username}/diary")
-    suspend fun userDiary(
+    // Thoughts. {username} is the author — the thread GET sits behind the
+    // author's profile-privacy gate.
+    @GET("api/v1/users/{username}/thoughts")
+    suspend fun userThoughts(
         @Path("username") username: String,
         @Query("page") page: Int? = null,
         @Query("page_size") pageSize: Int? = null
     ): DiaryEntriesResponse
 
-    @POST("api/v1/users/{username}/diary")
-    suspend fun createDiaryEntry(
+    @POST("api/v1/users/{username}/thoughts")
+    suspend fun createThought(
         @Path("username") username: String,
         @Body body: DiaryCreateBody
     ): DiaryEntry
 
-    @GET("api/v1/users/{username}/diary/{entryId}")
-    suspend fun getDiaryEntry(
+    @GET("api/v1/users/{username}/thoughts/{thoughtId}")
+    suspend fun getThought(
         @Path("username") username: String,
-        @Path("entryId") entryId: String
+        @Path("thoughtId") thoughtId: String
     ): DiaryEntry
 
-    @DELETE("api/v1/users/{username}/diary/{entryId}")
-    suspend fun deleteDiaryEntry(
+    @GET("api/v1/users/{username}/thoughts/{thoughtId}/thread")
+    suspend fun getThoughtThread(
         @Path("username") username: String,
-        @Path("entryId") entryId: String
+        @Path("thoughtId") thoughtId: String
+    ): ThoughtThreadResponse
+
+    @DELETE("api/v1/users/{username}/thoughts/{thoughtId}")
+    suspend fun deleteThought(
+        @Path("username") username: String,
+        @Path("thoughtId") thoughtId: String
     ): ResponseBody
 
-    @POST("api/v1/users/{username}/diary/{entryId}/like")
-    suspend fun likeDiaryEntry(
+    @POST("api/v1/users/{username}/thoughts/{thoughtId}/like")
+    suspend fun likeThought(
         @Path("username") username: String,
-        @Path("entryId") entryId: String
-    ): ResponseBody
+        @Path("thoughtId") thoughtId: String
+    ): ThoughtCountResponse
 
-    @DELETE("api/v1/users/{username}/diary/{entryId}/like")
-    suspend fun unlikeDiaryEntry(
+    @DELETE("api/v1/users/{username}/thoughts/{thoughtId}/like")
+    suspend fun unlikeThought(
         @Path("username") username: String,
-        @Path("entryId") entryId: String
-    ): ResponseBody
+        @Path("thoughtId") thoughtId: String
+    ): ThoughtCountResponse
+
+    @POST("api/v1/users/{username}/thoughts/{thoughtId}/repost")
+    suspend fun repostThought(
+        @Path("username") username: String,
+        @Path("thoughtId") thoughtId: String
+    ): ThoughtCountResponse
+
+    @DELETE("api/v1/users/{username}/thoughts/{thoughtId}/repost")
+    suspend fun unrepostThought(
+        @Path("username") username: String,
+        @Path("thoughtId") thoughtId: String
+    ): ThoughtCountResponse
 
     // Activities + events
     @GET("api/v1/activities/following")
@@ -477,4 +527,57 @@ interface ApiService {
 
     @GET("api/v1/fusions/{id}")
     suspend fun fusion(@Path("id") id: String): FusionStory
+
+    // Messages (DMs). Polling: a chat asks for ?after=<last id>.
+    @GET("api/v1/conversations")
+    suspend fun conversations(
+        @Query("box") box: String,
+        @Query("before") before: String? = null
+    ): ConversationList
+
+    @GET("api/v1/conversations/badge")
+    suspend fun inboxBadge(): InboxBadge
+
+    @GET("api/v1/conversations/with/{username}")
+    suspend fun conversationWith(@Path("username") username: String): ConversationWith
+
+    @GET("api/v1/conversations/{id}/messages")
+    suspend fun conversationMessages(
+        @Path("id") id: String,
+        @Query("before") before: Long? = null,
+        @Query("after") after: Long? = null
+    ): ConversationPage
+
+    @GET("api/v1/conversations/{id}/shared")
+    suspend fun conversationShared(
+        @Path("id") id: String,
+        @Query("kind") kind: String? = null
+    ): SharedList
+
+    @POST("api/v1/messages")
+    suspend fun sendMessage(@Body body: SendMessageRequest): SendResult
+
+    /** kind = photo | video. Attach the result as AttachmentRef(kind, refId). */
+    @Multipart
+    @POST("api/v1/messages/media")
+    suspend fun uploadMessageMedia(@Part("kind") kind: RequestBody, @Part file: MultipartBody.Part): MediaUpload
+
+    /** GIPHY via the backend; trending when q is empty. type = gifs | stickers. */
+    @GET("api/v1/messages/gifs")
+    suspend fun gifs(@Query("type") type: String, @Query("q") q: String): GifList
+
+    @DELETE("api/v1/messages/{id}")
+    suspend fun unsendMessage(@Path("id") id: Long): Response<Unit>
+
+    @POST("api/v1/conversations/{id}/read")
+    suspend fun markConversationRead(@Path("id") id: String): Response<Unit>
+
+    @POST("api/v1/conversations/{id}/accept")
+    suspend fun acceptConversation(@Path("id") id: String): Response<Unit>
+
+    @PATCH("api/v1/conversations/{id}")
+    suspend fun updateConversation(@Path("id") id: String, @Body body: Map<String, Boolean>): Response<Unit>
+
+    @DELETE("api/v1/conversations/{id}")
+    suspend fun clearConversation(@Path("id") id: String): Response<Unit>
 }

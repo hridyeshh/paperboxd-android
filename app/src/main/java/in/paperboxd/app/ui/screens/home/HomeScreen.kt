@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,6 +71,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import `in`.paperboxd.app.R
 import `in`.paperboxd.app.domain.model.ActivityItem
+import `in`.paperboxd.app.domain.model.NowCard
 import `in`.paperboxd.app.domain.model.Book
 import `in`.paperboxd.app.domain.model.LastLoggedBook
 import `in`.paperboxd.app.domain.model.RecommendationItem
@@ -205,7 +207,11 @@ fun HomeContent(
 // ---- Header (cursive wordmark + circular card actions) ----
 
 @Composable
-private fun HomeHeader(hasUnread: Boolean, onWrite: () -> Unit, onBell: () -> Unit) {
+private fun HomeHeader(
+    hasUnread: Boolean,
+    onWrite: () -> Unit,
+    onBell: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -240,19 +246,23 @@ private fun HomeHeader(hasUnread: Boolean, onWrite: () -> Unit, onBell: () -> Un
                     )
                 }
                 if (hasUnread) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = (-3).dp, y = 3.dp)
-                            .size(9.dp)
-                            .clip(CircleShape)
-                            .background(Terracotta)
-                            .border(2.dp, HL.Paper, CircleShape)
-                    )
+                    UnreadDot(Modifier.align(Alignment.TopEnd))
                 }
             }
         }
     }
+}
+
+@Composable
+private fun UnreadDot(modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .offset(x = (-3).dp, y = 3.dp)
+            .size(9.dp)
+            .clip(CircleShape)
+            .background(Terracotta)
+            .border(2.dp, HL.Paper, CircleShape)
+    )
 }
 
 @Composable
@@ -325,6 +335,9 @@ private fun FeedList(
             }
         }
 
+        // Home answers "what happened while you were away?": your reading
+        // (hero), your people, right now, for you. Every other rail lives
+        // under Explore.
         if (state.friendsActivities.isNotEmpty()) {
             item {
                 ActivityRail(
@@ -334,6 +347,10 @@ private fun FeedList(
                     onOpenPreview = onOpenPreview
                 )
             }
+        }
+
+        if (state.nowCards.isNotEmpty()) {
+            item { RightNowSection(cards = state.nowCards, onOpenBook = onOpenBook) }
         } else if (state.showsCommunityRail) {
             item {
                 ActivityRail(
@@ -345,9 +362,35 @@ private fun FeedList(
             }
         }
 
-        // Server-assembled modules first: each carries its own title and a
-        // reason on every book. The legacy rails below are deduped against them.
-        items(state.feedModules, key = { it.kind }) { module ->
+        val firstModule = state.feedModules.firstOrNull()
+        val forYou = firstModule?.books?.take(4) ?: state.pickedForYou.take(4)
+        if (forYou.isNotEmpty()) {
+            item {
+                CarouselSection(
+                    eyebrow = stringResource(R.string.home_picked_eyebrow),
+                    title = firstModule?.title ?: stringResource(R.string.home_picked_title),
+                    items = forYou,
+                    onOpenBook = onOpenBook,
+                    trackImpression = trackImpression,
+                    onVerdict = onVerdict
+                )
+            }
+        }
+
+        item {
+            Text(
+                text = "EXPLORE",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                letterSpacing = 2.4.sp,
+                color = HL.Muted,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .padding(vertical = 8.dp)
+            )
+        }
+
+        items(state.feedModules.drop(1), key = { it.kind }) { module ->
             CarouselSection(
                 eyebrow = feedEyebrow(module.kind),
                 title = module.title,
@@ -358,7 +401,7 @@ private fun FeedList(
             )
         }
 
-        if (state.pickedForYou.isNotEmpty()) {
+        if (firstModule != null && state.pickedForYou.isNotEmpty()) {
             item {
                 CarouselSection(
                     eyebrow = stringResource(R.string.home_picked_eyebrow),
@@ -1025,5 +1068,58 @@ private fun HomePreview() {
             onOpenBook = {},
             onWrite = {}
         )
+    }
+}
+
+// ---- Right Now ----
+
+/** Server-picked live events; the server sends none when too little is happening. */
+@Composable
+private fun RightNowSection(cards: List<NowCard>, onOpenBook: (String) -> Unit) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        EyebrowText(text = "Right now on Paperboxd")
+        Text(
+            text = "What's happening.",
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 22.sp,
+            color = HL.Ink
+        )
+        cards.forEach { card ->
+            val book = card.book
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(HL.Card, RoundedCornerShape(16.dp))
+                    .then(if (book != null) Modifier.clickable { onOpenBook(book.id) } else Modifier)
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (book?.coverUrl != null) {
+                    BookCoverImage(
+                        url = book.coverUrl,
+                        title = book.title,
+                        modifier = Modifier.width(44.dp).height(66.dp),
+                        cornerRadius = 3.dp
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(text = card.headline, fontSize = 14.sp, color = HL.Ink)
+                    card.excerpt?.let {
+                        Text(
+                            text = "“$it”",
+                            fontFamily = FontFamily.Serif,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 14.sp,
+                            color = HL.Muted,
+                            maxLines = 3
+                        )
+                    }
+                }
+            }
+        }
     }
 }

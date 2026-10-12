@@ -152,7 +152,7 @@ private fun FollowRequestRow(
 }
 
 @Composable
-private fun ActivityRow(activity: ActivityItem, onClick: (() -> Unit)?) {
+internal fun ActivityRow(activity: ActivityItem, onClick: (() -> Unit)?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

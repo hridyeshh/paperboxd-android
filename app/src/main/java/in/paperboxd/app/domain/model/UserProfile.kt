@@ -19,7 +19,7 @@ data class UserProfile(
     @SerializedName("total_pages_read") val totalPagesRead: Int = 0,
     @SerializedName("favorites_count") val favoritesCount: Int = 0,
     @SerializedName("lists_count") val listsCount: Int = 0,
-    @SerializedName("diary_entries_count") val diaryEntriesCount: Int = 0,
+    @SerializedName("thoughts_count") val thoughtsCount: Int = 0,
     @SerializedName("followers_count") val followersCount: Int = 0,
     @SerializedName("following_count") val followingCount: Int = 0,
     @SerializedName("favorite_genres") val favoriteGenres: List<String> = emptyList(),

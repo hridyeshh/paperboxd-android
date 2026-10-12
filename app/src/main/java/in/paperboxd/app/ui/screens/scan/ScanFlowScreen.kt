@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import `in`.paperboxd.app.ui.screens.plus.PlusPaywallSheet
+import `in`.paperboxd.app.ui.screens.plus.PlusFeature
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import `in`.paperboxd.app.data.billing.PlusBilling
 import `in`.paperboxd.app.data.remote.ApiError
 import `in`.paperboxd.app.data.repository.AnalyticsRepository
 import `in`.paperboxd.app.data.repository.BookRepository
@@ -50,7 +56,8 @@ data class ScanFlowUiState(
 class ScanFlowViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val analyticsRepository: AnalyticsRepository,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    val billing: PlusBilling
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScanFlowUiState())
@@ -173,6 +180,7 @@ fun ScanFlowScreen(
     viewModel: ScanFlowViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    var showPaywall by remember { mutableStateOf(false) }
 
     // Reset the retained VM as we leave, so the next open starts at the scanner.
     val dismiss = {
@@ -218,7 +226,8 @@ fun ScanFlowScreen(
                 onReveal = { viewModel.go(ScanStage.Reveal) },
                 onRetry = { viewModel.retry() },
                 onBack = { viewModel.go(ScanStage.Scan) },
-                onClose = dismiss
+                onClose = dismiss,
+                onGetPlus = { showPaywall = true }
             )
             ScanStage.Reveal -> state.result?.let { result ->
                 RevealScreen(
@@ -238,5 +247,14 @@ fun ScanFlowScreen(
                 )
             } ?: Box(Modifier.fillMaxSize().background(SK.bg))
         }
+    }
+
+    if (showPaywall) {
+        PlusPaywallSheet(
+            billing = viewModel.billing,
+            feature = PlusFeature.Scan,
+            onUnlocked = { showPaywall = false; viewModel.retry() },
+            onDismiss = { showPaywall = false }
+        )
     }
 }

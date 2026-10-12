@@ -3,7 +3,6 @@ package `in`.paperboxd.app.ui.screens.wrapped
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,14 +65,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import `in`.paperboxd.app.ui.components.cacheShareImage
+import `in`.paperboxd.app.ui.components.instagramStoryIntent
 import `in`.paperboxd.app.domain.model.Wrapped
 import `in`.paperboxd.app.ui.UiState
 import `in`.paperboxd.app.ui.components.rememberGallerySaver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import java.io.File
-import java.io.FileOutputStream
 
 // Monthly Wrapped — a fourteen-chapter story player. Twin of iOS WrappedView.swift.
 // The design prototype previewed the story inside phone mockups; here the story
@@ -359,7 +358,7 @@ private fun WrappedShareSheet(w: Wrapped, chapter: WrappedChapter, onDismiss: ()
                 if (instagram != null) {
                     ShareTile(Icons.Outlined.IosShare, "INSTAGRAM STORY", Modifier.weight(1f), accent = true) {
                         scope.launch {
-                            val uri = cacheWrappedCard(context, render())
+                            val uri = cacheShareImage(context, render(), "wrapped-card")
                             if (uri != null) {
                                 instagram.setDataAndType(uri, "image/png")
                                 context.startActivity(instagram)
@@ -405,29 +404,6 @@ private fun ShareTile(
         Text(label, fontFamily = PBW.Mono, fontSize = 9.sp, letterSpacing = 1.sp, color = tint)
     }
 }
-
-/**
- * Instagram's "share to story" intent with the card as the background image, or
- * null when Instagram isn't installed (needs the <queries> entry in the manifest).
- */
-private fun instagramStoryIntent(context: Context): Intent? {
-    val intent = Intent("com.instagram.share.ADD_TO_STORY").apply {
-        putExtra("source_application", context.packageName)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        type = "image/png"
-    }
-    return intent.takeIf { context.packageManager.resolveActivity(it, 0) != null }
-}
-
-/** Writes the card to cache and returns a FileProvider content:// URI for sharing. */
-private fun cacheWrappedCard(context: Context, bitmap: Bitmap): Uri? = runCatching {
-    val dir = File(context.cacheDir, "shares").apply { mkdirs() }
-    val file = File(dir, "wrapped-card.png")
-    FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-    androidx.core.content.FileProvider.getUriForFile(
-        context, "${context.packageName}.fileprovider", file
-    )
-}.getOrNull()
 
 // MARK: - Empty / error state
 

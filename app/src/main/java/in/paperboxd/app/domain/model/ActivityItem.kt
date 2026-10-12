@@ -23,7 +23,7 @@ data class ActivityItem(
 ) {
     /**
      * Verb for "<name> <verb> <title>". Types are the ones the Go backend writes
-     * (handler/bookshelf.go shelfActivityType, diary.go, lists.go); the fallback
+     * (handler/bookshelf.go shelfActivityType, thoughts.go, lists.go); the fallback
      * turns any newer type into readable words.
      */
     val verbPhrase: String
@@ -39,7 +39,9 @@ data class ActivityItem(
                 "wants_to_read" -> "wants to read"
                 "rated" -> "rated$stars"
                 "added_book" -> "shelved"
-                "created_diary_entry" -> "wrote about"
+                "created_thought" -> "wrote about"
+                "liked_thought" -> "liked a thought on"
+                "reposted_thought" -> "reposted a thought on"
                 "created_list" -> "made a list"
                 "shared_list" -> "shared a list"
                 "shared_book" -> "shared"
@@ -81,6 +83,21 @@ data class CommunityResponse(
     val rising: List<CommunityShelfBook> = emptyList(),
     @SerializedName("most_tbr") val mostTbr: List<CommunityShelfBook> = emptyList(),
     @SerializedName("hidden_gems") val hiddenGems: List<CommunityShelfBook> = emptyList()
+    ,
+    /** Right Now on Paperboxd. Empty when too little is happening; show `activity` instead. */
+    val now: List<NowCard> = emptyList()
+)
+
+/** One "Right Now" event. The headline is server-authored so every client makes the same claim. */
+data class NowCard(
+    val kind: String = "",
+    val headline: String = "",
+    val count: Int = 0,
+    val book: Book? = null,
+    @SerializedName("list_id") val listId: String? = null,
+    @SerializedName("thought_id") val thoughtId: String? = null,
+    val username: String? = null,
+    val excerpt: String? = null
 )
 
 /**
@@ -110,7 +127,19 @@ data class CommunityShelfBook(
  * GET /api/v1/books/{id}/social — what Paperboxd readers did with a book.
  * `books.average_rating` is the publisher's number; this one is ours.
  */
-data class BookSocialResponse(val readers: BookReaderStats = BookReaderStats())
+data class BookSocialResponse(
+    val readers: BookReaderStats = BookReaderStats(),
+    val friends: List<BookSocialFriend> = emptyList(),
+    @SerializedName("thoughts_count") val thoughtsCount: Int = 0
+)
+
+data class BookSocialFriend(
+    @SerializedName("user_id") val userId: String = "",
+    val username: String = "",
+    val name: String? = null,
+    val status: String = "",
+    val rating: Int? = null
+)
 
 data class BookReaderStats(
     val rating: Double? = null,

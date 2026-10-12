@@ -245,13 +245,18 @@ fun GoogleButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    shape: androidx.compose.ui.graphics.Shape = RectangleShape,
+    background: Color = HL.Card,
+    border: Color = HL.Ink,
+    borderWidth: androidx.compose.ui.unit.Dp = 2.dp,
+    textColor: Color = HL.Ink,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(50.dp)
-            .background(HL.Card, RectangleShape)
-            .border(2.dp, HL.Ink, RectangleShape)
+            .background(background, shape)
+            .border(borderWidth, border, shape)
             .clickableNoRipple(enabled = enabled, onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -262,25 +267,25 @@ fun GoogleButton(
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(10.dp))
-        Text(text, color = HL.Ink, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 14.5f.sp)
+        Text(text, color = textColor, fontFamily = PBSans, fontWeight = FontWeight.SemiBold, fontSize = 14.5f.sp)
     }
 }
 
 /** "── OR ──" mono divider. */
 @Composable
-fun OrDivider(modifier: Modifier = Modifier) {
+fun OrDivider(modifier: Modifier = Modifier, lineColor: Color = HL.Ink.copy(0.18f), labelColor: Color = HL.Muted.copy(0.7f)) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f).height(1.dp).background(HL.Ink.copy(0.18f)))
+        Box(Modifier.weight(1f).height(1.dp).background(lineColor))
         Text(
             "OR",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
             letterSpacing = 2.2.sp,
-            color = HL.Muted.copy(0.7f),
+            color = labelColor,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 10.dp),
         )
-        Box(Modifier.weight(1f).height(1.dp).background(HL.Ink.copy(0.18f)))
+        Box(Modifier.weight(1f).height(1.dp).background(lineColor))
     }
 }
 
@@ -298,3 +303,9 @@ private fun Modifier.clickableNoRipple(
         onClick = onClick,
     )
 )
+
+/** Good-enough shape check for auth email fields; the backend is the source of truth on submit. */
+fun looksLikeEmail(s: String): Boolean {
+    val at = s.indexOf('@')
+    return at > 0 && s.substring(at + 1).contains('.')
+}

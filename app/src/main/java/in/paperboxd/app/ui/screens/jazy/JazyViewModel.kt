@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import `in`.paperboxd.app.data.billing.PlusBilling
+import `in`.paperboxd.app.data.remote.ApiError
 import `in`.paperboxd.app.data.repository.BookRepository
 import `in`.paperboxd.app.data.repository.UserRepository
 import `in`.paperboxd.app.domain.model.VibeMatch
@@ -42,7 +44,9 @@ data class JazyUiState(
      * yet or the request failed — callers must fail OPEN on null, since a
      * network hiccup is not a reason to take a feature away.
      */
-    val shelfSize: Int? = null
+    val shelfSize: Int? = null,
+    /** Ask Jazy is Plus-only: set when the ask needs a subscription first. */
+    val showPaywall: Boolean = false
 )
 
 /** Ask Jazy's vibe search. iOS twin: the search half of `JazyView`. */
@@ -50,11 +54,19 @@ data class JazyUiState(
 class JazyViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val bookRepository: BookRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    val billing: PlusBilling
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(JazyUiState())
     val state: StateFlow<JazyUiState> = _state.asStateFlow()
+
+    init {
+        // Entitlement check + link any purchase Play already holds, once per open.
+        billing.start()
+    }
+
+    fun setPaywall(visible: Boolean) = _state.update { it.copy(showPaywall = visible) }
 
     private var searchJob: Job? = null
 
@@ -105,6 +117,12 @@ class JazyViewModel @Inject constructor(
     fun submit(answer: String? = null) {
         val q = _state.value.query.trim()
         if (q.isEmpty() || _state.value.isSearching) return
+        // Known not-subscribed opens the paywall before the ask; unknown
+        // (null) lets it through and the backend's 402 opens it.
+        if (billing.isActive.value == false) {
+            _state.update { it.copy(showPaywall = true) }
+            return
+        }
         searchJob?.cancel()
         _state.update {
             it.copy(isSearching = true, errorMessage = null, pendingQuestion = null, questionOptions = emptyList())
@@ -150,7 +168,9 @@ class JazyViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             isSearching = false,
-                            errorMessage = e.message ?: "Shelf jammed — try again"
+                            showPaywall = e is ApiError.SubscriptionRequired,
+                            errorMessage = if (e is ApiError.SubscriptionRequired) null
+                                           else e.message ?: "Shelf jammed — try again"
                         )
                     }
                 }

@@ -6,7 +6,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -14,14 +15,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,6 +31,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -52,7 +49,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -72,13 +68,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import `in`.paperboxd.app.R
 import `in`.paperboxd.app.ui.components.HL
 import `in`.paperboxd.app.ui.components.ImageCropper
 import `in`.paperboxd.app.ui.components.SpineTitle
@@ -92,18 +89,47 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import `in`.paperboxd.app.domain.model.Genre
-import `in`.paperboxd.app.domain.model.ONBOARDING_MAX_PICKS
-import `in`.paperboxd.app.domain.model.RecommendationItem
-import `in`.paperboxd.app.domain.model.SuggestedReader
 import `in`.paperboxd.app.domain.model.User
+import `in`.paperboxd.app.ui.components.PBPrimaryButton
+import `in`.paperboxd.app.ui.components.PBStepHeader
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.delay
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import `in`.paperboxd.app.ui.components.CatAnimation
+import `in`.paperboxd.app.ui.components.CatClip
+import `in`.paperboxd.app.ui.components.brutalPlate
+import `in`.paperboxd.app.ui.components.pageDissolve
+import `in`.paperboxd.app.ui.components.pageDissolveSupported
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Multi-step onboarding — iOS `OnboardingContainerView` twin: light editorial
@@ -127,7 +153,6 @@ private object OB {
     val ring = HL.Ink.copy(alpha = 0.28f)
     val green = HL.Sage
     val red = HL.Crimson
-    val darkBg = Color(0xFF0F0F0F)   // aha-loading only; stays dark
     val avatarGradient = Brush.linearGradient(listOf(Color(0xFFF2D19E), Color(0xFF7A52B8)))
 }
 
@@ -189,11 +214,6 @@ fun OnboardingScreen(
         onSubmitUsername = viewModel::submitUsername,
         onToggleGenre = viewModel::toggleGenre,
         onContinueFromGenres = viewModel::continueFromGenres,
-        onSearchChange = viewModel::onSearchChange,
-        onTogglePick = viewModel::togglePick,
-        onContinueFromBooks = viewModel::continueFromBooks,
-        onFollow = viewModel::follow,
-        onContinueFromReaders = viewModel::continueFromReaders,
         onSaveToShelf = viewModel::saveToShelf,
         onShowAnother = viewModel::showAnother,
         onSkipAha = viewModel::skipAha
@@ -210,22 +230,10 @@ private fun OnboardingContent(
     onSubmitUsername: () -> Unit,
     onToggleGenre: (String) -> Unit,
     onContinueFromGenres: () -> Unit,
-    onSearchChange: (String) -> Unit,
-    onTogglePick: (RecommendationItem) -> Unit,
-    onContinueFromBooks: () -> Unit,
-    onFollow: (SuggestedReader) -> Unit,
-    onContinueFromReaders: () -> Unit,
     onSaveToShelf: () -> Unit,
     onShowAnother: () -> Unit,
     onSkipAha: () -> Unit
 ) {
-    val isDark = state.step == OnboardingStep.AhaLoading
-    val bg by animateColorAsState(
-        if (isDark) OB.darkBg else HL.Paper,
-        animationSpec = tween(400),
-        label = "onboarding-bg"
-    )
-
     // Whole-content entrance: fade in, once.
     var contentIn by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentIn = true }
@@ -233,7 +241,7 @@ private fun OnboardingContent(
         if (contentIn) 1f else 0f, tween(600), label = "content-alpha"
     )
 
-    Box(Modifier.fillMaxSize().background(bg)) {
+    Box(Modifier.fillMaxSize().background(HL.Paper)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().alpha(contentAlpha)) {
             if (state.step != OnboardingStep.AhaLoading) {
                 StageHeader(
@@ -245,7 +253,9 @@ private fun OnboardingContent(
             AnimatedContent(
                 targetState = state.step,
                 transitionSpec = {
-                    if (targetState == OnboardingStep.AhaLoading ||
+                    if (pageDissolveSupported) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else if (targetState == OnboardingStep.AhaLoading ||
                         initialState == OnboardingStep.AhaLoading
                     ) {
                         fadeIn(tween(400)) togetherWith fadeOut(tween(400))
@@ -257,16 +267,16 @@ private fun OnboardingContent(
                 label = "onboarding-step",
                 modifier = Modifier.fillMaxSize()
             ) { step ->
-                when (step) {
-                    OnboardingStep.Username -> UsernameStep(
-                        state, avatarModel, onPickAvatar, onUsernameChange,
-                        onDisplayNameChange, onSubmitUsername
-                    )
-                    OnboardingStep.Genres -> GenresStep(state, onToggleGenre, onContinueFromGenres)
-                    OnboardingStep.Books -> BooksStep(state, onSearchChange, onTogglePick, onContinueFromBooks)
-                    OnboardingStep.Readers -> ReadersStep(state, onFollow, onContinueFromReaders)
-                    OnboardingStep.AhaLoading -> AhaLoadingStep()
-                    OnboardingStep.AhaReveal -> AhaRevealStep(state, onSaveToShelf, onShowAnother, onSkipAha)
+                Box(Modifier.fillMaxSize().then(pageDissolve()), propagateMinConstraints = true) {
+                    when (step) {
+                        OnboardingStep.Username -> UsernameStep(
+                            state, avatarModel, onPickAvatar, onUsernameChange,
+                            onDisplayNameChange, onSubmitUsername
+                        )
+                        OnboardingStep.Genres -> SwipeGenresStep(state, onToggleGenre, onContinueFromGenres)
+                        OnboardingStep.AhaLoading -> AhaLoadingStep(Genre.all.filter { it.id in state.selectedGenres }.map { it.label })
+                        OnboardingStep.AhaReveal -> AhaRevealStep(state, onSaveToShelf, onShowAnother, onSkipAha)
+                    }
                 }
             }
         }
@@ -275,74 +285,16 @@ private fun OnboardingContent(
 
 // ── Stage header ─────────────────────────────────────────────────────────────
 
+/** Signup is step 1 of the shared 3-step run; onboarding picks up at 2. */
 @Composable
 private fun StageHeader(step: OnboardingStep, modifier: Modifier = Modifier) {
-    val stages = listOf("Sign up", "Set up", "Aha")
-    val activeStage = when (step) {
-        OnboardingStep.Username, OnboardingStep.Genres, OnboardingStep.Books, OnboardingStep.Readers -> 1
-        OnboardingStep.AhaLoading, OnboardingStep.AhaReveal -> 2
-    }
     val subStep = when (step) {
-        OnboardingStep.Username -> 1
-        OnboardingStep.Genres -> 2
-        OnboardingStep.Books -> 3
-        OnboardingStep.Readers -> 4
+        OnboardingStep.Username -> 2
+        OnboardingStep.Genres -> 3
         else -> null
-    }
+    } ?: return
 
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            stages.forEachIndexed { idx, label ->
-                StagePill(label, done = idx < activeStage, current = idx == activeStage)
-                if (idx < stages.size - 1) {
-                    Box(
-                        Modifier
-                            .padding(horizontal = 6.dp)
-                            .width(12.dp)
-                            .height(2.dp)
-                            .background(if (idx < activeStage) OB.ink else OB.line)
-                    )
-                }
-            }
-        }
-        if (subStep != null) {
-            Text(
-                "STEP $subStep OF 4",
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp,
-                letterSpacing = 1.4.sp,
-                color = OB.muted
-            )
-        }
-    }
-}
-
-@Composable
-private fun StagePill(label: String, done: Boolean, current: Boolean) {
-    val fill = when {
-        current -> OB.ink
-        done -> HL.Ochre
-        else -> OB.well
-    }
-    val textColor = when {
-        current -> HL.Cream
-        done -> OB.ink
-        else -> OB.faint
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
-            .background(fill)
-            .border(2.dp, if (done || current) OB.ink else OB.hairline)
-            .padding(horizontal = 9.dp, vertical = 4.dp)
-    ) {
-        if (done) {
-            Icon(Icons.Filled.Check, null, tint = textColor, modifier = Modifier.size(9.dp))
-        }
-        Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = textColor)
-    }
+    PBStepHeader(step = subStep, modifier = modifier)
 }
 
 // ── Shared components ────────────────────────────────────────────────────────
@@ -376,41 +328,6 @@ private fun FieldLabel(text: String) {
     )
 }
 
-/** Crimson CTA plate on the paper ground — iOS `OnboardingPrimaryButton`. */
-@Composable
-private fun OnbPrimaryButton(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    loading: Boolean = false,
-    enabled: Boolean = true
-) {
-    val alpha by animateFloatAsState(if (enabled) 1f else 0.45f, tween(180), label = "cta-alpha")
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .alpha(alpha)
-            .brutalButton(onClick = onClick, fill = HL.Crimson, enabled = enabled && !loading)
-    ) {
-        if (loading) {
-            CircularProgressIndicator(color = HL.Cream, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(title, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = HL.Cream)
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward, null,
-                    tint = HL.Cream, modifier = Modifier.size(15.dp)
-                )
-            }
-        }
-    }
-}
-
 // ── Step 1: Username ─────────────────────────────────────────────────────────
 
 @Composable
@@ -430,9 +347,18 @@ private fun UsernameStep(
             .padding(horizontal = 26.dp)
             .padding(top = 28.dp, bottom = 48.dp)
     ) {
-        OnbTitle("Choose your name\non the shelves.")
-        Spacer(Modifier.height(8.dp))
-        OnbSubtitle("This is how readers will find and follow you.")
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Image(
+                painter = painterResource(R.drawable.reading_buddy_icon),
+                contentDescription = null,
+                modifier = Modifier.width(50.dp)
+            )
+            Column {
+                OnbTitle("Choose your name\non the shelves.")
+                Spacer(Modifier.height(8.dp))
+                OnbSubtitle("This is how readers will find and follow you.")
+            }
+        }
         Spacer(Modifier.height(24.dp))
 
         AvatarRow(avatarModel, state.isUploadingAvatar, onPickAvatar)
@@ -455,7 +381,7 @@ private fun UsernameStep(
         }
 
         Spacer(Modifier.height(28.dp))
-        OnbPrimaryButton(
+        PBPrimaryButton(
             title = "Continue",
             onClick = onSubmitUsername,
             loading = state.isSubmitting,
@@ -657,544 +583,443 @@ private fun DisplayNameField(value: String, onChange: (String) -> Unit) {
     }
 }
 
-// ── Step 2: Genres — pull them off the shelf ─────────────────────────────────
-
-/**
- * Cloth and foil for each genre, plus how tall its board stands. Same shelf
- * language as the sign-in hero, so the metaphor carries from the first screen
- * into the first task. Keyed by `Genre.id`.
- */
-private val genreBoards = mapOf(
-    "fiction" to Triple(0xFF6A2350, 0xFFEDD9A8, 112),
-    "mystery" to Triple(0xFF23304F, 0xFFD8B45C, 122),
-    "thriller" to Triple(0xFFC0271C, 0xFFFFF0CC, 106),
-    "romance" to Triple(0xFFB5456B, 0xFFFFF0CC, 118),
-    "science-fiction" to Triple(0xFF14595E, 0xFFE7C77A, 110),
-    "fantasy" to Triple(0xFF33306B, 0xFFD8B45C, 124),
-    "horror" to Triple(0xFF23211E, 0xFFD8B45C, 104),
-    "historical" to Triple(0xFFC9962B, 0xFF3A2C1C, 120),
-    "biography" to Triple(0xFF7A2E1B, 0xFFE7C77A, 114),
-    "self-help" to Triple(0xFF4F7A1E, 0xFFF2EDE1, 108),
-    "business" to Triple(0xFF2A3A5A, 0xFFC9962B, 116),
-    "non-fiction" to Triple(0xFF1B4B3C, 0xFFEDD9A8, 122),
-    "young-adult" to Triple(0xFFB5642A, 0xFF2A1C0E, 110),
-    "classics" to Triple(0xFF8C2B22, 0xFFE7C77A, 126),
-    "poetry" to Triple(0xFF2F7D5A, 0xFFFFF0CC, 106)
-)
+// ── Step 3: Genres — swipe away ──────────────────────────────────────────────
+//
+// Deck of genre cards. Drag past 90dp (or tap a button) to add or skip: the card
+// tints and stamps ADD/SKIP as it leans, the matching button lights up and the
+// mascot quips. Picked genres drop into the shelf tray; three auto-advance.
 
 @Composable
-private fun GenresStep(
+private fun SwipeGenresStep(
     state: OnboardingUiState,
     onToggleGenre: (String) -> Unit,
     onContinueFromGenres: () -> Unit
 ) {
-    val remaining = (3 - state.selectedGenres.size).coerceAtLeast(0)
-    // Fifteen boards across three shelves.
-    val shelves = remember { Genre.all.chunked(5) }
+    val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val commitPx = with(density) { 90.dp.toPx() }
+    val latest by rememberUpdatedState(state)
 
-    Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .padding(horizontal = 26.dp)
-                .padding(top = 22.dp, bottom = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            OnbTitle("Pull the ones\nyou'd reread.")
-            OnbSubtitle("Tap a spine to pull it off the shelf. Three or more and we can start.")
-        }
+    var deck by remember { mutableStateOf(Genre.all.shuffled()) }
+    var dragX by remember { mutableFloatStateOf(0f) }
+    var dragY by remember { mutableFloatStateOf(0f) }
+    var flying by remember { mutableStateOf(false) }
+    var pastThreshold by remember { mutableStateOf(false) }
+    val topGenre = deck.firstOrNull()
+    val lean = (dragX / commitPx).coerceIn(-1f, 1f)
+    val leaningAdd = lean > 0.3f
+    val leaningSkip = lean < -0.3f
 
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-        ) {
-            shelves.forEach { books -> GenreShelf(books, state.selectedGenres, onToggleGenre) }
-        }
-
-        Column(
-            Modifier
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp)
-                .padding(top = 10.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            PulledTally(state.selectedGenres.size)
-            OnbPrimaryButton(
-                title = if (remaining == 0) "Continue" else "Pull $remaining more",
-                onClick = onContinueFromGenres,
-                enabled = remaining == 0
-            )
+    // Parse both cat loops while the reader swipes, so the next screens start instantly.
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            CatClip.load(context, R.raw.cat_play)
+            CatClip.load(context, R.raw.cat_match)
         }
     }
-}
 
-@Composable
-private fun GenreShelf(books: List<Genre>, picked: Set<String>, onToggle: (String) -> Unit) {
-    Column(Modifier.padding(top = 14.dp)) {
-        Row(
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-            modifier = Modifier.fillMaxWidth().height(128.dp)
-        ) {
-            books.forEach { genre ->
-                GenreBoard(genre, genre.id in picked) { onToggle(genre.id) }
+    fun swipe(liked: Boolean) {
+        val genre = deck.firstOrNull() ?: return
+        if (flying) return
+        flying = true
+        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        scope.launch {
+            val fromX = dragX
+            val fromY = dragY
+            val toX = (if (liked) 1f else -1f) * commitPx * 6f
+            animate(0f, 1f, animationSpec = tween(200, easing = FastOutLinearInEasing)) { p, _ ->
+                dragX = fromX + (toX - fromX) * p
+                dragY = fromY + 30f * density.density * p
+            }
+            if (deck.firstOrNull()?.id == genre.id) deck = deck.drop(1)
+            dragX = 0f
+            dragY = 0f
+            if (liked) onToggleGenre(genre.id)
+            // Ran out of cards before three — reshuffle the skipped ones so nobody gets stuck.
+            val picked = latest.selectedGenres + if (liked) setOf(genre.id) else emptySet()
+            if (deck.isEmpty() && picked.size < 3) deck = Genre.all.filter { it.id !in picked }.shuffled()
+            flying = false
+            if (deck.isEmpty()) {
+                // Seen every genre with 3+ liked: nothing left to decide, so move on.
+                delay(350)
+                onContinueFromGenres()
             }
         }
-        Box(Modifier.fillMaxWidth().height(5.dp).background(HL.Plank))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(14.dp)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(HL.Plank.copy(alpha = 0.26f), HL.Plank.copy(alpha = 0f))
-                    )
-                )
-        )
     }
-}
 
-@Composable
-private fun GenreBoard(genre: Genre, pulled: Boolean, onToggle: () -> Unit) {
-    val spec = genreBoards[genre.id] ?: Triple(0xFF23211E, 0xFFD8B45C, 114)
-    val foil = Color(spec.second)
-    val lift by animateFloatAsState(if (pulled) -14f else 0f, tween(220), label = "genre-lift")
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-            .offset { IntOffset(0, lift.dp.roundToPx()) }
-            .width(61.dp)
-            .height(spec.third.dp)
-            .background(Color(spec.first))
-            // Untouched boards sit back under a shadow veil; a pulled one is
-            // lifted out of the row and into the light.
-            .background(if (pulled) Color.Transparent else Color(0xFF1A140C).copy(alpha = 0.30f))
-            .border(2.dp, HL.Ink)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onToggle
-            )
-            .padding(vertical = 8.dp)
-    ) {
-        Box(Modifier.size(width = 40.dp, height = 2.dp).background(foil))
-        SpineTitle(
-            text = genre.label,
-            fontSize = 12.sp,
-            color = foil,
-            run = (spec.third - 36).dp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.3.sp
-        )
-        Box(Modifier.size(width = 40.dp, height = 2.dp).background(foil))
-    }
-}
-
-@Composable
-private fun PulledTally(count: Int) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            "PULLED",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            letterSpacing = 1.6.sp,
-            color = OB.muted
-        )
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            repeat(3) { i ->
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .height(8.dp)
-                        .background(if (i < count) HL.Crimson else OB.well)
-                        .border(1.5.dp, HL.Ink)
-                )
-            }
+    Column(Modifier.fillMaxSize().padding(horizontal = 26.dp)) {
+        Column(Modifier.padding(top = 18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            OnbTitle("Swipe away!")
+            OnbSubtitle("Right for genres you love, left to skip. Pick at least 3.")
         }
-        Text(
-            "$count/${Genre.all.size}",
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
-            color = OB.ink
+        ShelfTray(
+            // selectedGenres is insertion-ordered, so this is pick order.
+            picked = state.selectedGenres.mapNotNull { id -> Genre.all.find { it.id == id } },
+            pending = if (leaningAdd) topGenre else null,
+            modifier = Modifier.padding(top = 16.dp)
         )
-    }
-}
-
-
-// ── Step 3: Books you love ───────────────────────────────────────────────────
-//
-// Up to four books the reader already loves. Search on top, a suggestion grid
-// underneath; picks sit in a tray of four slots so the cap is visible before
-// it bites. iOS twin: BooksStepView.
-
-@Composable
-private fun BooksStep(
-    state: OnboardingUiState,
-    onSearchChange: (String) -> Unit,
-    onTogglePick: (RecommendationItem) -> Unit,
-    onContinue: () -> Unit
-) {
-    Column(Modifier.fillMaxSize().imePadding()) {
-        Column(Modifier.padding(horizontal = 26.dp).padding(top = 22.dp, bottom = 14.dp)) {
-            OnbTitle("Books you\nalready love.")
-            Spacer(Modifier.height(7.dp))
-            OnbSubtitle("Pick up to $ONBOARDING_MAX_PICKS. They become your Top 4 and teach us your taste.")
-        }
-
-        PicksTray(state.picks, onTogglePick, Modifier.padding(horizontal = 26.dp).padding(bottom = 12.dp))
-        PickSearchField(state, onSearchChange, Modifier.padding(horizontal = 26.dp).padding(bottom = 12.dp))
-
-        val grid = state.pickGrid
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp),
-            modifier = Modifier.weight(1f).fillMaxWidth()
-        ) {
-            when {
-                state.isLoadingSuggestions && grid.isEmpty() -> items(8) {
-                    Box(
-                        Modifier.aspectRatio(2f / 3f).background(OB.recessed)
-                            .border(1.5.dp, HL.Ink.copy(alpha = 0.12f))
-                    )
-                }
-                grid.isEmpty() -> item(span = { GridItemSpan(4) }) {
-                    Text(
-                        if (state.searchQuery.trim().length >= 2) "Nothing found — try another title."
-                        else "Search for a book you love.",
-                        fontSize = 13.sp, color = OB.muted, textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)
-                    )
-                }
-                else -> items(grid, key = { it.id }) { book ->
-                    val picked = state.isPicked(book.id)
-                    val scale by animateFloatAsState(if (picked) 0.96f else 1f, tween(180), label = "pick-scale")
-                    Box(
-                        Modifier
-                            .aspectRatio(2f / 3f)
-                            .scale(scale)
-                            .border(if (picked) 2.5.dp else 1.5.dp, if (picked) OB.ink else OB.line)
-                            .clickable { onTogglePick(book) }
-                    ) {
-                        PickCover(book.coverUrl, book.title, Modifier.fillMaxSize())
-                        if (picked) {
-                            Box(Modifier.fillMaxSize().background(OB.ink.copy(alpha = 0.35f)), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Filled.Check, null, tint = HL.Cream, modifier = Modifier.size(20.dp))
+        // Shrinks the deck on short phones so Continue stays on screen.
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val fit = (maxHeight / 320.dp).coerceAtMost(1f)
+            deck.take(3).reversed().forEach { genre ->
+                key(genre.id) {
+                    val depth = deck.indexOf(genre)
+                    val isTop = depth == 0
+                    val scaled = Modifier.graphicsLayer { scaleX = fit; scaleY = fit }
+                    GenreCard(
+                        genre = genre,
+                        depth = depth,
+                        dragX = if (isTop) dragX else 0f,
+                        dragY = if (isTop) dragY else 0f,
+                        lean = if (isTop) lean else 0f,
+                        modifier = if (!isTop) scaled else scaled.pointerInput(genre.id) {
+                            detectDragGestures(
+                                onDragEnd = {
+                                    pastThreshold = false
+                                    when {
+                                        dragX > commitPx -> swipe(true)
+                                        dragX < -commitPx -> swipe(false)
+                                        else -> scope.launch {
+                                            val fx = dragX
+                                            val fy = dragY
+                                            animate(1f, 0f, animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)) { p, _ ->
+                                                dragX = fx * p
+                                                dragY = fy * p
+                                            }
+                                        }
+                                    }
+                                },
+                                onDragCancel = {
+                                    pastThreshold = false
+                                    dragX = 0f
+                                    dragY = 0f
+                                }
+                            ) { change, amount ->
+                                if (flying) return@detectDragGestures
+                                change.consume()
+                                dragX += amount.x
+                                dragY += amount.y
+                                val past = abs(dragX) > commitPx
+                                if (past != pastThreshold) {
+                                    pastThreshold = past
+                                    if (past) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
                             }
                         }
-                    }
+                    )
                 }
             }
         }
-
-        Column(
-            Modifier.navigationBarsPadding().padding(horizontal = 26.dp).padding(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        HintRow(leaningAdd, leaningSkip)
+        Row(
+            Modifier.fillMaxWidth().padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            state.errorMessage?.let {
-                Text(it, fontSize = 12.sp, color = OB.red, textAlign = TextAlign.Center)
+            val label = topGenre?.label.orEmpty()
+            SwipeAction(add = false, active = leaningSkip, dimmed = leaningAdd, enabled = topGenre != null && !flying, genre = label) { swipe(false) }
+            Spacer(Modifier.weight(1f))
+            SwipeMascot(lean)
+            Spacer(Modifier.weight(1f))
+            SwipeAction(add = true, active = leaningAdd, dimmed = leaningSkip, enabled = topGenre != null && !flying, genre = label) { swipe(true) }
+        }
+        PBPrimaryButton(
+            title = "Continue",
+            onClick = onContinueFromGenres,
+            enabled = state.selectedGenres.size >= 3,
+            modifier = Modifier.navigationBarsPadding().padding(top = 18.dp, bottom = 20.dp)
+        )
+    }
+}
+
+@Composable
+private fun ShelfTray(picked: List<Genre>, pending: Genre?, modifier: Modifier = Modifier) {
+    // Scrolls once it outgrows the screen, following the newest (or
+    // about-to-be-added) chip at the end.
+    val scroll = rememberScrollState()
+    LaunchedEffect(scroll.maxValue) { scroll.animateScrollTo(scroll.maxValue) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            if (picked.size < 3) "YOUR SHELF · ${picked.size} OF 3" else "YOUR SHELF · ${picked.size} PICKED",
+            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
+            fontSize = 11.sp, letterSpacing = 1.6.sp, color = OB.muted
+        )
+        Row(Modifier.horizontalScroll(scroll), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            picked.forEach { FilledChip(it.label) }
+            when {
+                pending != null -> DashedChip(pending.label, HL.Sage, HL.Sage, plus = true)
+                picked.size < 3 -> DashedChip("${3 - picked.size} more", OB.muted, HL.Ink.copy(alpha = 0.35f), plus = false)
             }
-            OnbPrimaryButton(
-                title = if (state.picks.isEmpty()) "Skip for now" else "Continue",
-                onClick = onContinue
-            )
         }
     }
 }
 
 @Composable
-private fun PicksTray(
-    picks: List<RecommendationItem>,
-    onRemove: (RecommendationItem) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        repeat(ONBOARDING_MAX_PICKS) { i ->
-            val book = picks.getOrNull(i)
-            if (book != null) {
-                Box(
-                    Modifier
-                        .size(width = 48.dp, height = 72.dp)
-                        .border(2.dp, OB.ink)
-                        .clickable { onRemove(book) }
-                ) {
-                    PickCover(book.coverUrl, book.title, Modifier.fillMaxSize())
-                }
-            } else {
-                Box(
-                    Modifier
-                        .size(width = 48.dp, height = 72.dp)
-                        .background(OB.well)
-                        .drawBehind {
-                            drawRect(
-                                color = OB.line,
-                                style = Stroke(
-                                    width = 1.5.dp.toPx(),
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
-                                )
-                            )
-                        }
+private fun FilledChip(label: String) {
+    Row(
+        Modifier.height(32.dp).clip(CircleShape).background(HL.Ink).padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Icon(Icons.Filled.Check, null, tint = HL.Card, modifier = Modifier.size(12.dp))
+        Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = HL.Card)
+    }
+}
+
+@Composable
+private fun DashedChip(label: String, color: Color, dash: Color, plus: Boolean) {
+    Row(
+        Modifier
+            .height(32.dp)
+            .drawBehind {
+                val w = 1.5.dp.toPx()
+                drawRoundRect(
+                    dash,
+                    topLeft = Offset(w / 2, w / 2),
+                    size = Size(size.width - w, size.height - w),
+                    cornerRadius = CornerRadius(size.height / 2),
+                    style = Stroke(w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx())))
                 )
             }
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        if (plus) Icon(Icons.Filled.Add, null, tint = color, modifier = Modifier.size(12.dp))
+        Text(label, fontSize = 13.sp, fontWeight = if (plus) FontWeight.SemiBold else FontWeight.Medium, color = color)
+    }
+}
+
+@Composable
+private fun GenreCard(genre: Genre, depth: Int, dragX: Float, dragY: Float, lean: Float, modifier: Modifier) {
+    val isTop = depth == 0
+    val number = Genre.all.indexOf(genre) + 1
+    Box(
+        modifier
+            .graphicsLayer {
+                translationX = dragX
+                translationY = dragY
+                rotationZ = if (isTop) dragX / (14f * density) else if (depth == 1) -4f else 5f
+            }
+            .size(width = 250.dp, height = 300.dp)
+            .background(if (isTop) HL.Ink else if (depth == 1) HL.Paper2 else HL.Card)
+            .border(2.dp, HL.Ink)
+    ) {
+        if (isTop) {
+            Box(Modifier.matchParentSize().background((if (lean >= 0f) HL.Sage else HL.Crimson).copy(alpha = abs(lean))))
+            Column(Modifier.fillMaxSize().padding(22.dp)) {
+                Text(
+                    String.format(Locale.US, "GENRE %02d / %d", number, Genre.all.size),
+                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, letterSpacing = 1.6.sp,
+                    color = Color.White.copy(alpha = 0.65f)
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    genre.label,
+                    fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp, lineHeight = 42.sp, maxLines = 2, color = Color.White
+                )
+            }
+            SwipeStamp(add = true, alpha = max(0f, lean), modifier = Modifier.align(Alignment.TopStart).padding(top = 48.dp, start = 18.dp))
+            SwipeStamp(add = false, alpha = max(0f, -lean), modifier = Modifier.align(Alignment.TopEnd).padding(top = 48.dp, end = 18.dp))
         }
     }
 }
 
 @Composable
-private fun PickSearchField(state: OnboardingUiState, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
-    var focused by remember { mutableStateOf(false) }
+private fun SwipeStamp(add: Boolean, alpha: Float, modifier: Modifier) {
     Row(
+        modifier
+            .graphicsLayer { this.alpha = alpha; rotationZ = if (add) -14f else 14f }
+            .border(3.dp, Color.White)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .background(OB.well)
-            .border(2.dp, if (focused) OB.ink else OB.hairline)
-            .padding(horizontal = 14.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Icon(Icons.Filled.Search, null, tint = OB.muted, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(10.dp))
-        BasicTextField(
-            value = state.searchQuery,
-            onValueChange = onChange,
-            singleLine = true,
-            textStyle = TextStyle(fontSize = 15.sp, color = OB.ink),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Search),
-            modifier = Modifier.weight(1f).onFocusChanged { focused = it.isFocused },
-            decorationBox = { inner ->
-                Box {
-                    if (state.searchQuery.isEmpty()) {
-                        Text("Search a title or author", fontSize = 15.sp, color = OB.faint)
-                    }
-                    inner()
-                }
+        Icon(if (add) Icons.Filled.Check else Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        Text(if (add) "ADD" else "SKIP", fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp, color = Color.White)
+    }
+}
+
+@Composable
+private fun HintRow(leaningAdd: Boolean, leaningSkip: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp)) {
+        HintText("← SKIP", if (leaningSkip) HL.Crimson else OB.muted, if (leaningAdd) 0.4f else 1f)
+        Spacer(Modifier.weight(1f))
+        HintText("ADD →", if (leaningAdd) HL.Sage else OB.muted, if (leaningSkip) 0.4f else 1f)
+    }
+}
+
+@Composable
+private fun HintText(text: String, color: Color, alpha: Float) {
+    Text(
+        text, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold,
+        fontSize = 11.sp, letterSpacing = 1.4.sp, color = color, modifier = Modifier.alpha(alpha)
+    )
+}
+
+@Composable
+private fun SwipeAction(add: Boolean, active: Boolean, dimmed: Boolean, enabled: Boolean, genre: String, onClick: () -> Unit) {
+    val scale by animateFloatAsState(if (active) 1.06f else 1f, spring(dampingRatio = 0.6f), label = "swipe-action")
+    val fill = when {
+        active -> if (add) HL.Sage else HL.Crimson
+        add -> HL.Ink
+        else -> HL.Card
+    }
+    val fg = if (active || add) Color.White else HL.Ink
+    Row(
+        Modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (dimmed) 0.35f else 1f }
+            .semantics { contentDescription = "${if (add) "Add" else "Skip"} $genre" }
+            .size(width = 112.dp, height = 58.dp)
+            .brutalButton(onClick = onClick, fill = fill, enabled = enabled),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(if (add) Icons.Filled.Check else Icons.Filled.Close, null, tint = fg, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(7.dp))
+        Text(if (add) "Add" else "Skip", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = fg)
+    }
+}
+
+@Composable
+private fun SwipeMascot(lean: Float) {
+    val quip = when {
+        lean > 0.3f -> "ooh, yes!"
+        lean < -0.3f -> "nah, next!"
+        else -> null
+    }
+    var lastQuip by remember { mutableStateOf("ooh, yes!") }
+    LaunchedEffect(quip) { if (quip != null) lastQuip = quip }
+    val shown by animateFloatAsState(if (quip != null) 1f else 0f, tween(150), label = "quip")
+    Box(Modifier.width(100.dp).height(92.dp), contentAlignment = Alignment.BottomCenter) {
+        Image(
+            painter = painterResource(R.drawable.swipe_mascot_icon),
+            contentDescription = null,
+            modifier = Modifier.width(70.dp).graphicsLayer {
+                scaleX = if (lean < -0.3f) -1f else 1f
+                rotationZ = lean * -6f
             }
         )
-        when {
-            state.isSearching -> CircularProgressIndicator(color = OB.muted, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
-            state.searchQuery.isNotEmpty() -> Icon(
-                Icons.Filled.Close, "Clear", tint = OB.muted,
-                modifier = Modifier.size(16.dp).clickable { onChange("") }
-            )
-        }
-    }
-}
-
-/** Cover with a titled fallback so a book with no image is still pickable. */
-@Composable
-private fun PickCover(url: String?, title: String, modifier: Modifier = Modifier) {
-    Box(modifier.background(OB.recessed), contentAlignment = Alignment.Center) {
-        if (url.isNullOrBlank()) {
-            Text(
-                title, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = OB.muted,
-                textAlign = TextAlign.Center, maxLines = 4, modifier = Modifier.padding(4.dp)
-            )
-        } else {
-            AsyncImage(
-                model = url, contentDescription = title, contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
-}
-
-// ── Step 4: Readers to follow ────────────────────────────────────────────────
-//
-// The home feed is empty until you follow someone. Suggestions come with a
-// server-authored reason so the same line shows on every platform.
-
-@Composable
-private fun ReadersStep(
-    state: OnboardingUiState,
-    onFollow: (SuggestedReader) -> Unit,
-    onContinue: () -> Unit
-) {
-    Column(Modifier.fillMaxSize()) {
-        Column(Modifier.padding(horizontal = 26.dp).padding(top = 22.dp, bottom = 18.dp)) {
-            OnbTitle("Readers\nto follow.")
-            Spacer(Modifier.height(7.dp))
-            OnbSubtitle("Your home fills up with what they read, finish and write.")
-        }
-
-        Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 26.dp).padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            when {
-                state.isLoadingReaders && state.readers.isEmpty() -> repeat(4) {
-                    Box(Modifier.fillMaxWidth().height(62.dp).background(OB.recessed).border(1.5.dp, HL.Ink.copy(alpha = 0.12f)))
-                }
-                state.readers.isEmpty() -> Text(
-                    "You're early — no readers to suggest yet. You can find people from search any time.",
-                    fontSize = 13.sp, color = OB.muted, textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)
-                )
-                else -> state.readers.forEach { reader ->
-                    ReaderRow(reader, followed = reader.username in state.followed) { onFollow(reader) }
-                }
-            }
-        }
-
-        Column(
-            Modifier.navigationBarsPadding().padding(horizontal = 26.dp).padding(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            state.errorMessage?.let {
-                Text(it, fontSize = 12.sp, color = OB.red, textAlign = TextAlign.Center)
-            }
-            OnbPrimaryButton(
-                title = if (state.followed.isEmpty()) "Skip for now" else "Get my recommendations",
-                onClick = onContinue
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReaderRow(reader: SuggestedReader, followed: Boolean, onFollow: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(OB.well)
-            .border(1.5.dp, OB.line)
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-    ) {
-        Box(
-            Modifier.size(40.dp).clip(CircleShape).background(OB.recessed).border(1.5.dp, OB.ink, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            if (reader.avatarUrl.isNullOrBlank()) {
-                Text(
-                    reader.displayName.take(1).uppercase(),
-                    fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OB.ink
-                )
-            } else {
-                AsyncImage(
-                    model = reader.avatarUrl, contentDescription = null, contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(reader.displayName, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = OB.ink, maxLines = 1)
-            Text(
-                if (reader.booksReadCount > 0) "${reader.reason} · ${reader.booksReadCount} read" else reader.reason,
-                fontSize = 12.sp, color = OB.muted, maxLines = 1
-            )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        Text(
+            lastQuip, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = HL.Ink, maxLines = 1, softWrap = false,
             modifier = Modifier
-                .height(32.dp)
-                .background(if (followed) HL.Ochre else OB.ink)
-                .border(2.dp, OB.ink)
-                .clickable(enabled = !followed, onClick = onFollow)
-                .padding(horizontal = 12.dp)
-        ) {
-            Icon(
-                if (followed) Icons.Filled.Check else Icons.Filled.Add, null,
-                tint = if (followed) OB.ink else HL.Cream, modifier = Modifier.size(12.dp)
-            )
-            Text(
-                if (followed) "Following" else "Follow",
-                fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                color = if (followed) OB.ink else HL.Cream
-            )
-        }
+                .align(Alignment.TopCenter)
+                .graphicsLayer {
+                    alpha = shown
+                    scaleX = 0.6f + 0.4f * shown
+                    scaleY = 0.6f + 0.4f * shown
+                    rotationZ = if (lean > 0f) -3f else 3f
+                }
+                .background(HL.Card)
+                .border(2.dp, HL.Ink)
+                .padding(horizontal = 10.dp, vertical = 5.dp)
+        )
     }
 }
 
-// ── Aha loading (dark) ───────────────────────────────────────────────────────
+// ── Aha loading: the cat plays while the first match loads ───────────────────
 
 @Composable
-private fun AhaLoadingStep() {
-    val messages = listOf(
-        "Mapping your taste…",
-        "Scanning 5M+ books…",
-        "Weighing your picks…",
-        "Almost there…"
-    )
-    var msgIndex by remember { mutableIntStateOf(0) }
+private fun AhaLoadingStep(genres: List<String>) {
+    var stage by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(1200)
-            msgIndex = (msgIndex + 1) % messages.size
+        while (stage < 2) {
+            delay(1000)
+            stage++
         }
     }
-
-    // Pulse driven off the frame clock (immune to the system animator-scale setting).
-    var pulse by remember { mutableFloatStateOf(0f) }
+    // Frame-clock driven so the bar still moves when the system animator scale is 0.
+    var progress by remember { mutableFloatStateOf(0.06f) }
     LaunchedEffect(Unit) {
-        var start = 0L
-        while (true) {
+        var start = -1L
+        while (progress < 0.92f) {
             withFrameNanos { now ->
-                if (start == 0L) start = now
-                val t = (now - start) / 1_000_000_000f
-                pulse = (t % 1.4f) / 1.4f
+                if (start < 0) start = now
+                val t = ((now - start) / 3.0e9f).coerceAtMost(1f)
+                progress = 0.06f + 0.86f * (1f - (1f - t) * (1f - t))
             }
         }
     }
-
-    // iOS pins the card to the upper third (1 spacer top : 2 bottom), not dead-center.
+    val steps = listOf(
+        "Reading your taste" to genres.joinToString(" · ").ifEmpty { null },
+        "Checking the shelves" to null,
+        "Picking the one" to null
+    )
     Column(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().navigationBarsPadding().padding(horizontal = 26.dp).padding(bottom = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.weight(1f))
-        Box(contentAlignment = Alignment.Center) {
-            // Expanding, fading pulse ring.
-            Box(
-                Modifier
-                    .size(96.dp)
-                    .scale(0.95f + 0.20f * pulse)
-                    .alpha(0.6f * (1f - pulse))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-            )
-            Box(
-                Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Outlined.MenuBook, null,
-                    tint = Color.White.copy(alpha = 0.65f), modifier = Modifier.size(30.dp)
-                )
-            }
-        }
-        Spacer(Modifier.height(28.dp))
         Text(
-            "Finding your book",
-            fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
-            fontSize = 28.sp, color = Color.White
+            "ALMOST THERE", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
+            fontSize = 11.sp, letterSpacing = 2.sp, color = OB.muted, modifier = Modifier.padding(top = 28.dp)
         )
-        Spacer(Modifier.height(10.dp))
-        AnimatedContent(
-            targetState = msgIndex,
-            transitionSpec = { fadeIn(tween(350)) togetherWith fadeOut(tween(350)) },
-            label = "aha-msg"
-        ) { i ->
-            Text(messages[i], fontSize = 14.sp, color = Color.White.copy(alpha = 0.5f))
+        CatAnimation(
+            R.raw.cat_play,
+            Modifier.padding(top = 14.dp).fillMaxWidth().weight(3f, fill = false).aspectRatio(1.5f)
+        )
+        Text(
+            "Finding your\nfirst book…", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
+            fontSize = 28.sp, lineHeight = 32.sp, textAlign = TextAlign.Center, color = OB.ink,
+            modifier = Modifier.padding(top = 16.dp)
+        )
+        Text(
+            "Matching your picks against the shelves.", fontSize = 14.sp, color = OB.muted,
+            textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp)
+        )
+        Column(
+            Modifier.padding(top = 22.dp).fillMaxWidth().brutalPlate(borderWidth = 2.dp).padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            steps.forEachIndexed { i, (title, detail) -> LoadingStepRow(i, stage, title, detail) }
         }
-        Spacer(Modifier.weight(2f))
+        Spacer(Modifier.weight(1f))
+        Box(Modifier.fillMaxWidth().height(14.dp).background(HL.Card).border(2.dp, HL.Ink).padding(2.dp)) {
+            Box(Modifier.fillMaxHeight().fillMaxWidth(progress).background(HL.Ink))
+        }
+        Text(
+            "HANG TIGHT", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
+            fontSize = 11.sp, letterSpacing = 1.6.sp, color = OB.muted, modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
 
-// ── Aha reveal (light) ───────────────────────────────────────────────────────
+@Composable
+private fun LoadingStepRow(i: Int, stage: Int, title: String, detail: String?) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) {
+            when {
+                i < stage -> Box(Modifier.fillMaxSize().clip(CircleShape).background(HL.Ink), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(13.dp))
+                }
+                i == stage -> Box(Modifier.fillMaxSize().border(2.dp, HL.Ink, CircleShape), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(8.dp).clip(CircleShape).background(HL.Crimson))
+                }
+                else -> Box(Modifier.fillMaxSize().drawBehind {
+                    val w = 2.dp.toPx()
+                    drawCircle(
+                        HL.Ink.copy(alpha = 0.3f), radius = size.minDimension / 2 - w / 2,
+                        style = Stroke(w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx())))
+                    )
+                })
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                title, fontSize = 15.sp, color = if (i > stage) OB.muted else OB.ink,
+                fontWeight = when {
+                    i == stage -> FontWeight.Bold
+                    i < stage -> FontWeight.SemiBold
+                    else -> FontWeight.Medium
+                }
+            )
+            if (detail != null) Text(detail, fontSize = 13.sp, color = OB.muted)
+        }
+    }
+}
+
+// ── Aha reveal: the first match, presented by the celebrating cat ────────────
 
 @Composable
 private fun AhaRevealStep(
@@ -1204,55 +1029,50 @@ private fun AhaRevealStep(
     onSkip: () -> Unit
 ) {
     val book = state.currentAhaBook ?: return
+    val reason = Genre.all.filter { it.id in state.selectedGenres }.take(2).map { it.label }
+        .takeIf { it.isNotEmpty() }?.joinToString(" + ", prefix = "Picked from ")
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 26.dp)
-                .padding(top = 24.dp, bottom = 24.dp),
+                .padding(top = 20.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "YOUR FIRST MATCH",
-                fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
-                fontSize = 10.5.sp, letterSpacing = 2.sp, color = OB.muted
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "We think you'll\nlove this.",
-                fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
-                fontSize = 30.sp, lineHeight = 35.sp, color = OB.ink,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(28.dp))
-
-            AsyncImage(
-                model = book.coverUrl,
-                contentDescription = book.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(150.dp)
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(OB.recessed)
+                "YOUR FIRST MATCH", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium,
+                fontSize = 11.sp, letterSpacing = 2.sp, color = OB.muted
             )
             Spacer(Modifier.height(18.dp))
-            Text(
-                book.title, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-                fontSize = 22.sp, color = OB.ink, textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "by ${book.authorLine}", fontSize = 13.sp, color = OB.muted,
-                textAlign = TextAlign.Center
-            )
-            book.reason?.takeIf { it.isNotEmpty() }?.let {
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    it, fontSize = 13.5.sp, lineHeight = 19.sp, color = OB.muted,
-                    textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 8.dp)
+            Box(
+                Modifier
+                    .rotate(-2f)
+                    .padding(end = 6.dp, bottom = 6.dp)
+                    .drawBehind { drawRect(HL.Ink, topLeft = Offset(6.dp.toPx(), 6.dp.toPx()), size = size) }
+                    .border(2.dp, HL.Ink)
+            ) {
+                AsyncImage(
+                    model = book.coverUrl,
+                    contentDescription = book.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.width(160.dp).aspectRatio(2f / 3f).background(OB.recessed)
                 )
+            }
+            Spacer(Modifier.height(22.dp))
+            Text(
+                book.title, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
+                fontSize = 24.sp, lineHeight = 28.sp, color = OB.ink, textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(4.dp))
+            Text("by ${book.authorLine}", fontSize = 14.sp, color = OB.muted, textAlign = TextAlign.Center)
+            Row(
+                Modifier.padding(top = 14.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                CatAnimation(R.raw.cat_match, Modifier.size(147.dp))
+                LoveBubble(reason, Modifier.padding(top = 16.dp))
             }
         }
 
@@ -1264,7 +1084,7 @@ private fun AhaRevealStep(
             state.errorMessage?.let {
                 Text(it, fontSize = 12.sp, color = OB.red, textAlign = TextAlign.Center)
             }
-            OnbPrimaryButton(
+            PBPrimaryButton(
                 title = "Save to my shelves",
                 onClick = onSaveToShelf,
                 loading = state.isAddingBook
@@ -1297,6 +1117,31 @@ private fun AhaRevealStep(
             ) {
                 Text("Skip to home", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = OB.faint)
             }
+        }
+    }
+}
+
+@Composable
+private fun LoveBubble(reason: String?, modifier: Modifier = Modifier) {
+    Box(modifier) {
+        Column(
+            Modifier.brutalPlate(borderWidth = 2.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                "You'll love\nthis!", fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold,
+                fontSize = 26.sp, lineHeight = 27.sp, color = OB.ink
+            )
+            reason?.let { Text(it, fontSize = 13.sp, color = OB.muted) }
+        }
+        Canvas(Modifier.offset(x = (-11).dp, y = 22.dp).size(width = 12.dp, height = 18.dp)) {
+            val tail = Path().apply {
+                moveTo(size.width, 0f)
+                lineTo(0f, size.height / 2)
+                lineTo(size.width, size.height)
+            }
+            drawPath(tail, HL.Card)
+            drawPath(tail, HL.Ink, style = Stroke(2.dp.toPx()))
         }
     }
 }

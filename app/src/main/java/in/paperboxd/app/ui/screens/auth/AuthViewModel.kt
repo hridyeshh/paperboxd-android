@@ -23,10 +23,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class AuthMode { Login, LoginOtp, Register }
+enum class AuthMode { Welcome, Login, LoginOtp, Register }
 
 data class AuthUiState(
-    val mode: AuthMode = AuthMode.Login,
+    val mode: AuthMode = AuthMode.Welcome,
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",

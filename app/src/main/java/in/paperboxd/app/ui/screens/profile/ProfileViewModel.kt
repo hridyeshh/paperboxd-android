@@ -199,9 +199,9 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             diaryRepository.entries(profileUsername, page = diaryPage, pageSize = 20)
                 .onSuccess { resp ->
-                    _state.update { it.copy(diaryEntries = it.diaryEntries + resp.entries) }
+                    _state.update { it.copy(diaryEntries = it.diaryEntries + resp.thoughts) }
                     diaryPage += 1
-                    diaryHasMore = resp.entries.size == 20
+                    diaryHasMore = resp.thoughts.size == 20
                 }
             isLoadingDiary = false
         }
@@ -209,6 +209,51 @@ class ProfileViewModel @Inject constructor(
 
     fun fetchDiaryIfNeeded(item: DiaryEntry) {
         if (_state.value.diaryEntries.lastOrNull()?.id == item.id) fetchDiary()
+    }
+
+    // Likes, reposts, follow-ups and deletes happen on the thread screen; the
+    // tab refetches its first page when the reader comes back from one.
+    private var thoughtsStale = false
+
+    fun markThoughtsStale() { thoughtsStale = true }
+
+    fun reloadThoughtsIfStale() {
+        if (!thoughtsStale || isLoadingDiary) return
+        thoughtsStale = false
+        isLoadingDiary = true
+        viewModelScope.launch {
+            diaryRepository.entries(profileUsername, page = 1, pageSize = 20).onSuccess { resp ->
+                _state.update { it.copy(diaryEntries = resp.thoughts) }
+                diaryPage = 2
+                diaryHasMore = resp.thoughts.size == 20
+            }
+            isLoadingDiary = false
+        }
+    }
+
+    fun toggleThoughtLike(entry: DiaryEntry) =
+        mutateThought(entry, entry.withLike(!entry.isLiked)) { diaryRepository.toggleLike(entry) }
+
+    fun toggleThoughtRepost(entry: DiaryEntry) =
+        mutateThought(entry, entry.withRepost(!entry.isReposted)) { diaryRepository.toggleRepost(entry) }
+
+    /** Shows [optimistic] now, then the server's version, or rolls back with a toast. */
+    private fun mutateThought(entry: DiaryEntry, optimistic: DiaryEntry, call: suspend () -> Result<DiaryEntry>) {
+        replaceThought(optimistic)
+        viewModelScope.launch {
+            call().fold(
+                onSuccess = ::replaceThought,
+                onFailure = { e ->
+                    replaceThought(entry)
+                    _toast.tryEmit(e.message ?: "Couldn't update")
+                }
+            )
+        }
+    }
+
+    /** A thought can sit on the tab twice (original + repost); update both, keep each row's repost header. */
+    private fun replaceThought(t: DiaryEntry) = _state.update { s ->
+        s.copy(diaryEntries = s.diaryEntries.map { if (it.id == t.id) t.copy(repostedBy = it.repostedBy) else it })
     }
 
     private suspend fun fetchLists() {

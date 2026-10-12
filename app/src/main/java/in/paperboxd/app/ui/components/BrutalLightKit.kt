@@ -2,6 +2,7 @@ package `in`.paperboxd.app.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -9,12 +10,25 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
@@ -152,6 +166,90 @@ fun Modifier.popEffect(trigger: Int): Modifier = composed {
         scaleX = scale.value
         scaleY = scale.value
         rotationZ = rotation.value
+    }
+}
+
+/**
+ * "‹ STEP n / total" + a dash progress track — iOS `PBStepHeader` twin.
+ * Shared by the paper-themed signup screen (Auth) and the onboarding screens
+ * so the run reads as one continuous three-step flow.
+ */
+@Composable
+fun PBStepHeader(step: Int, total: Int = 3, onBack: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            onBack?.let {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack, null,
+                    tint = HL.Ink,
+                    modifier = Modifier.size(14.dp).clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = it
+                    )
+                )
+            }
+            Text(
+                "STEP $step / $total",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.sp,
+                letterSpacing = 1.4.sp,
+                color = HL.Muted
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (i in 1..total) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(3.dp)
+                        .background(if (i <= step) HL.Ink else HL.Card)
+                        .border(1.dp, HL.Ink.copy(alpha = if (i <= step) 0f else 0.3f))
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Black CTA plate on the paper ground — iOS `OnboardingPrimaryButton` twin.
+ * Shared by the paper-themed signup screen and every onboarding step so the
+ * run has one primary-button look.
+ */
+@Composable
+fun PBPrimaryButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    loading: Boolean = false,
+    enabled: Boolean = true,
+) {
+    val alpha by animateFloatAsState(if (enabled) 1f else 0.45f, tween(180), label = "cta-alpha")
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .graphicsLayer { this.alpha = alpha }
+            .brutalButton(onClick = onClick, fill = HL.Ink, enabled = enabled && !loading),
+    ) {
+        if (loading) {
+            CircularProgressIndicator(
+                color = HL.Cream, strokeWidth = 2.dp, modifier = Modifier.size(22.dp)
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(title, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold, color = HL.Cream)
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward, null,
+                    tint = HL.Cream, modifier = Modifier.size(15.dp)
+                )
+            }
+        }
     }
 }
 

@@ -115,14 +115,25 @@ class CelebrationCenter @Inject constructor(
     private val _current = MutableStateFlow<Celebration?>(null)
     val current: StateFlow<Celebration?> = _current.asStateFlow()
 
-    fun show(celebration: Celebration) { _current.value = celebration }
-    fun dismiss() { _current.value = null }
+    /** Takeovers that landed while another was playing (e.g. the streak after a
+     *  shelved poster). Played in order, one at a time. Main thread only. */
+    private val queue = ArrayDeque<Celebration>()
+
+    fun show(celebration: Celebration) {
+        if (_current.value == null) _current.value = celebration else queue.addLast(celebration)
+    }
+
+    /** Ends [celebration] and starts the next queued one; ignored unless it is the one playing. */
+    fun dismiss(celebration: Celebration) {
+        if (_current.value != celebration) return
+        _current.value = queue.removeFirstOrNull()
+    }
 
     /**
-     * Celebrate the first successful page-log of each UTC day — that's the moment
-     * a reading day (and thus the streak) is earned. Keyed on the UTC day so repeat
-     * logs the same day don't re-fire, but a fresh day / first-ever log / streak
-     * reset all celebrate (a numeric-increase check missed those).
+     * Celebrate the first successful log of each UTC day (pages, or a book
+     * shelved). Keyed on the UTC day so repeat logs the same day don't re-fire,
+     * but a fresh day / first-ever log / streak reset all celebrate (a
+     * numeric-increase check missed those).
      */
     fun checkStreak(new: Int) {
         if (new <= 0) return
@@ -151,7 +162,7 @@ class CelebrationViewModel @Inject constructor(
     private val center: CelebrationCenter
 ) : ViewModel() {
     val current: StateFlow<Celebration?> = center.current
-    fun dismiss() = center.dismiss()
+    fun dismiss(celebration: Celebration) = center.dismiss(celebration)
 }
 
 // ── Design tokens (mirror iOS TK / takeover styles.css) ────────────────────
@@ -207,7 +218,7 @@ fun CelebrationOverlayHost() {
     val c = current ?: return
     // key() restarts the phase machine if a new celebration lands mid-play.
     key(c) {
-        TakeoverScaffold(config = configFor(c), onDone = vm::dismiss) {
+        TakeoverScaffold(config = configFor(c), onDone = { vm.dismiss(c) }) {
             when (c) {
                 is Celebration.Shelved -> ShelvedPoster(c.shelf, c.title, c.author, c.coverUrl)
                 is Celebration.Streak -> StreakPoster(c.days)
